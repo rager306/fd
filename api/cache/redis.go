@@ -91,6 +91,12 @@ func (c *RedisCache) Set(ctx context.Context, text string, embedding []float32, 
 	return c.client.Set(ctx, key, data, c.ttl).Err()
 }
 
+// SetBytes stores pre-marshaled binary embedding.
+func (c *RedisCache) SetBytes(ctx context.Context, text string, data []byte) error {
+	key := c.prefix + "v2:" + c.HashText(text)
+	return c.client.Set(ctx, key, data, c.ttl).Err()
+}
+
 func (c *RedisCache) Ping(ctx context.Context) error {
 	return c.client.Ping(ctx).Err()
 }
