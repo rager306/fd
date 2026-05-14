@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"time"
 
-	"fd-api/embed"
 	"fd-api/cache"
+	"fd-api/embed"
 
 	"github.com/gin-gonic/gin"
 	"log/slog"
@@ -18,15 +18,15 @@ import (
 
 type BatchHandler struct {
 	teiClient *embed.TEIClient
-	cache     *cache.RedisCache
+	cache     *cache.TieredCache
 	modelID   string
 	logger    *slog.Logger
 }
 
-func NewBatchHandler(teiClient *embed.TEIClient, cache *cache.RedisCache, modelID string, logger *slog.Logger) *BatchHandler {
+func NewBatchHandler(teiClient *embed.TEIClient, c *cache.TieredCache, modelID string, logger *slog.Logger) *BatchHandler {
 	return &BatchHandler{
 		teiClient: teiClient,
-		cache:     cache,
+		cache:     c,
 		modelID:   modelID,
 		logger:    logger,
 	}
@@ -45,7 +45,6 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 		return
 	}
 
-	// Default dimensions
 	dims := 1024
 	if req.Dimensions == 512 {
 		dims = 512
@@ -54,34 +53,25 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 120*time.Second)
 	defer cancel()
 
-	// Process each input
 	embeddings := make([]string, len(req.Inputs))
 	for i, text := range req.Inputs {
-		emb, found, err := h.cache.Get(ctx, text, dims)
+		emb, err := h.cache.GetOrLoad(ctx, text, dims, func(ctx context.Context) ([]float32, error) {
+			h.logger.Info("batch cache miss, calling TEI", "index", i)
+			embs, err := h.teiClient.Embed(ctx, []string{text})
+			if err != nil {
+				return nil, err
+			}
+			return embs[0], nil
+		})
 		if err != nil {
-			h.logger.Warn("cache error", "error", err)
-		}
-
-		if found && emb != nil {
-			h.logger.Info("batch cache hit", "index", i)
-			embeddings[i] = encodeEmbedding(emb, req.EncodingFormat)
-			continue
-		}
-
-		embs, err := h.teiClient.Embed(ctx, []string{text})
-		if err != nil {
-			h.logger.Error("TEI error in batch", "error", err)
+			h.logger.Error("batch embedding error", "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "embedding generation failed"})
 			return
 		}
 
-		fullEmb := embs[0]
+		fullEmb := emb
 		if dims == 512 && len(fullEmb) >= 512 {
 			fullEmb = fullEmb[:512]
-		}
-
-		if err := h.cache.Set(ctx, text, fullEmb, dims); err != nil {
-			h.logger.Warn("cache set error", "error", err)
 		}
 
 		embeddings[i] = encodeEmbedding(fullEmb, req.EncodingFormat)
@@ -100,7 +90,6 @@ func encodeEmbedding(emb []float32, format string) string {
 		b, _ := json.Marshal(emb)
 		return string(b)
 	}
-	// Default: base64
 	return base64.StdEncoding.EncodeToString(float32SliceToBytes(emb))
 }
 

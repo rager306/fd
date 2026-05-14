@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"fd-api/embed"
 	"fd-api/cache"
+	"fd-api/embed"
 
 	"github.com/gin-gonic/gin"
 	"log/slog"
@@ -14,15 +14,15 @@ import (
 
 type EmbeddingsHandler struct {
 	teiClient *embed.TEIClient
-	cache     *cache.RedisCache
+	cache     *cache.TieredCache
 	modelID   string
 	logger    *slog.Logger
 }
 
-func NewEmbeddingsHandler(teiClient *embed.TEIClient, cache *cache.RedisCache, modelID string, logger *slog.Logger) *EmbeddingsHandler {
+func NewEmbeddingsHandler(teiClient *embed.TEIClient, c *cache.TieredCache, modelID string, logger *slog.Logger) *EmbeddingsHandler {
 	return &EmbeddingsHandler{
 		teiClient: teiClient,
-		cache:     cache,
+		cache:     c,
 		modelID:   modelID,
 		logger:    logger,
 	}
@@ -36,14 +36,12 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 		return
 	}
 
-	// Normalize: if input is a single string, convert to slice
 	texts := req.Input
 	if len(texts) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "input is required"})
 		return
 	}
 
-	// Dimensions: nil=1024 (default), 512, or explicit 1024
 	dims := 1024
 	if req.Dimensions != nil {
 		d := *req.Dimensions
@@ -58,51 +56,33 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	// Process texts — check cache first, then TEI for misses
 	embeddings := make([][]float32, len(texts))
 	promptTokens := 0
 
 	for i, text := range texts {
-		// Check cache
-		emb, found, err := h.cache.Get(ctx, text, dims)
+		emb, err := h.cache.GetOrLoad(ctx, text, dims, func(ctx context.Context) ([]float32, error) {
+			h.logger.Info("cache miss, calling TEI", "text_len", len(text))
+			embs, err := h.teiClient.Embed(ctx, []string{text})
+			if err != nil {
+				return nil, err
+			}
+			return embs[0], nil
+		})
 		if err != nil {
-			h.logger.Warn("cache error", "error", err)
-		}
-
-		if found && emb != nil {
-			h.logger.Info("cache hit", "text_len", len(text), "dim", dims)
-			embeddings[i] = emb
-			promptTokens += len(text) / 4 // rough estimate
-			continue
-		}
-
-		// Cache miss — call TEI (always returns 1024d)
-		h.logger.Info("cache miss, calling TEI", "text_len", len(text))
-		embs, err := h.teiClient.Embed(ctx, []string{text})
-		if err != nil {
-			h.logger.Error("TEI error", "error", err)
+			h.logger.Error("embedding error", "error", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "embedding generation failed"})
 			return
 		}
 
-		fullEmb := embs[0]
-
-		// Slice to requested dimension
+		fullEmb := emb
 		if dims == 512 && len(fullEmb) >= 512 {
 			fullEmb = fullEmb[:512]
 		}
 
 		embeddings[i] = fullEmb
-
-		// Cache the result with correct dimension
-		if err := h.cache.Set(ctx, text, fullEmb, dims); err != nil {
-			h.logger.Warn("cache set error", "error", err)
-		}
-
 		promptTokens += len(text) / 4
 	}
 
-	// Build response
 	data := make([]embed.EmbeddingObj, len(embeddings))
 	for i, emb := range embeddings {
 		data[i] = embed.EmbeddingObj{
