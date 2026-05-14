@@ -3,18 +3,14 @@ package cache
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
-
-type cachedValue struct {
-	Embedding []float32 `json:"embedding"`
-	Dim      int        `json:"dim"`
-}
 
 type RedisCache struct {
 	client *redis.Client
@@ -25,12 +21,44 @@ type RedisCache struct {
 func NewRedisCache(addr, prefix string, poolSize int) *RedisCache {
 	return &RedisCache{
 		client: redis.NewClient(&redis.Options{
-			Addr:     addr,
-			PoolSize: poolSize,
+			Addr:         addr,
+			PoolSize:     poolSize,
+			DialTimeout:  5 * time.Second,
+			ReadTimeout:  3 * time.Second,
+			WriteTimeout: 3 * time.Second,
+			PoolTimeout:  4 * time.Second,
+			MinIdleConns: 10,
 		}),
 		prefix: prefix,
 		ttl:    24 * time.Hour,
 	}
+}
+
+// marshalEmbedding encodes [dim:uint16][float32*dim] — 2+4*dim bytes.
+// Replaces JSON (~8KB for 1024d → 4098 bytes).
+func marshalEmbedding(embedding []float32, dim int) []byte {
+	buf := make([]byte, 2+dim*4)
+	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim))
+	for i := 0; i < dim; i++ {
+		binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+	}
+	return buf
+}
+
+// unmarshalEmbedding decodes binary format back to []float32.
+func unmarshalEmbedding(data []byte) ([]float32, int) {
+	if len(data) < 2 {
+		return nil, 0
+	}
+	dim := int(binary.LittleEndian.Uint16(data[0:2]))
+	if len(data) < 2+dim*4 {
+		return nil, 0
+	}
+	emb := make([]float32, dim)
+	for i := 0; i < dim; i++ {
+		emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
+	}
+	return emb, dim
 }
 
 func (c *RedisCache) HashText(text string) string {
@@ -39,9 +67,10 @@ func (c *RedisCache) HashText(text string) string {
 }
 
 func (c *RedisCache) Get(ctx context.Context, text string, dim int) ([]float32, bool, error) {
-	key := c.prefix + "text:" + c.HashText(text)
+	// v2 key format includes dimension suffix
+	key := c.prefix + "v2:" + c.HashText(text) + ":d" + fmt.Sprintf("%d", dim)
 
-	data, err := c.client.HGet(ctx, key, "embedding").Result()
+	data, err := c.client.Get(ctx, key).Bytes()
 	if err == redis.Nil {
 		return nil, false, nil
 	}
@@ -49,41 +78,17 @@ func (c *RedisCache) Get(ctx context.Context, text string, dim int) ([]float32, 
 		return nil, false, err
 	}
 
-	var cv cachedValue
-	if err := json.Unmarshal([]byte(data), &cv); err != nil {
-		// Legacy data without dim — re-cache
-		var embedding []float32
-		if err2 := json.Unmarshal([]byte(data), &embedding); err2 == nil {
-			// Re-store with dim
-			c.Set(ctx, text, embedding, dim)
-			return embedding[:dim], true, nil
-		}
-		return nil, false, err
-	}
-
-	// If stored dim != requested dim, treat as miss (will re-cache at correct dim)
-	if cv.Dim != dim {
+	emb, gotDim := unmarshalEmbedding(data)
+	if gotDim != dim {
 		return nil, false, nil
 	}
-
-	return cv.Embedding, true, nil
+	return emb, true, nil
 }
 
 func (c *RedisCache) Set(ctx context.Context, text string, embedding []float32, dim int) error {
-	key := c.prefix + "text:" + c.HashText(text)
-
-	cv := cachedValue{Embedding: embedding, Dim: dim}
-	embJSON, err := json.Marshal(cv)
-	if err != nil {
-		return fmt.Errorf("marshal embedding: %w", err)
-	}
-
-	pipe := c.client.Pipeline()
-	pipe.HSet(ctx, key, "embedding", string(embJSON), "text", text)
-	pipe.Expire(ctx, key, c.ttl)
-	_, err = pipe.Exec(ctx)
-
-	return err
+	key := c.prefix + "v2:" + c.HashText(text) + ":d" + fmt.Sprintf("%d", dim)
+	data := marshalEmbedding(embedding, dim)
+	return c.client.Set(ctx, key, data, c.ttl).Err()
 }
 
 func (c *RedisCache) Ping(ctx context.Context) error {
