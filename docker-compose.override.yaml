@@ -1,0 +1,30 @@
+services:
+  tei:
+    command: --model-id deepvk/USER-bge-m3
+    healthcheck:
+      start_period: 300s
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: fd_api
+    restart: unless-stopped
+    env_file:
+      - ./api/.env
+    environment:
+      TEI_URL: "http://tei:80"
+      REDIS_HOST: "redis:6379"
+      MODEL_ID: "deepvk/USER-bge-m3"
+      LOG_LEVEL: "info"
+      GIN_MODE: "release"
+    depends_on:
+      tei:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G

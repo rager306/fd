@@ -1,0 +1,7 @@
+*_test.go
+.git
+.gitignore
+*.md
+tests/
+docs/
+README.md

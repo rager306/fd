@@ -1,0 +1,39 @@
+# Build artifacts
+fd-api
+*.exe
+
+# Go
+go.sum
+*.test
+*.out
+
+# Docker
+.docker/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Compiled
+*.so
+*.dylib
+
+# Models (downloaded separately)
+tei-models/
+api/api
+api/fd-api

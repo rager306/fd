@@ -1,0 +1,72 @@
+version: '3.9'
+
+services:
+  tei:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9
+    container_name: fd_tei
+    restart: unless-stopped
+    ports:
+      - "30080:80"
+    volumes:
+      - tei_data:/data
+    environment:
+      HF_HOME: /data
+    command: --model-id deepvk/USER-bge-m3 --dtype fp16 --max-batch-tokens 8192
+    # Note: --dtype fp16 requires ONNX model. Falls back to FP32 if ONNX unavailable.
+    # For true FP16 speedup: convert model to ONNX using optimum-cli first.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 120s
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: fd_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+    environment:
+      - TEI_URL=http://tei:80
+      - REDIS_ADDR=redis:6379
+      - PORT=8000
+    depends_on:
+      tei:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis/redis-stack:latest
+    container_name: fd_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru --protected-mode no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+
+volumes:
+  tei_data:
+  redis_data:
