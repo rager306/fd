@@ -15,8 +15,16 @@ services:
     environment:
       TEI_URL: "http://tei:80"
       REDIS_HOST: "redis:6379"
-      MODEL_ID: "deepvk/USER-bge-m3"
-      LOG_LEVEL: "info"
+      MODEL_ID: "${MODEL_ID:-deepvk/USER-bge-m3}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      REDIS_POOL_SIZE: "${REDIS_POOL_SIZE:-50}"
+      REDIS_CACHE_TTL: "${REDIS_CACHE_TTL:-}"
+      REDIS_CACHE_NO_EXPIRE: "${REDIS_CACHE_NO_EXPIRE:-}"
+      EMBEDDING_CACHE_VERSION: "${EMBEDDING_CACHE_VERSION:-}"
+      EMBEDDING_MODEL_ID: "${EMBEDDING_MODEL_ID:-}"
+      EMBEDDING_MODEL_REVISION: "${EMBEDDING_MODEL_REVISION:-}"
+      EMBEDDING_TOKENIZER_VERSION: "${EMBEDDING_TOKENIZER_VERSION:-}"
+      EMBEDDING_CHUNKING_VERSION: "${EMBEDDING_CHUNKING_VERSION:-}"
       GIN_MODE: "release"
     depends_on:
       tei:

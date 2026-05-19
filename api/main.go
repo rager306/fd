@@ -26,8 +26,12 @@ func getEnv(key, default_ string) string {
 }
 
 func getEnvInt(key string, default_ int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return default_
+	}
 	var n int
-	for _, c := range []byte(os.Getenv(key)) {
+	for _, c := range []byte(value) {
 		if c < '0' || c > '9' {
 			return default_
 		}
@@ -71,7 +75,16 @@ func main() {
 	localCache := cache.NewLocalCache(10000, 30*time.Second)
 
 	// L2: Redis binary cache with pool timeouts
-	redisCache := cache.NewRedisCache(redisHost, "embed:cache:", redisPoolSize)
+	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
+	if err != nil {
+		logger.Error("redis cache config invalid", "error", err)
+		os.Exit(1)
+	}
+	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
+	if err != nil {
+		logger.Error("redis cache init failed", "error", err)
+		os.Exit(1)
+	}
 	defer func() {
 		if err := redisCache.Close(); err != nil {
 			logger.Warn("redis close failed", "error", err)

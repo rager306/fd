@@ -15,7 +15,7 @@
 - [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: After this, every benchmark run reports the effective safe configuration needed to compare future results.
 
-- [ ] **S02: Cache namespace and retention** `risk:medium` `depends:[S01]`
+- [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: After this, Redis cache retention and namespace can be tuned safely for long-lived research reuse.
 
 - [ ] **S03: Redis persistence hardening** `risk:medium` `depends:[S02]`

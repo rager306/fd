@@ -1,0 +1,131 @@
+======================================================================
+EMBEDDING BENCHMARK — Russian Text / Redis Cache
+Model: deepvk/USER-bge-m3 (1024 dimensions)
+======================================================================
+
+## 0. Effective Configuration Snapshot (sanitized)
+
+{
+  "benchmark": {
+    "api_url": "http://localhost:8000",
+    "dimensions": 1024,
+    "input_texts_logged": false,
+    "model": "deepvk/USER-bge-m3",
+    "script": "benchmark.py"
+  },
+  "docker_compose": {
+    "config_sha256": "e9cae461113306f6c0908aa6a5c5d46818be596bbd10ac25dc5f7b838aef684a",
+    "images": [
+      "CONTAINER           REPOSITORY                                      TAG                 PLATFORM            IMAGE ID            SIZE                CREATED",
+      "fd_api              fd-api                                          latest              linux/amd64         24cdf4e4c5f4        43.8MB              2 minutes ago",
+      "fd_redis            redis/redis-stack                               latest              linux/amd64         5d5154123426        403MB               5 days ago",
+      "fd_tei              ghcr.io/huggingface/text-embeddings-inference   cpu-1.9             linux/amd64         ad950d30878e        239MB               5 days ago"
+    ],
+    "images_available": true,
+    "images_output_sha256": "64293dda45b2164ce5ba5a6a78e50e214db804f98dbdb0b66e742fc0d285d90a"
+  },
+  "environment": {
+    "allowlist_size": 25,
+    "omitted_secret_like_keys": [],
+    "values": {
+      "EMBEDDING_MODEL_ID": "deepvk/USER-bge-m3",
+      "MODEL_ID": "deepvk/USER-bge-m3",
+      "REDIS_CACHE_TTL": "168h",
+      "REDIS_POOL_SIZE": "50"
+    }
+  },
+  "environment_baseline": {
+    "exists": true,
+    "path": "benchmark-results/fd-environment-inxi-m008.txt",
+    "sha256": "97c438a26a3b00e28a9625f98660034bdca513aae22c0831cf14db149fed1ccd"
+  },
+  "git": {
+    "branch": "master",
+    "commit": "400b967ca133623bb9bbed1a61d77dcc8760e4db",
+    "dirty": true
+  },
+  "redaction_policy": {
+    "mode": "allowlist_with_secret_like_omission",
+    "raw_benchmark_texts_excluded": true,
+    "secret_key_parts": [
+      "SECRET",
+      "TOKEN",
+      "PASSWORD",
+      "PASS",
+      "KEY",
+      "CREDENTIAL",
+      "AUTH",
+      "COOKIE"
+    ]
+  },
+  "redis_before_run": {
+    "available": true,
+    "db0_keys": 1,
+    "evicted_keys": 0,
+    "expired_keys": 0,
+    "keyspace_hits": 9,
+    "keyspace_misses": 66,
+    "mem_fragmentation_ratio": 8.01,
+    "redis_version": "7.4.7",
+    "used_memory_human": "1.21M",
+    "used_memory_peak_human": "1.39M"
+  },
+  "snapshot_version": 1
+}
+
+[warmup]... OK
+
+## 1. Single-Request Latency (cold vs warm, 5 runs each)
+
+Label                     Chars     COLD mean  WARM mean  Speedup
+-----------------------------------------------------------------
+short (17 chars)             17        27.7ms      1.58ms    17.5x
+medium (73 chars)            73        16.8ms      1.15ms    14.6x
+long (422 chars)            422        59.8ms      1.69ms    35.4x
+very_long (693 chars)       693        91.0ms      1.62ms    56.3x
+
+## 2. Repeated Requests — Cache Hit Behavior (100 requests)
+
+  text_label: medium (73 chars)
+  chars: 73
+  mean:   1.42ms
+  stdev:  0.29ms
+  min:    1.01ms
+  p50:    1.35ms
+  p95:    2.18ms
+  p99:    2.56ms
+  max:    2.56ms
+
+## 3. Throughput — Concurrent Requests (5s window)
+
+ Concurrency    Req/s  Mean ms   p50 ms   p95 ms
+--------------------------------------------------
+           1    580.0      1.5ms      1.4ms      2.3ms
+           4    840.2      4.1ms      3.9ms      6.7ms
+           8    713.8     10.0ms      9.4ms     16.9ms
+          16    689.0     20.9ms     19.9ms     35.9ms
+
+## 4. Response Format Verification
+
+  dimensions:  1024
+  model:       deepvk/USER-bge-m3
+  object:      list
+  usage/prompt_tokens: 2
+
+## 5. Redis L2 Persistence — After API Restart
+
+  prime/cold request:      65.94ms
+  after API restart:       2.04ms
+  expectation:             served from Redis L2, then backfilled into L1
+
+======================================================================
+SUMMARY
+======================================================================
+
+  Best cold latency:  16.8ms (medium (73 chars))
+  Cache speedup:      56.3x (median text)
+  Warm latency mean:  1.51ms
+  Max throughput:     ~840 req/s (4 concurrent)
+  Redis L2 restart:   2.04ms after API restart
+
+======================================================================
