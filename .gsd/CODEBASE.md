@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-19T10:05:18Z | Files: 34 | Described: 0/34
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T10:05:18Z","fingerprint":"e54c4280af15f35e17e413bdbc84706defbc5d89","fileCount":34,"truncated":false} -->
+Generated: 2026-05-19T10:38:38Z | Files: 37 | Described: 0/37
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T10:38:38Z","fingerprint":"9955347fd754ae1541afe0f6e45e9c8a7d6eb278","fileCount":37,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -43,6 +43,9 @@ Generated: 2026-05-19T10:05:18Z | Files: 34 | Described: 0/34
 
 ### benchmark-results/
 - `benchmark-results/fd-benchmark-baseline-py313.txt`
+- `benchmark-results/fd-benchmark-m004-final.txt`
+- `benchmark-results/fd-benchmark-m004-s01.txt`
+- `benchmark-results/fd-benchmark-m004-s03.txt`
 - `benchmark-results/fd-runtime-stats-logs.txt`
 
 ### docs/superpowers/plans/
