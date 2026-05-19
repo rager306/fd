@@ -1,0 +1,71 @@
+# ONNX FP32 Dense Comparison — M010 S03
+
+## Effective Configuration
+
+```json
+{
+  "api_url": "http://localhost:8000",
+  "baseline_artifact": "benchmark-results/fd-dense-comparator-m010-s02.txt",
+  "cosine_threshold": 0.999,
+  "dimensions": 1024,
+  "model": "deepvk/USER-bge-m3",
+  "model_path": "tei-models/deepvk--USER-bge-m3",
+  "norm_tolerance": 0.02,
+  "onnx_path": ".gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx",
+  "raw_probe_texts_logged": false
+}
+```
+
+## ONNX Runtime Metadata
+
+```json
+{
+  "inputs": [
+    {
+      "name": "input_ids",
+      "shape": [
+        "batch_size",
+        "sequence_length"
+      ],
+      "type": "tensor(int64)"
+    },
+    {
+      "name": "attention_mask",
+      "shape": [
+        "batch_size",
+        "sequence_length"
+      ],
+      "type": "tensor(int64)"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "dense_vecs",
+      "shape": [
+        "batch_size",
+        1024
+      ],
+      "type": "tensor(float)"
+    }
+  ],
+  "providers": [
+    "CPUExecutionProvider"
+  ]
+}
+```
+
+## TEI vs ONNX Probe Comparison
+
+| Label | Chars | TEI Hash Matches S02 | TEI Norm | ONNX Norm | Cosine | Max Abs Diff | ONNX SHA256 (float32) | Passed |
+|---|---:|---|---:|---:|---:|---:|---|---|
+| contract_question_jurisdiction | 94 | yes | 1.00000002 | 1.00000014 | 0.99999347 | 0.0004630069 | `e9daa81a2c8511df5ff0ba2fceb7dbb2d77cc99abfbe186cc9d052527a7f6604` | yes |
+| contract_clause_delivery | 131 | yes | 0.99999999 | 1.00000001 | 0.99999380 | 0.0003867651 | `eebee1baba629fe6fc1386ad9caebade924c61b62ccb9a2d7cd5a09856264363` | yes |
+| labor_question_termination | 103 | yes | 1.00000003 | 0.99999972 | 0.99999364 | 0.0006345856 | `086d3f120c829838e091a8ec6697ad458cb4e0abd30567d251225bbb0bb17366` | yes |
+| civil_clause_damages | 140 | yes | 0.99999996 | 1.00000018 | 0.99999393 | 0.0003501176 | `010bcf1be461de585b4950052bc5acef9791e5aa64ecf25d6b63744f3949eb13` | yes |
+| neutral_russian_reference | 102 | yes | 1.00000002 | 1.00000000 | 0.99999386 | 0.0005282953 | `6e91ee154ba634fef76a781035d407347e71e06a464f3ffa6cbd160d4c0f3f86` | yes |
+
+## Verdict
+
+PASS
+
+Raw probe texts are intentionally excluded from this artifact.

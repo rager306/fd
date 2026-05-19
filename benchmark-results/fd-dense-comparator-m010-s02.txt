@@ -1,0 +1,57 @@
+# Dense Embedding Comparator Baseline
+
+## Effective Configuration
+
+```json
+{
+  "api_url": "http://localhost:8000",
+  "expected_dimensions": 1024,
+  "generated_at": "2026-05-19T18:36:29.346584+00:00",
+  "norm_tolerance": 0.02,
+  "probe_count": 5,
+  "raw_probe_texts_logged": false,
+  "requested_model": "deepvk/USER-bge-m3",
+  "response_model": "deepvk/USER-bge-m3",
+  "script_version": 1
+}
+```
+
+## Probe Summary
+
+| Label | Chars | Dimensions | Finite | L2 Norm | Normalized | Vector SHA256 (float32) | Passed |
+|---|---:|---:|---|---:|---|---|---|
+| contract_question_jurisdiction | 94 | 1024 | yes | 1.00000002 | yes | `a72f77870f5f1125514b177294c0491ea252c3a7b35d06b3b3e464a4fc18f074` | yes |
+| contract_clause_delivery | 131 | 1024 | yes | 0.99999999 | yes | `f846bef1608227b4d4e85eb1cce7a43e09b0fa2acf6a1e0c1d84605a94ca435a` | yes |
+| labor_question_termination | 103 | 1024 | yes | 1.00000003 | yes | `fc63d92687e6b2783b9b35d06528fef1786614bc9f88ffede09557832ff6d77a` | yes |
+| civil_clause_damages | 140 | 1024 | yes | 0.99999996 | yes | `6bbf134ddf8aabbae78691d7963fdfe98c594600df1ab337e1b6c52d9eb61c6b` | yes |
+| neutral_russian_reference | 102 | 1024 | yes | 1.00000002 | yes | `6e75116d8b2ba28313c6b7f40c1b38478472778d8dd6c8bac9812ad2495fe6de` | yes |
+
+## Pairwise Cosine Similarities
+
+| Left | Right | Cosine |
+|---|---|---:|
+| contract_question_jurisdiction | contract_clause_delivery | 0.54761505 |
+| contract_question_jurisdiction | labor_question_termination | 0.46918931 |
+| contract_question_jurisdiction | civil_clause_damages | 0.40267085 |
+| contract_question_jurisdiction | neutral_russian_reference | 0.27814161 |
+| contract_clause_delivery | labor_question_termination | 0.37913565 |
+| contract_clause_delivery | civil_clause_damages | 0.46680702 |
+| contract_clause_delivery | neutral_russian_reference | 0.34963314 |
+| labor_question_termination | civil_clause_damages | 0.48149344 |
+| labor_question_termination | neutral_russian_reference | 0.26329673 |
+| civil_clause_damages | neutral_russian_reference | 0.33680405 |
+
+## Usage
+
+```json
+{
+  "prompt_tokens": 263,
+  "total_tokens": 263
+}
+```
+
+## Verdict
+
+PASS
+
+Raw probe texts are intentionally excluded from this artifact.

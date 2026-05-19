@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-19T17:21:23Z | Files: 42 | Described: 0/42
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T17:21:23Z","fingerprint":"8bc7bf6e67c4784f45d80d386b285c89625ecabb","fileCount":42,"truncated":false} -->
+Generated: 2026-05-19T18:22:26Z | Files: 47 | Described: 0/47
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T18:22:26Z","fingerprint":"5c809e87249560d30dea765d0c5f3c50446d58a1","fileCount":47,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -21,6 +21,7 @@ Generated: 2026-05-19T17:21:23Z | Files: 42 | Described: 0/42
 - `api/Dockerfile.tests`
 - `api/go.mod`
 - `api/go.sum`
+- `api/main_test.go`
 - `api/main.go`
 
 ### api/cache/
@@ -52,6 +53,10 @@ Generated: 2026-05-19T17:21:23Z | Files: 42 | Described: 0/42
 - `benchmark-results/fd-benchmark-m004-final.txt`
 - `benchmark-results/fd-benchmark-m004-s01.txt`
 - `benchmark-results/fd-benchmark-m004-s03.txt`
+- `benchmark-results/fd-benchmark-m009-s01.txt`
+- `benchmark-results/fd-benchmark-m009-s02.txt`
+- `benchmark-results/fd-benchmark-m009-s03.txt`
+- `benchmark-results/fd-benchmark-m009-s04.txt`
 - `benchmark-results/fd-environment-inxi-m008.txt`
 - `benchmark-results/fd-runtime-stats-logs.txt`
 
