@@ -36,13 +36,20 @@ func NewRedisCache(addr, prefix string, poolSize int) *RedisCache {
 
 // marshalEmbedding encodes [dim:uint16][float32*dim] — 2+4*dim bytes.
 // Replaces JSON (~8KB for 1024d → 4098 bytes).
-func marshalEmbedding(embedding []float32, dim int) []byte {
+func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
+	if dim <= 0 {
+		return nil, fmt.Errorf("dimension must be positive, got %d", dim)
+	}
+	if len(embedding) < dim {
+		return nil, fmt.Errorf("embedding length %d shorter than requested dimension %d", len(embedding), dim)
+	}
+
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim))
 	for i := 0; i < dim; i++ {
 		binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
 	}
-	return buf
+	return buf, nil
 }
 
 // unmarshalEmbedding decodes binary format back to []float32.
@@ -87,13 +94,16 @@ func (c *RedisCache) Get(ctx context.Context, text string, dim int) ([]float32, 
 
 func (c *RedisCache) Set(ctx context.Context, text string, embedding []float32, dim int) error {
 	key := c.prefix + "v2:" + c.HashText(text) + ":d" + fmt.Sprintf("%d", dim)
-	data := marshalEmbedding(embedding, dim)
+	data, err := marshalEmbedding(embedding, dim)
+	if err != nil {
+		return err
+	}
 	return c.client.Set(ctx, key, data, c.ttl).Err()
 }
 
 // SetBytes stores pre-marshaled binary embedding.
-func (c *RedisCache) SetBytes(ctx context.Context, text string, data []byte) error {
-	key := c.prefix + "v2:" + c.HashText(text)
+func (c *RedisCache) SetBytes(ctx context.Context, text string, data []byte, dim int) error {
+	key := c.prefix + "v2:" + c.HashText(text) + ":d" + fmt.Sprintf("%d", dim)
 	return c.client.Set(ctx, key, data, c.ttl).Err()
 }
 

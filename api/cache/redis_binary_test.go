@@ -1,12 +1,16 @@
 package cache
 
 import (
+	"strings"
 	"testing"
 )
 
 func TestBinaryMarshalUnmarshal_4d(t *testing.T) {
 	emb := []float32{1.0, 2.0, 3.0, 4.0}
-	data := marshalEmbedding(emb, 4)
+	data, err := marshalEmbedding(emb, 4)
+	if err != nil {
+		t.Fatalf("marshal error: %v", err)
+	}
 
 	if len(data) != 2+4*4 {
 		t.Errorf("len=%d, want %d", len(data), 2+16)
@@ -31,7 +35,10 @@ func TestBinaryMarshalUnmarshal_512d(t *testing.T) {
 	for i := range emb {
 		emb[i] = float32(i) * 0.001
 	}
-	data := marshalEmbedding(emb, 512)
+	data, err := marshalEmbedding(emb, 512)
+	if err != nil {
+		t.Fatalf("marshal error: %v", err)
+	}
 	got, dim := unmarshalEmbedding(data)
 
 	if dim != 512 {
@@ -47,7 +54,10 @@ func TestBinaryMarshalUnmarshal_1024d(t *testing.T) {
 	for i := range emb {
 		emb[i] = float32(i) * 0.001
 	}
-	data := marshalEmbedding(emb, 1024)
+	data, err := marshalEmbedding(emb, 1024)
+	if err != nil {
+		t.Fatalf("marshal error: %v", err)
+	}
 	if len(data) != 2+1024*4 {
 		t.Errorf("len=%d, want %d", len(data), 2+4096)
 	}
@@ -70,7 +80,10 @@ func TestBinaryMarshalUnmarshal_Truncated(t *testing.T) {
 
 func TestBinaryMarshalUnmarshal_RoundTrip(t *testing.T) {
 	original := []float32{0.123456, -0.654321, 1e10, -1e-10}
-	data := marshalEmbedding(original, 4)
+	data, err := marshalEmbedding(original, 4)
+	if err != nil {
+		t.Fatalf("marshal error: %v", err)
+	}
 	got, _ := unmarshalEmbedding(data)
 
 	if len(got) != len(original) {
@@ -80,5 +93,22 @@ func TestBinaryMarshalUnmarshal_RoundTrip(t *testing.T) {
 		if got[i] != original[i] {
 			t.Errorf("roundtrip failed at [%d]: got %v, want %v", i, got[i], original[i])
 		}
+	}
+}
+
+func TestMarshalEmbedding_ShortVectorReturnsError(t *testing.T) {
+	_, err := marshalEmbedding([]float32{1, 2}, 4)
+	if err == nil {
+		t.Fatal("expected short vector error")
+	}
+	if !strings.Contains(err.Error(), "shorter than requested dimension") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestMarshalEmbedding_InvalidDimensionReturnsError(t *testing.T) {
+	_, err := marshalEmbedding([]float32{1, 2}, 0)
+	if err == nil {
+		t.Fatal("expected invalid dimension error")
 	}
 }

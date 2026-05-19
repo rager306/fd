@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"golang.org/x/sync/singleflight"
@@ -27,8 +28,10 @@ func NewTieredCache(local *LocalCache, redis *RedisCache, localTTL time.Duration
 
 // GetOrLoad checks L1 then L2, invoking loader if both miss.
 func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
+	localKey := fmt.Sprintf("%s:d%d", key, dim)
+
 	// L1 check — returns []byte
-	if data, ok := tc.local.Get(ctx, key); ok {
+	if data, ok := tc.local.Get(ctx, localKey); ok {
 		emb, d := unmarshalEmbedding(data)
 		if d == dim {
 			return emb, nil
@@ -36,10 +39,10 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 		// dim mismatch — treat as miss
 	}
 
-	// singleflight — dedup concurrent requests
-	r, err, _ := tc.sf.Do(key, func() (any, error) {
+	// singleflight — dedup concurrent requests for the same text and dimension.
+	r, err, _ := tc.sf.Do(localKey, func() (any, error) {
 		// Double-check L1
-		if data, ok := tc.local.Get(ctx, key); ok {
+		if data, ok := tc.local.Get(ctx, localKey); ok {
 			emb, d := unmarshalEmbedding(data)
 			if d == dim {
 				return emb, nil
@@ -49,8 +52,11 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 		// L2 check — Redis returns []float32
 		if emb, ok, err := tc.redis.Get(ctx, key, dim); err == nil && ok {
 			// backfill L1 with binary
-			data := marshalEmbedding(emb, dim)
-			tc.local.Set(ctx, key, data, tc.localTTL)
+			data, err := marshalEmbedding(emb, dim)
+			if err != nil {
+				return nil, err
+			}
+			tc.local.Set(ctx, localKey, data, tc.localTTL)
 			return emb, nil
 		}
 
@@ -61,13 +67,16 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 		}
 
 		// Backfill L1 with binary
-		data := marshalEmbedding(emb, dim)
-		tc.local.Set(ctx, key, data, tc.localTTL)
+		data, err := marshalEmbedding(emb, dim)
+		if err != nil {
+			return nil, err
+		}
+		tc.local.Set(ctx, localKey, data, tc.localTTL)
 
 		// Backfill L2
-		tc.redis.Set(ctx, key, emb, dim)
+		_ = tc.redis.SetBytes(ctx, key, data, dim)
 
-		return emb, nil
+		return emb[:dim], nil
 	})
 	if err != nil {
 		return nil, err
