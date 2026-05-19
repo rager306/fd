@@ -69,7 +69,7 @@ func (c *TEIClient) Embed(ctx context.Context, texts []string) ([][]float32, err
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("TEI returned status %d", resp.StatusCode)

@@ -110,6 +110,27 @@ go build ./...
 go test ./... -short
 ```
 
+### Quality tooling
+
+Tests use Go's standard `testing` package plus [Testify](https://github.com/stretchr/testify) `assert`/`require` helpers for clearer failures in representative cache and handler tests.
+
+Run the full Go test suite:
+
+```bash
+cd api
+go test ./... -short
+```
+
+Run the configured GolangCI-Lint gate from the Go module directory:
+
+```bash
+cd api
+go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 \
+  run --config ../.golangci.yml ./...
+```
+
+`.golangci.yml` enables Staticcheck through GolangCI-Lint, along with `go vet`, `errcheck`, `unused`, `ineffassign`, `goconst`, and `misspell`. Use this lint command before committing Go code changes.
+
 ### Local benchmark
 
 Prerequisites:

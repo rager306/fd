@@ -35,12 +35,12 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	var req embed.BatchEmbeddingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("invalid batch request", "error", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{errorKey: err.Error()})
 		return
 	}
 
 	if len(req.Inputs) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "inputs is required"})
+		c.JSON(http.StatusBadRequest, gin.H{errorKey: "inputs is required"})
 		return
 	}
 
@@ -49,13 +49,13 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 		if req.Dimensions == 512 || req.Dimensions == 1024 {
 			dims = req.Dimensions
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "dimensions must be 1024 or 512"})
+			c.JSON(http.StatusBadRequest, gin.H{errorKey: "dimensions must be 1024 or 512"})
 			return
 		}
 	}
 
 	if req.EncodingFormat != "" && req.EncodingFormat != "base64" && req.EncodingFormat != "float" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "encoding_format must be base64 or float"})
+		c.JSON(http.StatusBadRequest, gin.H{errorKey: "encoding_format must be base64 or float"})
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 		})
 		if err != nil {
 			h.logger.Error("batch embedding error", "error", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "embedding generation failed"})
+			c.JSON(http.StatusInternalServerError, gin.H{errorKey: "embedding generation failed"})
 			return
 		}
 

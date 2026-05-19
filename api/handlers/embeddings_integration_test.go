@@ -15,6 +15,13 @@ import (
 	"fd-api/embed"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+const (
+	helloInputJSON = `{"model":"test","input":"hello"}`
+	helloText      = "hello"
 )
 
 type mockEmbedder struct {
@@ -67,7 +74,7 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 	}{
 		{
 			name: "valid single text",
-			body: `{"model":"test","input":"hello"}`,
+			body: helloInputJSON,
 			embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
 				return [][]float32{{0.1, 0.2, 0.3}}, nil
 			},
@@ -153,7 +160,7 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 		},
 		{
 			name: "tei error returns 500",
-			body: `{"model":"test","input":"hello"}`,
+			body: helloInputJSON,
 			embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
 				return nil, errors.New("TEI unavailable")
 			},
@@ -161,7 +168,7 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 		},
 		{
 			name:       "invalid dimensions",
-			body:       `{"model":"test","input":"hello","dimensions":256}`,
+			body:       `{"model":"test","input":helloText,"dimensions":256}`,
 			embedFunc:  func(ctx context.Context, texts []string) ([][]float32, error) { return nil, nil },
 			wantStatus: http.StatusBadRequest,
 		},
@@ -254,15 +261,11 @@ func TestCreateBatchEmbeddings_Base64Response(t *testing.T) {
 	}
 
 	var resp embed.BatchEmbeddingsResponse
-	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
-		t.Fatalf("unmarshal response: %v", err)
-	}
-	if resp.Count != 1 || resp.Dimensions != 1024 {
-		t.Fatalf("unexpected response metadata: %+v", resp)
-	}
-	if _, err := base64.StdEncoding.DecodeString(resp.Embeddings[0]); err != nil {
-		t.Fatalf("embedding is not valid base64: %v", err)
-	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp), "unmarshal response")
+	assert.Equal(t, 1, resp.Count)
+	assert.Equal(t, 1024, resp.Dimensions)
+	_, err := base64.StdEncoding.DecodeString(resp.Embeddings[0])
+	assert.NoError(t, err, "embedding should be valid base64")
 }
 
 func TestCreateEmbedding_SuccessDoesNotEmitInfo(t *testing.T) {
@@ -276,13 +279,9 @@ func TestCreateEmbedding_SuccessDoesNotEmitInfo(t *testing.T) {
 	router := gin.New()
 	router.POST("/v1/embeddings", handler.CreateEmbedding)
 
-	w := postJSON(router, "/v1/embeddings", `{"model":"test","input":"hello"}`)
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d. body: %s", w.Code, w.Body.String())
-	}
-	if logs.Len() != 0 {
-		t.Fatalf("successful embedding request emitted info logs: %s", logs.String())
-	}
+	w := postJSON(router, "/v1/embeddings", helloInputJSON)
+	require.Equal(t, http.StatusOK, w.Code, "body: %s", w.Body.String())
+	assert.Empty(t, logs.String(), "successful embedding request should not emit info logs")
 }
 
 func TestCreateBatchEmbeddings_SuccessDoesNotEmitInfo(t *testing.T) {
@@ -297,12 +296,8 @@ func TestCreateBatchEmbeddings_SuccessDoesNotEmitInfo(t *testing.T) {
 	router.POST("/embeddings/batch", handler.CreateBatchEmbeddings)
 
 	w := postJSON(router, "/embeddings/batch", `{"inputs":["hello"]}`)
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d. body: %s", w.Code, w.Body.String())
-	}
-	if logs.Len() != 0 {
-		t.Fatalf("successful batch request emitted info logs: %s", logs.String())
-	}
+	require.Equal(t, http.StatusOK, w.Code, "body: %s", w.Body.String())
+	assert.Empty(t, logs.String(), "successful batch request should not emit info logs")
 }
 
 func TestEmbeddingsRequest_Unmarshal(t *testing.T) {
@@ -313,18 +308,18 @@ func TestEmbeddingsRequest_Unmarshal(t *testing.T) {
 	}{
 		{
 			name:     "single string input",
-			input:    `{"model":"test","input":"hello"}`,
-			expected: []string{"hello"},
+			input:    helloInputJSON,
+			expected: []string{helloText},
 		},
 		{
 			name:     "array string input",
 			input:    `{"model":"test","input":["hello","world"]}`,
-			expected: []string{"hello", "world"},
+			expected: []string{helloText, "world"},
 		},
 		{
 			name:     "dimensions field parsed",
 			input:    `{"model":"test","input":"hello","dimensions":512}`,
-			expected: []string{"hello"},
+			expected: []string{helloText},
 		},
 	}
 

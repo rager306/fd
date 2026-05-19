@@ -39,13 +39,13 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 	var req embed.EmbeddingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("invalid request", "error", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{errorKey: err.Error()})
 		return
 	}
 
 	texts := req.Input
 	if len(texts) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "input is required"})
+		c.JSON(http.StatusBadRequest, gin.H{errorKey: "input is required"})
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 		if d == 512 {
 			dims = 512
 		} else if d != 1024 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "dimensions must be 1024 or 512"})
+			c.JSON(http.StatusBadRequest, gin.H{errorKey: "dimensions must be 1024 or 512"})
 			return
 		}
 	}
@@ -76,7 +76,7 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 		})
 		if err != nil {
 			h.logger.Error("embedding error", "error", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "embedding generation failed"})
+			c.JSON(http.StatusInternalServerError, gin.H{errorKey: "embedding generation failed"})
 			return
 		}
 

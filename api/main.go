@@ -72,7 +72,11 @@ func main() {
 
 	// L2: Redis binary cache with pool timeouts
 	redisCache := cache.NewRedisCache(redisHost, "embed:cache:", redisPoolSize)
-	defer redisCache.Close()
+	defer func() {
+		if err := redisCache.Close(); err != nil {
+			logger.Warn("redis close failed", "error", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := redisCache.Ping(ctx); err != nil {
@@ -132,6 +136,8 @@ func main() {
 	logger.Info("shutting down...")
 	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	srv.Shutdown(ctx)
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.Error("server shutdown failed", "error", err)
+	}
 	logger.Info("stopped")
 }
