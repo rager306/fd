@@ -11,6 +11,7 @@ CLAUDE.md
 .gsd/exec/
 .gsd/graphs/
 .gsd/journal/
+.gsd/last-snapshot.md
 .gsd/notifications.jsonl
 .gsd/runtime/
 .gsd/state-manifest.json

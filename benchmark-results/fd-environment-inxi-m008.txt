@@ -1,0 +1,55 @@
+FD ENVIRONMENT SNAPSHOT — M008
+Generated: 2026-05-19T16:59:28Z
+Git commit: c1d2453b47ab973169bca88305b25eddb3b719ab
+Git branch: master
+
+Command: inxi -F -c0
+========================================
+System:
+  Kernel: 6.8.0-117-generic arch: x86_64 bits: 64
+  Console: N/A Distro: Ubuntu 24.04.4 LTS (Noble Numbat)
+Machine:
+  Type: Kvm System: QEMU product: Standard PC (i440FX + PIIX, 1996) v: pc-i440fx-9.0 serial: N/A
+  Mobo: N/A model: N/A serial: N/A BIOS: SeaBIOS v: rel-1.16.3-0-ga6ed6b701f0a-prebuilt.qemu.org
+    date: 04/01/2014
+CPU:
+  Info: 12-core model: AMD EPYC (with IBPB) bits: 64 type: MCP cache: L2: 6 MiB
+  Speed (MHz): avg: 3195 min/max: N/A cores: 1: 3195 2: 3195 3: 3195 4: 3195 5: 3195 6: 3195
+    7: 3195 8: 3195 9: 3195 10: 3195 11: 3195 12: 3195
+Graphics:
+  Device-1: driver: N/A
+  Display: server: No display server data found. Headless machine? tty: 80x40
+  API: EGL v: 1.5 drivers: swrast platforms: surfaceless,device
+  API: OpenGL v: 4.5 vendor: mesa v: 25.2.8-0ubuntu0.24.04.1 note: console (EGL sourced)
+    renderer: llvmpipe (LLVM 20.1.2 256 bits)
+Audio:
+  Message: No device data found.
+Network:
+  Device-1: Intel 82371AB/EB/MB PIIX4 ACPI type: network bridge driver: N/A
+  Device-2: Red Hat Virtio network driver: virtio-pci
+  IF: eth0 state: up speed: -1 duplex: unknown mac: <filter>
+  IF-ID-1: br-20753b3c60a2 state: down mac: <filter>
+  IF-ID-2: br-5a00d005998c state: down mac: <filter>
+  IF-ID-3: br-9672003639e3 state: up speed: 10000 Mbps duplex: unknown mac: <filter>
+  IF-ID-4: br-9bacea5b0cb5 state: down mac: <filter>
+  IF-ID-5: docker0 state: up speed: 10000 Mbps duplex: unknown mac: <filter>
+  IF-ID-6: veth2329b9d state: up speed: 10000 Mbps duplex: full mac: <filter>
+  IF-ID-7: veth7d73b58 state: up speed: 10000 Mbps duplex: full mac: <filter>
+  IF-ID-8: vethb980841 state: up speed: 10000 Mbps duplex: full mac: <filter>
+  IF-ID-9: vethff5f319 state: up speed: 10000 Mbps duplex: full mac: <filter>
+  IF-ID-10: wg0 state: unknown speed: N/A duplex: N/A mac: N/A
+Drives:
+  Local Storage: total: 250 GiB used: 155.95 GiB (62.4%)
+  ID-1: /dev/sda vendor: QEMU model: HARDDISK size: 250 GiB
+Partition:
+  ID-1: / size: 241.13 GiB used: 155.83 GiB (64.6%) fs: ext4 dev: /dev/sda1
+  ID-2: /boot size: 880.4 MiB used: 116.5 MiB (13.2%) fs: ext4 dev: /dev/sda16
+  ID-3: /boot/efi size: 104.3 MiB used: 6.1 MiB (5.9%) fs: vfat dev: /dev/sda15
+Swap:
+  Alert: No swap data was found.
+Sensors:
+  Src: lm-sensors+/sys Message: No sensor data found using /sys/class/hwmon or lm-sensors.
+Info:
+  Memory: total: 48 GiB available: 47.05 GiB used: 12.56 GiB (26.7%)
+  Processes: 300 Uptime: 2d 55m Init: systemd target: graphical (5) Client: Unknown Client: node
+    inxi: 3.3.34

@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-19T12:06:58Z | Files: 40 | Described: 0/40
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T12:06:58Z","fingerprint":"a11750610d2cfbb102e26f3f92f2fa3e2632f791","fileCount":40,"truncated":false} -->
+Generated: 2026-05-19T16:49:04Z | Files: 41 | Described: 0/41
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T16:49:04Z","fingerprint":"fc8d6aa10db4e77e7987d5d157dc0babe4234f1d","fileCount":41,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -11,6 +11,9 @@ Generated: 2026-05-19T12:06:58Z | Files: 40 | Described: 0/40
 - `docker-compose.override.yaml`
 - `docker-compose.yaml`
 - `README.md`
+
+### .github/workflows/
+- `.github/workflows/go-quality.yml`
 
 ### api/
 - `api/.dockerignore`
