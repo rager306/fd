@@ -14,7 +14,7 @@
 - [x] **S01: S01** `risk:high` `depends:[]`
   > After this: Cache layer cannot cross-contaminate 512d and 1024d requests; short TEI vectors return errors rather than panics.
 
-- [ ] **S02: API validation and handler tests** `risk:medium` `depends:[S01]`
+- [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: Invalid batch dimensions or encoding formats return HTTP 400; production handler paths are tested directly.
 
 - [ ] **S03: Local cache semantics** `risk:medium` `depends:[S01]`

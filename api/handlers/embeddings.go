@@ -5,21 +5,28 @@ import (
 	"net/http"
 	"time"
 
-	"fd-api/cache"
 	"fd-api/embed"
 
 	"github.com/gin-gonic/gin"
 	"log/slog"
 )
 
+type Embedder interface {
+	Embed(ctx context.Context, texts []string) ([][]float32, error)
+}
+
+type EmbeddingCache interface {
+	GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error)
+}
+
 type EmbeddingsHandler struct {
-	teiClient *embed.TEIClient
-	cache     *cache.TieredCache
+	teiClient Embedder
+	cache     EmbeddingCache
 	modelID   string
 	logger    *slog.Logger
 }
 
-func NewEmbeddingsHandler(teiClient *embed.TEIClient, c *cache.TieredCache, modelID string, logger *slog.Logger) *EmbeddingsHandler {
+func NewEmbeddingsHandler(teiClient Embedder, c EmbeddingCache, modelID string, logger *slog.Logger) *EmbeddingsHandler {
 	return &EmbeddingsHandler{
 		teiClient: teiClient,
 		cache:     c,

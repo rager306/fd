@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"time"
 
-	"fd-api/cache"
 	"fd-api/embed"
 
 	"github.com/gin-gonic/gin"
@@ -17,13 +16,13 @@ import (
 )
 
 type BatchHandler struct {
-	teiClient *embed.TEIClient
-	cache     *cache.TieredCache
+	teiClient Embedder
+	cache     EmbeddingCache
 	modelID   string
 	logger    *slog.Logger
 }
 
-func NewBatchHandler(teiClient *embed.TEIClient, c *cache.TieredCache, modelID string, logger *slog.Logger) *BatchHandler {
+func NewBatchHandler(teiClient Embedder, c EmbeddingCache, modelID string, logger *slog.Logger) *BatchHandler {
 	return &BatchHandler{
 		teiClient: teiClient,
 		cache:     c,
@@ -46,8 +45,18 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	}
 
 	dims := 1024
-	if req.Dimensions == 512 {
-		dims = 512
+	if req.Dimensions != 0 {
+		if req.Dimensions == 512 || req.Dimensions == 1024 {
+			dims = req.Dimensions
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "dimensions must be 1024 or 512"})
+			return
+		}
+	}
+
+	if req.EncodingFormat != "" && req.EncodingFormat != "base64" && req.EncodingFormat != "float" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "encoding_format must be base64 or float"})
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 120*time.Second)
