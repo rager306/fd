@@ -24,7 +24,7 @@
 - [x] **S04: S04** `risk:medium` `depends:[]`
   > After this: After this, benchmark evidence shows whether batch cache hits are Redis round-trip limited.
 
-- [ ] **S05: MGET pipeline A B** `risk:high` `depends:[S04]`
+- [x] **S05: MGET pipeline A B** `risk:high` `depends:[S04]`
   > After this: After this, batch Redis cache hits use MGET or pipelining only if baseline evidence justifies it.
 
 ## Boundary Map
