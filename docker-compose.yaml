@@ -33,7 +33,7 @@ services:
       - ./api:/app
     environment:
       - TEI_URL=http://tei:80
-      - REDIS_ADDR=redis:6379
+      - REDIS_HOST=redis:6379
       - PORT=8000
     depends_on:
       tei:
@@ -51,8 +51,6 @@ services:
     image: redis/redis-stack:latest
     container_name: fd_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru --protected-mode no

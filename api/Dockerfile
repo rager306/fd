@@ -18,6 +18,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
 
 # Stage 2: Runtime (minimal, static binary works on any base)
 FROM debian:stable-slim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /
 COPY --from=builder /app/api /api
 ENV GIN_MODE=release

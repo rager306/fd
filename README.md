@@ -76,6 +76,7 @@ Request → L1 (sync.Map, ~50ns) → L2 (Redis binary, ~0.5ms) → TEI (~70ms)
 | `MODEL_ID` | `deepvk/USER-bge-m3` | HuggingFace model ID |
 | `REDIS_POOL_SIZE` | `50` | Connection pool size |
 | `BIND_HOST` | `0.0.0.0` | Bind address |
+| `PORT` | `8000` | API port |
 
 ## Development
 

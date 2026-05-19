@@ -46,6 +46,7 @@ func main() {
 	redisHost := getEnv("REDIS_HOST", "redis:6379")
 	modelID := getEnv("MODEL_ID", "deepvk/USER-bge-m3")
 	bindHost := getEnv("BIND_HOST", "0.0.0.0")
+	port := getEnv("PORT", "8000")
 	redisPoolSize := getEnvInt("REDIS_POOL_SIZE", 50)
 
 	numCPU := runtime.NumCPU()
@@ -96,7 +97,7 @@ func main() {
 	r.POST("/v1/embeddings", embedHandler.CreateEmbedding)
 	r.POST("/embeddings/batch", batchHandler.CreateBatchEmbeddings)
 
-	addr := bindHost + ":8000"
+	addr := bindHost + ":" + port
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: r,

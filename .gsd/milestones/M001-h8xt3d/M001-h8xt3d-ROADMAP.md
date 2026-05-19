@@ -20,7 +20,7 @@
 - [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: L1 cache enforces documented size/overwrite semantics with tests.
 
-- [ ] **S04: Runtime configuration hardening** `risk:medium` `depends:[S02,S03]`
+- [x] **S04: S04** `risk:medium` `depends:[]`
   > After this: Docker Compose healthchecks work with runtime image and config names match application expectations.
 
 ## Boundary Map
