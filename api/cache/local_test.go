@@ -34,7 +34,41 @@ func TestLocalCache_TTLExpired(t *testing.T) {
 	}
 }
 
+func TestLocalCache_SetRefreshesExistingValueAndTTL(t *testing.T) {
+	c := NewLocalCache(1000, time.Minute)
+	ctx := context.Background()
 
+	c.Set(ctx, "key1", []byte{1}, 1*time.Millisecond)
+	c.Set(ctx, "key1", []byte{2, 3}, time.Minute)
+	time.Sleep(10 * time.Millisecond)
+
+	got, ok := c.Get(ctx, "key1")
+	if !ok {
+		t.Fatal("expected refreshed key to still exist")
+	}
+	if len(got) != 2 || got[0] != 2 || got[1] != 3 {
+		t.Fatalf("got %v, want [2 3]", got)
+	}
+	if c.currentSize() != 1 {
+		t.Fatalf("size=%d, want 1 after overwrite", c.currentSize())
+	}
+}
+
+func TestLocalCache_EnforcesMaxSize(t *testing.T) {
+	c := NewLocalCache(2, time.Minute)
+	ctx := context.Background()
+
+	c.Set(ctx, "key1", []byte{1}, time.Minute)
+	c.Set(ctx, "key2", []byte{2}, time.Minute)
+	c.Set(ctx, "key3", []byte{3}, time.Minute)
+
+	if c.currentSize() > 2 {
+		t.Fatalf("size=%d, want <= 2", c.currentSize())
+	}
+	if _, ok := c.Get(ctx, "key3"); !ok {
+		t.Fatal("expected newest key to be retained")
+	}
+}
 
 func TestLocalCache_Delete(t *testing.T) {
 	c := NewLocalCache(1000, time.Minute)

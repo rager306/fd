@@ -40,13 +40,17 @@ func (c *LocalCache) Get(_ context.Context, key string) ([]byte, bool) {
 }
 
 func (c *LocalCache) Set(_ context.Context, key string, value []byte, ttl time.Duration) {
-	_, loaded := c.data.LoadOrStore(key, &l1Entry{
+	_, loaded := c.data.Load(key)
+	c.data.Store(key, &l1Entry{
 		value:     value,
 		expiresAt: time.Now().Add(ttl),
 	})
-	if !loaded {
-		c.incrSize()
+	if loaded {
+		return
 	}
+
+	c.incrSize()
+	c.enforceMaxSize(key)
 }
 
 func (c *LocalCache) Delete(_ context.Context, key string) {
@@ -63,8 +67,39 @@ func (c *LocalCache) incrSize() {
 
 func (c *LocalCache) decrSize() {
 	c.mu.Lock()
-	c.size--
+	if c.size > 0 {
+		c.size--
+	}
 	c.mu.Unlock()
+}
+
+func (c *LocalCache) enforceMaxSize(protectedKey string) {
+	if c.maxSize <= 0 {
+		return
+	}
+
+	for c.currentSize() > c.maxSize {
+		deleted := false
+		c.data.Range(func(key, _ any) bool {
+			if key == protectedKey {
+				return true
+			}
+			if _, loaded := c.data.LoadAndDelete(key); loaded {
+				c.decrSize()
+				deleted = true
+			}
+			return false
+		})
+		if !deleted {
+			return
+		}
+	}
+}
+
+func (c *LocalCache) currentSize() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.size
 }
 
 func (c *LocalCache) evictLoop() {

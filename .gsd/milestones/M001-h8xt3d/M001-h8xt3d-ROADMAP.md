@@ -17,7 +17,7 @@
 - [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: Invalid batch dimensions or encoding formats return HTTP 400; production handler paths are tested directly.
 
-- [ ] **S03: Local cache semantics** `risk:medium` `depends:[S01]`
+- [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: L1 cache enforces documented size/overwrite semantics with tests.
 
 - [ ] **S04: Runtime configuration hardening** `risk:medium` `depends:[S02,S03]`
