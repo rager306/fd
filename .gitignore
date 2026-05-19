@@ -1,3 +1,17 @@
+# GSD local runtime artifacts
+.bg-shell/
+.gsd/STATE.md
+.gsd/audit/
+.gsd/event-log.jsonl
+.gsd/exec/
+.gsd/graphs/
+.gsd/journal/
+.gsd/notifications.jsonl
+.gsd/runtime/
+.gsd/state-manifest.json
+.gsd/gsd.db-shm
+.gsd/gsd.db-wal
+
 # Build artifacts
 fd-api
 *.exe
