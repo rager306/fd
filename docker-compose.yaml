@@ -51,7 +51,13 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru --protected-mode no
+    command: >
+      redis-server
+      --maxmemory ${REDIS_MAXMEMORY:-2gb}
+      --maxmemory-policy ${REDIS_MAXMEMORY_POLICY:-allkeys-lru}
+      --save ${REDIS_RDB_SAVE:-300 1}
+      --appendonly ${REDIS_AOF_ENABLED:-no}
+      --protected-mode no
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s

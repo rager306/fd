@@ -39,6 +39,8 @@ SAFE_ENV_KEYS = [
     "REDIS_CACHE_NO_EXPIRE",
     "REDIS_MAXMEMORY",
     "REDIS_MAXMEMORY_POLICY",
+    "REDIS_RDB_SAVE",
+    "REDIS_AOF_ENABLED",
     "EMBEDDING_MODEL_ID",
     "EMBEDDING_MODEL_REVISION",
     "EMBEDDING_CACHE_VERSION",
@@ -132,9 +134,14 @@ def collect_redis_metadata():
         stats = R.info("stats")
         server = R.info("server")
         keyspace = R.info("keyspace")
+        redis_config = {}
+        for key in ("maxmemory", "maxmemory-policy", "save", "appendonly"):
+            value = R.config_get(key).get(key)
+            redis_config[key] = value
         return {
             "available": True,
             "redis_version": server.get("redis_version"),
+            "config": redis_config,
             "used_memory_human": memory.get("used_memory_human"),
             "used_memory_peak_human": memory.get("used_memory_peak_human"),
             "mem_fragmentation_ratio": memory.get("mem_fragmentation_ratio"),

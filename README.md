@@ -82,13 +82,28 @@ Request → L1 (sync.Map, ~50ns) → L2 (Redis binary, ~0.5ms) → TEI (~70ms)
 | `BIND_HOST` | `0.0.0.0` | Bind address |
 | `PORT` | `8000` | API port |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, or `error`; `debug` enables cache-path events |
+| `REDIS_CACHE_TTL` | `24h` | Redis L2 embedding TTL, parsed as a Go duration; ignored when no-expire mode is enabled |
+| `REDIS_CACHE_NO_EXPIRE` | `false` | Set `true` for long-lived reusable research cache entries with no key TTL |
+| `EMBEDDING_CACHE_VERSION` | `v2` | Cache schema/version namespace. Default preserves existing `v2` keys |
+| `EMBEDDING_MODEL_ID` | unset | Optional model namespace component for Redis keys; set for long-lived multi-model research caches |
+| `EMBEDDING_MODEL_REVISION` | unset | Optional model revision namespace component |
+| `EMBEDDING_TOKENIZER_VERSION` | unset | Optional tokenizer namespace component |
+| `EMBEDDING_CHUNKING_VERSION` | unset | Optional chunking/splitting namespace component |
+| `REDIS_MAXMEMORY` | `2gb` | Redis server maxmemory used by Compose |
+| `REDIS_MAXMEMORY_POLICY` | `allkeys-lru` | Redis eviction policy used by Compose |
+| `REDIS_RDB_SAVE` | `300 1` | Redis RDB snapshot rule for rebuildable cache persistence |
+| `REDIS_AOF_ENABLED` | `no` | Redis appendonly mode; keep `no` unless cache write loss is more expensive than AOF overhead |
 
 ## Operational Notes
 
-### Redis exposure and host tuning
+### Redis exposure, persistence, and host tuning
 
 - The base Compose file does not publish Redis to the host. The local override binds Redis to `127.0.0.1:6379` so `benchmark.py` can run from the host without exposing Redis on all interfaces.
 - Do not change the override to `6379:6379` unless you also add proper network access controls. Runtime validation previously observed unsolicited external Redis traffic when Redis was exposed on `0.0.0.0:6379`.
+- Redis L2 is a rebuildable embedding cache, not the source of truth. Compose defaults to an RDB-first persistence profile (`REDIS_RDB_SAVE="300 1"`, `REDIS_AOF_ENABLED=no`) so cache entries can survive normal Redis/container restarts while avoiding AOF write overhead.
+- For repeated research/chunking workflows, set `REDIS_CACHE_TTL` to a long duration such as `168h` or set `REDIS_CACHE_NO_EXPIRE=true`. Do not set both at once; the API rejects that configuration at startup.
+- For long-lived or multi-model cache reuse, set `EMBEDDING_MODEL_ID`, `EMBEDDING_MODEL_REVISION`, `EMBEDDING_TOKENIZER_VERSION`, and `EMBEDDING_CHUNKING_VERSION` as appropriate. Redis keys use short hashes of these values; benchmark artifacts record the clear effective config values for comparison.
+- Redis memory behavior is controlled by `REDIS_MAXMEMORY` and `REDIS_MAXMEMORY_POLICY` in Compose. `allkeys-lru` is the default; `allkeys-lfu` may be worth benchmarking for repeated chunk reuse.
 - Redis may log `Memory overcommit must be enabled`. That is a host-level deployment note, not an application bug. For hosts that rely on Redis persistence/background saves, set `vm.overcommit_memory=1` through the host's normal sysctl management.
 
 ### TEI backend artifacts

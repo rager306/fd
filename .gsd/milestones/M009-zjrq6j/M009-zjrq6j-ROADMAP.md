@@ -18,7 +18,7 @@
 - [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: After this, Redis cache retention and namespace can be tuned safely for long-lived research reuse.
 
-- [ ] **S03: Redis persistence hardening** `risk:medium` `depends:[S02]`
+- [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: After this, local Redis can survive restarts for research cache reuse with documented memory/eviction policy.
 
 - [ ] **S04: Redis batch hit benchmark** `risk:medium` `depends:[S01,S02]`
