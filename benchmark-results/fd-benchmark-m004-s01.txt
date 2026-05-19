@@ -1,0 +1,53 @@
+======================================================================
+EMBEDDING BENCHMARK — Russian Text / Redis Cache
+Model: deepvk/USER-bge-m3 (1024 dimensions)
+======================================================================
+
+[warmup]... OK
+
+## 1. Single-Request Latency (cold vs warm, 5 runs each)
+
+Label                     Chars     COLD mean  WARM mean  Speedup
+-----------------------------------------------------------------
+short (11 chars)             17        29.4ms      1.86ms    15.8x
+medium (84 chars)            73        24.8ms      2.88ms     8.6x
+long (446 chars)            422        84.3ms      2.04ms    41.3x
+very_long (864 chars)       693       144.5ms      2.15ms    67.3x
+
+## 2. Repeated Requests — Cache Hit Behavior (100 requests)
+
+  text: Москва — столица России, город с богатой историей и культурн...
+  mean:   1.56ms
+  stdev:  0.37ms
+  min:    1.04ms
+  p50:    1.49ms
+  p95:    2.31ms
+  p99:    3.64ms
+  max:    3.64ms
+
+## 3. Throughput — Concurrent Requests (5s window)
+
+ Concurrency    Req/s  Mean ms   p50 ms   p95 ms
+--------------------------------------------------
+           1    530.6      1.7ms      1.6ms      2.5ms
+           4    714.0      4.8ms      4.6ms      7.9ms
+           8    665.4     10.7ms     10.0ms     19.6ms
+          16    742.8     19.4ms     18.3ms     33.7ms
+
+## 4. Response Format Verification
+
+  dimensions:  1024
+  model:       deepvk/USER-bge-m3
+  object:      list
+  usage/prompt_tokens: 2
+
+======================================================================
+SUMMARY
+======================================================================
+
+  Best cold latency:  24.8ms (medium (84 chars))
+  Cache speedup:      67.3x (median text)
+  Warm latency mean:  2.23ms
+  Max throughput:     ~743 req/s (16 concurrent)
+
+======================================================================

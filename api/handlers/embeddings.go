@@ -68,7 +68,6 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 
 	for i, text := range texts {
 		emb, err := h.cache.GetOrLoad(ctx, text, dims, func(ctx context.Context) ([]float32, error) {
-			h.logger.Info("cache miss, calling TEI", "text_len", len(text))
 			embs, err := h.teiClient.Embed(ctx, []string{text})
 			if err != nil {
 				return nil, err
@@ -110,6 +109,5 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 		},
 	}
 
-	h.logger.Info("embeddings generated", "count", len(embeddings))
 	c.JSON(http.StatusOK, response)
 }

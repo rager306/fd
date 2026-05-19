@@ -1,0 +1,60 @@
+======================================================================
+EMBEDDING BENCHMARK — Russian Text / Redis Cache
+Model: deepvk/USER-bge-m3 (1024 dimensions)
+======================================================================
+
+[warmup]... OK
+
+## 1. Single-Request Latency (cold vs warm, 5 runs each)
+
+Label                     Chars     COLD mean  WARM mean  Speedup
+-----------------------------------------------------------------
+short (11 chars)             17        54.4ms      1.64ms    33.1x
+medium (84 chars)            73        59.9ms      1.61ms    37.3x
+long (446 chars)            422       122.2ms      1.84ms    66.4x
+very_long (864 chars)       693       187.7ms      1.86ms   100.8x
+
+## 2. Repeated Requests — Cache Hit Behavior (100 requests)
+
+  text: Москва — столица России, город с богатой историей и культурн...
+  mean:   2.42ms
+  stdev:  0.94ms
+  min:    1.35ms
+  p50:    2.16ms
+  p95:    4.59ms
+  p99:    5.74ms
+  max:    5.74ms
+
+## 3. Throughput — Concurrent Requests (5s window)
+
+ Concurrency    Req/s  Mean ms   p50 ms   p95 ms
+--------------------------------------------------
+           1    477.8      1.9ms      1.8ms      2.7ms
+           4    643.6      5.4ms      5.2ms      8.7ms
+           8    573.6     12.4ms     11.8ms     21.3ms
+          16    637.8     22.8ms     21.5ms     39.0ms
+
+## 4. Response Format Verification
+
+  dimensions:  1024
+  model:       deepvk/USER-bge-m3
+  object:      list
+  usage/prompt_tokens: 2
+
+## 5. Redis L2 Persistence — After API Restart
+
+  prime/cold request:      291.34ms
+  after API restart:       2.21ms
+  expectation:             served from Redis L2, then backfilled into L1
+
+======================================================================
+SUMMARY
+======================================================================
+
+  Best cold latency:  54.4ms (short (11 chars))
+  Cache speedup:      100.8x (median text)
+  Warm latency mean:  1.74ms
+  Max throughput:     ~644 req/s (4 concurrent)
+  Redis L2 restart:   2.21ms after API restart
+
+======================================================================

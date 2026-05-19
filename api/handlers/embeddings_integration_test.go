@@ -42,6 +42,10 @@ func testLogger() *slog.Logger {
 	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
+func bufferLogger(buf *bytes.Buffer) *slog.Logger {
+	return slog.New(slog.NewTextHandler(buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+}
+
 func postJSON(router *gin.Engine, path string, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, path, bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -258,6 +262,46 @@ func TestCreateBatchEmbeddings_Base64Response(t *testing.T) {
 	}
 	if _, err := base64.StdEncoding.DecodeString(resp.Embeddings[0]); err != nil {
 		t.Fatalf("embedding is not valid base64: %v", err)
+	}
+}
+
+func TestCreateEmbedding_SuccessDoesNotEmitInfo(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	var logs bytes.Buffer
+	embedder := &mockEmbedder{embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
+		return [][]float32{{0.1, 0.2, 0.3}}, nil
+	}}
+	handler := NewEmbeddingsHandler(embedder, &mockEmbeddingCache{}, "test-model", bufferLogger(&logs))
+	router := gin.New()
+	router.POST("/v1/embeddings", handler.CreateEmbedding)
+
+	w := postJSON(router, "/v1/embeddings", `{"model":"test","input":"hello"}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d. body: %s", w.Code, w.Body.String())
+	}
+	if logs.Len() != 0 {
+		t.Fatalf("successful embedding request emitted info logs: %s", logs.String())
+	}
+}
+
+func TestCreateBatchEmbeddings_SuccessDoesNotEmitInfo(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	var logs bytes.Buffer
+	embedder := &mockEmbedder{embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
+		return [][]float32{{1, 2, 3, 4}}, nil
+	}}
+	handler := NewBatchHandler(embedder, &mockEmbeddingCache{}, "test-model", bufferLogger(&logs))
+	router := gin.New()
+	router.POST("/embeddings/batch", handler.CreateBatchEmbeddings)
+
+	w := postJSON(router, "/embeddings/batch", `{"inputs":["hello"]}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d. body: %s", w.Code, w.Body.String())
+	}
+	if logs.Len() != 0 {
+		t.Fatalf("successful batch request emitted info logs: %s", logs.String())
 	}
 }
 

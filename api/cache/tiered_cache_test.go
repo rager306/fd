@@ -1,18 +1,25 @@
 package cache
 
 import (
+	"bytes"
 	"context"
+	"io"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
 )
+
+func newDiscardLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
+}
 
 func TestTieredCache_GetOrLoad_SeparatesDimensionsForSameText(t *testing.T) {
 	ctx := context.Background()
 	local := NewLocalCache(100, time.Minute)
 	redis := NewRedisCache("127.0.0.1:0", "test:", 1)
 	defer redis.Close()
-	tc := NewTieredCache(local, redis, time.Minute)
+	tc := NewTieredCacheWithLogger(local, redis, time.Minute, newDiscardLogger())
 
 	loads := 0
 	loader := func(context.Context) ([]float32, error) {
@@ -49,7 +56,7 @@ func TestTieredCache_GetOrLoad_ReturnsErrorForShortEmbedding(t *testing.T) {
 	local := NewLocalCache(100, time.Minute)
 	redis := NewRedisCache("127.0.0.1:0", "test:", 1)
 	defer redis.Close()
-	tc := NewTieredCache(local, redis, time.Minute)
+	tc := NewTieredCacheWithLogger(local, redis, time.Minute, newDiscardLogger())
 
 	_, err := tc.GetOrLoad(ctx, "short text", 512, func(context.Context) ([]float32, error) {
 		return make([]float32, 128), nil
@@ -59,5 +66,38 @@ func TestTieredCache_GetOrLoad_ReturnsErrorForShortEmbedding(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "shorter than requested dimension") {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestTieredCache_GetOrLoad_EmitsDebugCachePathWithoutRawKey(t *testing.T) {
+	ctx := context.Background()
+	local := NewLocalCache(100, time.Minute)
+	redis := NewRedisCache("127.0.0.1:0", "test:", 1)
+	defer redis.Close()
+
+	var logs bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	tc := NewTieredCacheWithLogger(local, redis, time.Minute, logger)
+
+	const rawText = "sensitive benchmark text"
+	loader := func(context.Context) ([]float32, error) {
+		return make([]float32, 1024), nil
+	}
+
+	if _, err := tc.GetOrLoad(ctx, rawText, 1024, loader); err != nil {
+		t.Fatalf("first GetOrLoad error: %v", err)
+	}
+	if _, err := tc.GetOrLoad(ctx, rawText, 1024, loader); err != nil {
+		t.Fatalf("second GetOrLoad error: %v", err)
+	}
+
+	got := logs.String()
+	for _, event := range []string{"cache_miss_load", "cache_l1_hit"} {
+		if !strings.Contains(got, event) {
+			t.Fatalf("expected log event %q in logs: %s", event, got)
+		}
+	}
+	if strings.Contains(got, rawText) {
+		t.Fatalf("cache logs leaked raw key text: %s", got)
 	}
 }

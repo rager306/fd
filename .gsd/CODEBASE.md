@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-19T07:59:00Z | Files: 32 | Described: 0/32
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T07:59:00Z","fingerprint":"bad550381f5cccbf3391318b7e992f336b009740","fileCount":32,"truncated":false} -->
+Generated: 2026-05-19T10:05:18Z | Files: 34 | Described: 0/34
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T10:05:18Z","fingerprint":"e54c4280af15f35e17e413bdbc84706defbc5d89","fileCount":34,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -40,6 +40,10 @@ Generated: 2026-05-19T07:59:00Z | Files: 32 | Described: 0/32
 - `api/handlers/embeddings_integration_test.go`
 - `api/handlers/embeddings.go`
 - `api/handlers/health.go`
+
+### benchmark-results/
+- `benchmark-results/fd-benchmark-baseline-py313.txt`
+- `benchmark-results/fd-runtime-stats-logs.txt`
 
 ### docs/superpowers/plans/
 - `docs/superpowers/plans/2026-05-14-fd-tiered-cache-redesign.md`

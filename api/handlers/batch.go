@@ -65,7 +65,6 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	embeddings := make([]string, len(req.Inputs))
 	for i, text := range req.Inputs {
 		emb, err := h.cache.GetOrLoad(ctx, text, dims, func(ctx context.Context) ([]float32, error) {
-			h.logger.Info("batch cache miss, calling TEI", "index", i)
 			embs, err := h.teiClient.Embed(ctx, []string{text})
 			if err != nil {
 				return nil, err
@@ -86,7 +85,6 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 		embeddings[i] = encodeEmbedding(fullEmb, req.EncodingFormat)
 	}
 
-	h.logger.Info("batch embeddings generated", "count", len(req.Inputs))
 	c.JSON(http.StatusOK, embed.BatchEmbeddingsResponse{
 		Embeddings: embeddings,
 		Count:      len(req.Inputs),
