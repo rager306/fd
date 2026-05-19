@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-19T16:49:04Z | Files: 41 | Described: 0/41
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T16:49:04Z","fingerprint":"fc8d6aa10db4e77e7987d5d157dc0babe4234f1d","fileCount":41,"truncated":false} -->
+Generated: 2026-05-19T17:21:23Z | Files: 42 | Described: 0/42
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T17:21:23Z","fingerprint":"8bc7bf6e67c4784f45d80d386b285c89625ecabb","fileCount":42,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -52,6 +52,7 @@ Generated: 2026-05-19T16:49:04Z | Files: 41 | Described: 0/41
 - `benchmark-results/fd-benchmark-m004-final.txt`
 - `benchmark-results/fd-benchmark-m004-s01.txt`
 - `benchmark-results/fd-benchmark-m004-s03.txt`
+- `benchmark-results/fd-environment-inxi-m008.txt`
 - `benchmark-results/fd-runtime-stats-logs.txt`
 
 ### docs/superpowers/plans/

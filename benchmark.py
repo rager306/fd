@@ -4,27 +4,198 @@ Benchmark: Russian text embedding latency and cache performance.
 Runs from the host — API at localhost:8000, Redis at localhost:6379.
 """
 
-import time
+import hashlib
+import json
+import os
+from pathlib import Path
 import statistics
-import requests
 import subprocess
+import time
+
 import redis
+import requests
 
-API = "http://localhost:8000"
-R = redis.Redis(host="localhost", port=6379, decode_responses=True)
+API = os.getenv("BENCHMARK_API_URL", "http://localhost:8000")
+MODEL = os.getenv("BENCHMARK_MODEL", "deepvk/USER-bge-m3")
+DIMENSIONS = int(os.getenv("BENCHMARK_DIMENSIONS", "1024"))
+ENVIRONMENT_BASELINE = Path(os.getenv("BENCHMARK_ENVIRONMENT_BASELINE", "benchmark-results/fd-environment-inxi-m008.txt"))
+SNAPSHOT_VERSION = 1
+R = redis.Redis(host=os.getenv("BENCHMARK_REDIS_HOST", "localhost"), port=int(os.getenv("BENCHMARK_REDIS_PORT", "6379")), decode_responses=True)
 
-# Russian test texts of varying length
+SAFE_ENV_KEYS = [
+    "BENCHMARK_API_URL",
+    "BENCHMARK_MODEL",
+    "BENCHMARK_DIMENSIONS",
+    "BENCHMARK_REDIS_HOST",
+    "BENCHMARK_REDIS_PORT",
+    "BENCHMARK_ENVIRONMENT_BASELINE",
+    "PORT",
+    "LOG_LEVEL",
+    "REDIS_HOST",
+    "REDIS_PORT",
+    "REDIS_CACHE_TTL",
+    "REDIS_CACHE_NO_EXPIRE",
+    "REDIS_MAXMEMORY",
+    "REDIS_MAXMEMORY_POLICY",
+    "EMBEDDING_MODEL_ID",
+    "EMBEDDING_MODEL_REVISION",
+    "EMBEDDING_CACHE_VERSION",
+    "EMBEDDING_TOKENIZER_VERSION",
+    "EMBEDDING_CHUNKING_VERSION",
+    "LOCAL_CACHE_TTL",
+    "LOCAL_CACHE_MAX_SIZE",
+    "BATCH_CACHE_MODE",
+    "BATCH_CACHE_PIPELINE_SIZE",
+]
+SECRET_KEY_PARTS = ("SECRET", "TOKEN", "PASSWORD", "PASS", "KEY", "CREDENTIAL", "AUTH", "COOKIE")
+
+
+def is_secret_like(key: str) -> bool:
+    upper_key = key.upper()
+    return any(part in upper_key for part in SECRET_KEY_PARTS)
+
+
+def run_metadata_command(args: list[str], timeout=10):
+    try:
+        result = subprocess.run(
+            args,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=timeout,
+        )
+        return result.stdout.strip() or None
+    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return None
+
+
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def sha256_file(path: Path):
+    if not path.exists() or not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def collect_git_metadata():
+    commit = run_metadata_command(["git", "rev-parse", "HEAD"])
+    branch = run_metadata_command(["git", "branch", "--show-current"])
+    status = run_metadata_command(["git", "status", "--short"])
+    return {
+        "commit": commit,
+        "branch": branch,
+        "dirty": bool(status),
+    }
+
+
+def collect_compose_metadata():
+    compose_config = run_metadata_command(["docker", "compose", "config"], timeout=20)
+    images_output = run_metadata_command(["docker", "compose", "images"], timeout=20)
+    images = images_output.splitlines() if images_output else []
+    return {
+        "config_sha256": sha256_text(compose_config) if compose_config else None,
+        "images_output_sha256": sha256_text(images_output) if images_output else None,
+        "images_available": images_output is not None,
+        "images": images,
+    }
+
+
+def collect_safe_environment():
+    values = {}
+    omitted_secret_like = []
+    for key in SAFE_ENV_KEYS:
+        if key not in os.environ:
+            continue
+        if is_secret_like(key):
+            omitted_secret_like.append(key)
+            continue
+        values[key] = os.environ[key]
+    return {
+        "values": values,
+        "omitted_secret_like_keys": sorted(omitted_secret_like),
+        "allowlist_size": len(SAFE_ENV_KEYS),
+    }
+
+
+def collect_redis_metadata():
+    try:
+        memory = R.info("memory")
+        stats = R.info("stats")
+        server = R.info("server")
+        keyspace = R.info("keyspace")
+        return {
+            "available": True,
+            "redis_version": server.get("redis_version"),
+            "used_memory_human": memory.get("used_memory_human"),
+            "used_memory_peak_human": memory.get("used_memory_peak_human"),
+            "mem_fragmentation_ratio": memory.get("mem_fragmentation_ratio"),
+            "keyspace_hits": stats.get("keyspace_hits"),
+            "keyspace_misses": stats.get("keyspace_misses"),
+            "evicted_keys": stats.get("evicted_keys"),
+            "expired_keys": stats.get("expired_keys"),
+            "db0_keys": keyspace.get("db0", {}).get("keys") if isinstance(keyspace.get("db0"), dict) else None,
+        }
+    except redis.RedisError as err:
+        return {
+            "available": False,
+            "error": type(err).__name__,
+        }
+
+
+def collect_environment_baseline_metadata():
+    return {
+        "path": str(ENVIRONMENT_BASELINE),
+        "exists": ENVIRONMENT_BASELINE.exists(),
+        "sha256": sha256_file(ENVIRONMENT_BASELINE),
+    }
+
+
+def effective_config_snapshot():
+    return {
+        "snapshot_version": SNAPSHOT_VERSION,
+        "benchmark": {
+            "script": "benchmark.py",
+            "api_url": API,
+            "model": MODEL,
+            "dimensions": DIMENSIONS,
+            "input_texts_logged": False,
+        },
+        "git": collect_git_metadata(),
+        "docker_compose": collect_compose_metadata(),
+        "environment": collect_safe_environment(),
+        "redis_before_run": collect_redis_metadata(),
+        "environment_baseline": collect_environment_baseline_metadata(),
+        "redaction_policy": {
+            "mode": "allowlist_with_secret_like_omission",
+            "secret_key_parts": list(SECRET_KEY_PARTS),
+            "raw_benchmark_texts_excluded": True,
+        },
+    }
+
+
+def print_effective_config_snapshot():
+    print("\n## 0. Effective Configuration Snapshot (sanitized)\n")
+    print(json.dumps(effective_config_snapshot(), ensure_ascii=False, indent=2, sort_keys=True))
+
+
 RUSSIAN_TEXTS = {
-    "short (11 chars)": "Привет, как дела?",
-    "medium (84 chars)": "Москва — столица России, город с богатой историей и культурным наследием.",
-    "long (446 chars)": (
+    "short (17 chars)": "Привет, как дела?",
+    "medium (73 chars)": "Москва — столица России, город с богатой историей и культурным наследием.",
+    "long (422 chars)": (
         "Искусственный интеллект — это область компьютерных наук, которая занимается созданием "
         "интеллектуальных агентов, способных выполнять задачи, традиционно требующие человеческого "
         "интеллекта. К таким задачам относятся распознавание речи, принятие решений, понимание "
         "естественного языка и визуальное восприятие. Современные языковые модели способны "
         "генерировать связный текст, отвечать на вопросы и даже писать программный код."
     ),
-    "very_long (864 chars)": (
+    "very_long (693 chars)": (
         "В современном мире технологии машинного обучения и глубокого обучения играют ключевую роль "
         "в развитии искусственного интеллекта. Нейронные сети с миллионами параметров обучаются на "
         "огромных корпусах текстов, что позволяет им понимать контекст, семантику и даже эмоциональную "
@@ -42,7 +213,7 @@ def flush_cache():
 
 
 def call_api(text: str, timeout=120):
-    payload = {"model": "deepvk/USER-bge-m3", "input": text, "encoding_format": "base64"}
+    payload = {"model": MODEL, "input": text, "encoding_format": "base64"}
     start = time.perf_counter()
     r = requests.post(f"{API}/v1/embeddings", json=payload, timeout=timeout)
     latency_ms = (time.perf_counter() - start) * 1000
@@ -88,8 +259,9 @@ def restart_api_for_l2_check():
 def main():
     print("=" * 70)
     print("EMBEDDING BENCHMARK — Russian Text / Redis Cache")
-    print("Model: deepvk/USER-bge-m3 (1024 dimensions)")
+    print(f"Model: {MODEL} ({DIMENSIONS} dimensions)")
     print("=" * 70)
+    print_effective_config_snapshot()
 
     # Warm up the service
     print("\n[warmup]...", end=" ", flush=True)
@@ -135,7 +307,7 @@ def main():
 
     # --- Section 2: 100 repeated requests (cache behavior) ---
     print(f"\n## 2. Repeated Requests — Cache Hit Behavior (100 requests)\n")
-    text = RUSSIAN_TEXTS["medium (84 chars)"]
+    text = RUSSIAN_TEXTS["medium (73 chars)"]
     flush_cache()
     call_api(text)  # prime
 
@@ -144,7 +316,8 @@ def main():
         lat, _ = call_api(text)
         lats.append(lat)
 
-    print(f"  text: {text[:60]}...")
+    print("  text_label: medium (73 chars)")
+    print(f"  chars: {len(text)}")
     print(f"  mean:   {statistics.mean(lats):.2f}ms")
     print(f"  stdev:  {statistics.stdev(lats):.2f}ms")
     print(f"  min:    {min(lats):.2f}ms")
@@ -164,7 +337,7 @@ def main():
         lats = []
         while not done_event.is_set():
             try:
-                lat, _ = call_api(RUSSIAN_TEXTS["medium (84 chars)"], timeout=30)
+                lat, _ = call_api(RUSSIAN_TEXTS["medium (73 chars)"], timeout=30)
                 lats.append(lat)
             except Exception:
                 break
