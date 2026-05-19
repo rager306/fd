@@ -21,7 +21,7 @@
 - [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: After this, local Redis can survive restarts for research cache reuse with documented memory/eviction policy.
 
-- [ ] **S04: Redis batch hit benchmark** `risk:medium` `depends:[S01,S02]`
+- [x] **S04: S04** `risk:medium` `depends:[]`
   > After this: After this, benchmark evidence shows whether batch cache hits are Redis round-trip limited.
 
 - [ ] **S05: MGET pipeline A B** `risk:high` `depends:[S04]`

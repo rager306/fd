@@ -230,6 +230,67 @@ def call_api(text: str, timeout=120):
     return latency_ms, r.json()
 
 
+def call_batch_api(inputs: list[str], timeout=120):
+    payload = {
+        "inputs": inputs,
+        "dimensions": DIMENSIONS,
+        "encoding_format": "base64",
+    }
+    start = time.perf_counter()
+    r = requests.post(f"{API}/embeddings/batch", json=payload, timeout=timeout)
+    latency_ms = (time.perf_counter() - start) * 1000
+    r.raise_for_status()
+    return latency_ms, r.json()
+
+
+def percentile(values: list[float], pct: float) -> float:
+    if not values:
+        return 0.0
+    idx = min(len(values) - 1, int(len(values) * pct))
+    return sorted(values)[idx]
+
+
+def print_latency_summary(prefix: str, lats: list[float]):
+    print(f"  {prefix}mean:   {statistics.mean(lats):.2f}ms")
+    print(f"  {prefix}stdev:  {statistics.stdev(lats):.2f}ms" if len(lats) > 1 else f"  {prefix}stdev:  0.00ms")
+    print(f"  {prefix}min:    {min(lats):.2f}ms")
+    print(f"  {prefix}p50:    {statistics.median(lats):.2f}ms")
+    print(f"  {prefix}p95:    {percentile(lats, 0.95):.2f}ms")
+    print(f"  {prefix}p99:    {percentile(lats, 0.99):.2f}ms")
+    print(f"  {prefix}max:    {max(lats):.2f}ms")
+
+
+def redis_stats_snapshot():
+    try:
+        stats = R.info("stats")
+        keyspace = R.info("keyspace")
+        return {
+            "keyspace_hits": int(stats.get("keyspace_hits", 0)),
+            "keyspace_misses": int(stats.get("keyspace_misses", 0)),
+            "evicted_keys": int(stats.get("evicted_keys", 0)),
+            "expired_keys": int(stats.get("expired_keys", 0)),
+            "total_commands_processed": int(stats.get("total_commands_processed", 0)),
+            "db0_keys": int(keyspace.get("db0", {}).get("keys", 0)) if isinstance(keyspace.get("db0"), dict) else 0,
+        }
+    except redis.RedisError:
+        return None
+
+
+def redis_stats_delta(before, after):
+    if before is None or after is None:
+        return None
+    return {key: after.get(key, 0) - before.get(key, 0) for key in before}
+
+
+def print_redis_delta(label: str, delta):
+    if delta is None:
+        print(f"  redis_delta/{label}: unavailable")
+        return
+    print(f"  redis_delta/{label}: hits={delta['keyspace_hits']} misses={delta['keyspace_misses']} "
+          f"evicted={delta['evicted_keys']} expired={delta['expired_keys']} "
+          f"commands={delta['total_commands_processed']} db0_key_delta={delta['db0_keys']}")
+
+
 def wait_for_api(timeout=60):
     deadline = time.perf_counter() + timeout
     last_error = ""
@@ -320,20 +381,17 @@ def main():
     flush_cache()
     call_api(text)  # prime
 
+    redis_before_l1 = redis_stats_snapshot()
     lats = []
     for _ in range(100):
         lat, _ = call_api(text)
         lats.append(lat)
+    redis_after_l1 = redis_stats_snapshot()
 
     print("  text_label: medium (73 chars)")
     print(f"  chars: {len(text)}")
-    print(f"  mean:   {statistics.mean(lats):.2f}ms")
-    print(f"  stdev:  {statistics.stdev(lats):.2f}ms")
-    print(f"  min:    {min(lats):.2f}ms")
-    print(f"  p50:    {statistics.median(lats):.2f}ms")
-    print(f"  p95:    {sorted(lats)[int(len(lats)*0.95)]:.2f}ms")
-    print(f"  p99:    {sorted(lats)[int(len(lats)*0.99)]:.2f}ms")
-    print(f"  max:    {max(lats):.2f}ms")
+    print_latency_summary("", lats)
+    print_redis_delta("l1_hot_repeated", redis_stats_delta(redis_before_l1, redis_after_l1))
 
     # --- Section 3: Throughput with concurrency ---
     print("\n## 3. Throughput — Concurrent Requests (5s window)\n")
@@ -387,7 +445,9 @@ def main():
     if not ok:
         print(f"  skipped: {reason}")
     else:
+        redis_before_l2 = redis_stats_snapshot()
         l2_lat, _ = call_api(l2_text)
+        redis_after_l2 = redis_stats_snapshot()
         l2_restart_result = {
             "prime_ms": prime_lat,
             "after_restart_ms": l2_lat,
@@ -395,6 +455,61 @@ def main():
         print(f"  prime/cold request:      {prime_lat:.2f}ms")
         print(f"  after API restart:       {l2_lat:.2f}ms")
         print("  expectation:             served from Redis L2, then backfilled into L1")
+        print_redis_delta("l2_after_api_restart", redis_stats_delta(redis_before_l2, redis_after_l2))
+
+    # --- Section 6: Cached batch endpoint behavior ---
+    print("\n## 6. Cached Batch Endpoint — L1 and Redis L2\n")
+    batch_inputs = [f"batch-cache-item-{i}" for i in range(16)]
+
+    flush_cache()
+    prime_batch_lat, prime_batch_resp = call_batch_api(batch_inputs)
+    print(f"  batch_size:               {len(batch_inputs)}")
+    print(f"  prime/cold batch:         {prime_batch_lat:.2f}ms")
+    print(f"  prime/count:              {prime_batch_resp.get('count', 'N/A')}")
+
+    redis_before_batch_l1 = redis_stats_snapshot()
+    batch_l1_lats = []
+    for _ in range(20):
+        lat, _ = call_batch_api(batch_inputs)
+        batch_l1_lats.append(lat)
+    redis_after_batch_l1 = redis_stats_snapshot()
+    print("  l1_hot_batch:")
+    print_latency_summary("  ", batch_l1_lats)
+    print_redis_delta("batch_l1_hot", redis_stats_delta(redis_before_batch_l1, redis_after_batch_l1))
+
+    ok, reason = restart_api_for_l2_check()
+    batch_l2_lats = []
+    if not ok:
+        print(f"  redis_l2_batch_after_api_restart: skipped: {reason}")
+    else:
+        redis_before_batch_l2 = redis_stats_snapshot()
+        for _ in range(10):
+            lat, _ = call_batch_api(batch_inputs)
+            batch_l2_lats.append(lat)
+        redis_after_batch_l2 = redis_stats_snapshot()
+        print("  redis_l2_batch_after_api_restart:")
+        print_latency_summary("  ", batch_l2_lats)
+        print_redis_delta("batch_l2_after_api_restart", redis_stats_delta(redis_before_batch_l2, redis_after_batch_l2))
+
+    # --- Section 7: Repeated chunk reuse pattern ---
+    print("\n## 7. Repeated Chunk Reuse Pattern\n")
+    chunk_pool = [f"research-chunk-{i}" for i in range(8)]
+    repeated_batches = [chunk_pool[i % len(chunk_pool)] for i in range(32)]
+    flush_cache()
+    redis_before_chunks = redis_stats_snapshot()
+    chunk_lats = []
+    for _ in range(8):
+        lat, _ = call_batch_api(repeated_batches)
+        chunk_lats.append(lat)
+    redis_after_chunks = redis_stats_snapshot()
+    print(f"  unique_chunks:            {len(chunk_pool)}")
+    print(f"  batch_items_per_round:    {len(repeated_batches)}")
+    print(f"  rounds:                   {len(chunk_lats)}")
+    print(f"  first_cold_round:         {chunk_lats[0]:.2f}ms")
+    warm_chunk_lats = chunk_lats[1:]
+    print("  warm_reuse_rounds:")
+    print_latency_summary("  ", warm_chunk_lats)
+    print_redis_delta("repeated_chunk_reuse", redis_stats_delta(redis_before_chunks, redis_after_chunks))
 
     # --- Summary ---
     print("\n" + "=" * 70)
@@ -412,6 +527,12 @@ def main():
         print("  Redis L2 restart:   skipped")
     else:
         print(f"  Redis L2 restart:   {l2_restart_result['after_restart_ms']:.2f}ms after API restart")
+    print(f"  Batch L1 p95:       {percentile(batch_l1_lats, 0.95):.2f}ms ({len(batch_inputs)} items)")
+    if batch_l2_lats:
+        print(f"  Batch L2 p95:       {percentile(batch_l2_lats, 0.95):.2f}ms after API restart")
+    else:
+        print("  Batch L2 p95:       skipped")
+    print(f"  Chunk reuse warm p95: {percentile(warm_chunk_lats, 0.95):.2f}ms")
 
     print("\n" + "=" * 70)
 

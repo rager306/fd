@@ -1,0 +1,177 @@
+======================================================================
+EMBEDDING BENCHMARK — Russian Text / Redis Cache
+Model: deepvk/USER-bge-m3 (1024 dimensions)
+======================================================================
+
+## 0. Effective Configuration Snapshot (sanitized)
+
+{
+  "benchmark": {
+    "api_url": "http://localhost:8000",
+    "dimensions": 1024,
+    "input_texts_logged": false,
+    "model": "deepvk/USER-bge-m3",
+    "script": "benchmark.py"
+  },
+  "docker_compose": {
+    "config_sha256": "413378452f1e52aefd4701f67ca2eb219cde8df971c7041030ca6d3012fe13d3",
+    "images": [
+      "CONTAINER           REPOSITORY                                      TAG                 PLATFORM            IMAGE ID            SIZE                CREATED",
+      "fd_api              fd-api                                          latest              linux/amd64         24cdf4e4c5f4        43.8MB              25 minutes ago",
+      "fd_redis            redis/redis-stack                               latest              linux/amd64         5d5154123426        403MB               5 days ago",
+      "fd_tei              ghcr.io/huggingface/text-embeddings-inference   cpu-1.9             linux/amd64         ad950d30878e        239MB               5 days ago"
+    ],
+    "images_available": true,
+    "images_output_sha256": "9415c01c97eeda21f6588e19fe708dd773e6202af178cd39a406e5f5d2fdeee9"
+  },
+  "environment": {
+    "allowlist_size": 27,
+    "omitted_secret_like_keys": [],
+    "values": {}
+  },
+  "environment_baseline": {
+    "exists": true,
+    "path": "benchmark-results/fd-environment-inxi-m008.txt",
+    "sha256": "97c438a26a3b00e28a9625f98660034bdca513aae22c0831cf14db149fed1ccd"
+  },
+  "git": {
+    "branch": "master",
+    "commit": "6f50d78433b7f4e8d91ff5a5deb449eef30bbebd",
+    "dirty": true
+  },
+  "redaction_policy": {
+    "mode": "allowlist_with_secret_like_omission",
+    "raw_benchmark_texts_excluded": true,
+    "secret_key_parts": [
+      "SECRET",
+      "TOKEN",
+      "PASSWORD",
+      "PASS",
+      "KEY",
+      "CREDENTIAL",
+      "AUTH",
+      "COOKIE"
+    ]
+  },
+  "redis_before_run": {
+    "available": true,
+    "config": {
+      "appendonly": "no",
+      "maxmemory": "2147483648",
+      "maxmemory-policy": "allkeys-lru",
+      "save": "300 1"
+    },
+    "db0_keys": 8,
+    "evicted_keys": 0,
+    "expired_keys": 0,
+    "keyspace_hits": 17,
+    "keyspace_misses": 31,
+    "mem_fragmentation_ratio": 8.31,
+    "redis_version": "7.4.7",
+    "used_memory_human": "1.20M",
+    "used_memory_peak_human": "1.40M"
+  },
+  "snapshot_version": 1
+}
+
+[warmup]... OK
+
+## 1. Single-Request Latency (cold vs warm, 5 runs each)
+
+Label                     Chars     COLD mean  WARM mean  Speedup
+-----------------------------------------------------------------
+short (17 chars)             17        40.2ms      2.60ms    15.5x
+medium (73 chars)            73        39.3ms      2.31ms    17.0x
+long (422 chars)            422        94.6ms      1.74ms    54.3x
+very_long (693 chars)       693       116.7ms      2.49ms    46.9x
+
+## 2. Repeated Requests — Cache Hit Behavior (100 requests)
+
+  text_label: medium (73 chars)
+  chars: 73
+  mean:   1.77ms
+  stdev:  0.49ms
+  min:    1.12ms
+  p50:    1.66ms
+  p95:    3.02ms
+  p99:    3.75ms
+  max:    3.75ms
+  redis_delta/l1_hot_repeated: hits=0 misses=0 evicted=0 expired=0 commands=2 db0_key_delta=0
+
+## 3. Throughput — Concurrent Requests (5s window)
+
+ Concurrency    Req/s  Mean ms   p50 ms   p95 ms
+--------------------------------------------------
+           1    498.4      1.8ms      1.7ms      2.6ms
+           4    716.0      4.8ms      4.5ms      8.0ms
+           8    713.6     10.0ms      9.3ms     16.8ms
+          16    690.8     21.0ms     19.8ms     36.7ms
+
+## 4. Response Format Verification
+
+  dimensions:  1024
+  model:       deepvk/USER-bge-m3
+  object:      list
+  usage/prompt_tokens: 2
+
+## 5. Redis L2 Persistence — After API Restart
+
+  prime/cold request:      219.03ms
+  after API restart:       3.87ms
+  expectation:             served from Redis L2, then backfilled into L1
+  redis_delta/l2_after_api_restart: hits=1 misses=0 evicted=0 expired=0 commands=3 db0_key_delta=0
+
+## 6. Cached Batch Endpoint — L1 and Redis L2
+
+  batch_size:               16
+  prime/cold batch:         3391.10ms
+  prime/count:              16
+  l1_hot_batch:
+    mean:   2.62ms
+    stdev:  1.24ms
+    min:    1.69ms
+    p50:    2.43ms
+    p95:    7.48ms
+    p99:    7.48ms
+    max:    7.48ms
+  redis_delta/batch_l1_hot: hits=0 misses=0 evicted=0 expired=0 commands=2 db0_key_delta=0
+  redis_l2_batch_after_api_restart:
+    mean:   2.41ms
+    stdev:  1.16ms
+    min:    1.64ms
+    p50:    2.06ms
+    p95:    5.61ms
+    p99:    5.61ms
+    max:    5.61ms
+  redis_delta/batch_l2_after_api_restart: hits=16 misses=0 evicted=0 expired=0 commands=18 db0_key_delta=0
+
+## 7. Repeated Chunk Reuse Pattern
+
+  unique_chunks:            8
+  batch_items_per_round:    32
+  rounds:                   8
+  first_cold_round:         1622.03ms
+  warm_reuse_rounds:
+    mean:   3.46ms
+    stdev:  0.51ms
+    min:    2.76ms
+    p50:    3.49ms
+    p95:    4.22ms
+    p99:    4.22ms
+    max:    4.22ms
+  redis_delta/repeated_chunk_reuse: hits=0 misses=8 evicted=0 expired=0 commands=18 db0_key_delta=8
+
+======================================================================
+SUMMARY
+======================================================================
+
+  Best cold latency:  39.3ms (medium (73 chars))
+  Cache speedup:      54.3x (median text)
+  Warm latency mean:  2.29ms
+  Max throughput:     ~716 req/s (4 concurrent)
+  Redis L2 restart:   3.87ms after API restart
+  Batch L1 p95:       7.48ms (16 items)
+  Batch L2 p95:       5.61ms after API restart
+  Chunk reuse warm p95: 4.22ms
+
+======================================================================
