@@ -1,3 +1,8 @@
+# Local AI agent/generated context
+AGENTS.md
+CLAUDE.md
+.claude/
+
 # GSD local runtime artifacts
 .bg-shell/
 .gsd/STATE.md
