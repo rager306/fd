@@ -131,6 +131,8 @@ go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 \
 
 `.golangci.yml` enables Staticcheck through GolangCI-Lint, along with `go vet`, `errcheck`, `unused`, `ineffassign`, `goconst`, and `misspell`. Use this lint command before committing Go code changes.
 
+The same quality gate is prepared for GitHub Actions in `.github/workflows/go-quality.yml`. It runs on `push`, `pull_request`, and manual dispatch for API, lint config, workflow, or README changes. Remote CI run evidence is only available after these local commits are pushed to GitHub.
+
 ### Local benchmark
 
 Prerequisites:

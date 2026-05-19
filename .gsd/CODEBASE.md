@@ -1,10 +1,11 @@
 # Codebase Map
 
-Generated: 2026-05-19T10:38:38Z | Files: 37 | Described: 0/37
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T10:38:38Z","fingerprint":"9955347fd754ae1541afe0f6e45e9c8a7d6eb278","fileCount":37,"truncated":false} -->
+Generated: 2026-05-19T12:06:58Z | Files: 40 | Described: 0/40
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T12:06:58Z","fingerprint":"a11750610d2cfbb102e26f3f92f2fa3e2632f791","fileCount":40,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
+- `.golangci.yml`
 - `benchmark.py`
 - `CHANGELOG.md`
 - `docker-compose.override.yaml`
@@ -16,6 +17,7 @@ Generated: 2026-05-19T10:38:38Z | Files: 37 | Described: 0/37
 - `api/Dockerfile`
 - `api/Dockerfile.tests`
 - `api/go.mod`
+- `api/go.sum`
 - `api/main.go`
 
 ### api/cache/
@@ -37,6 +39,7 @@ Generated: 2026-05-19T10:38:38Z | Files: 37 | Described: 0/37
 
 ### api/handlers/
 - `api/handlers/batch.go`
+- `api/handlers/constants.go`
 - `api/handlers/embeddings_integration_test.go`
 - `api/handlers/embeddings.go`
 - `api/handlers/health.go`
