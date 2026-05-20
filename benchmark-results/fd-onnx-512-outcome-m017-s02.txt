@@ -1,0 +1,75 @@
+# M017 S02 ONNX 512 Legal Quality Outcome
+
+Generated: 2026-05-20
+Scope: outcome assessment for tagged Go ONNX with `ONNX_MAX_SEQUENCE_LENGTH=512`.
+Raw legal corpus text: intentionally excluded.
+
+## Inputs
+
+- M015 ONNX 128 legal retrieval gate: `benchmark-results/fd-legal-retrieval-m015-s03.txt`
+- M016 Python ONNX sequence diagnostic: `benchmark-results/fd-onnx-sequence-diagnostics-m016-s02.txt`
+- M017 tagged Go ONNX 512 gate: `benchmark-results/fd-legal-retrieval-m017-s01-onnx512.txt`
+
+## Outcome Summary
+
+The tagged Go ONNX 512 runtime is a major quality improvement over the earlier 128-token path, but it is not sufficient for strict legal equivalence.
+
+| Gate | Runtime path | Verdict | Top-1 agreement | Mean overlap@5 | ONNX recall ratio | Minimum cross-backend cosine |
+|---|---|---:|---:|---:|---:|---:|
+| M015 | tagged ONNX HF tokenizer, 128 tokens | FAIL | `0.977011` | `0.908046` | `0.991422` | `0.369489` |
+| M016 S02 | local Python ONNX, 512 tokens, 17 worst cases | diagnostic | n/a | n/a | n/a | `0.99026363` |
+| M017 S01 | tagged Go ONNX HF tokenizer, 512 tokens | FAIL | `1.0` | `0.997701` | `1.0` | `0.98982302` |
+
+## Interpretation
+
+### What improved
+
+- Retrieval ranking parity is now very strong:
+  - top-1 agreement: `1.0`;
+  - mean overlap@5: `0.997701`;
+  - ONNX recall ratio: `1.0`.
+- The catastrophic cosine failures from the 128-token path are gone.
+- The Go tagged runtime behavior matches the M016 Python diagnostic direction: longer sequence length restores most vector equivalence.
+
+### What still fails
+
+- Strict cross-backend cosine threshold remains failed:
+  - threshold: `0.999`;
+  - observed minimum: `0.98982302`.
+- Worst remaining cases are long legal fragments still above 512 tokens.
+- Therefore, 512 tokens is necessary but not sufficient for strict legal equivalence on this legal corpus.
+
+## Decision Implication
+
+Do not promote ONNX based on the 512-token gate alone.
+
+The next implementation gate should add one of these long-text policies:
+
+1. deterministic legal chunking with stable chunk IDs and cache namespace versioning;
+2. longer-sequence ONNX/runtime variant, for example 1024 tokens, if memory and latency are acceptable;
+3. hybrid policy: 512 default plus chunking only for fragments above 512 tokens.
+
+The recommended next path is the hybrid policy:
+
+- keep 512-token ONNX as the baseline experimental path;
+- add deterministic chunking for texts that exceed 512 tokens;
+- include `EMBEDDING_CHUNKING_VERSION` or equivalent in cache namespace inputs;
+- rerun the full legal retrieval gate with an isolated namespace;
+- benchmark performance only after quality passes.
+
+## Production Safety
+
+- TEI remains production/default.
+- ONNX remains opt-in experimental.
+- Model replacement remains out of scope until candidate models pass Russian/legal corpus benchmarks.
+- The 512-token ranking improvement justifies continued ONNX remediation, not production promotion.
+
+## Acceptance Gates for Next Milestone
+
+- Chunking or longer-sequence implementation is deterministic and documented.
+- Cache namespace includes model, tokenizer, ONNX sequence length, and chunking policy version.
+- Full legal retrieval gate passes or records a new evidence-backed threshold decision.
+- Artifact hygiene check confirms no raw legal text leakage.
+- Tagged native tokenizer tests pass.
+- Default Go tests and lint pass.
+- Runtime cleanup leaves no stale ONNX server.
