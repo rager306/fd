@@ -1,0 +1,32 @@
+# Go ONNX HF Tokenizer Comparison — M013 S03
+
+## Effective Configuration
+
+```json
+{
+  "cosine_threshold": 0.999,
+  "dimensions": 1024,
+  "model": "deepvk/USER-bge-m3",
+  "onnx_api_url": "http://localhost:18000",
+  "onnx_cache_version": "m013-hf-tokenizer",
+  "raw_probe_texts_logged": false,
+  "tei_api_url": "http://localhost:8000",
+  "tokenizer": "github.com/daulet/tokenizers via hf_tokenizers build tag"
+}
+```
+
+## TEI default vs tagged Go ONNX opt-in
+
+| Label | Chars | TEI Norm | ONNX Norm | Cosine | ONNX SHA256 (float32) | Passed |
+|---|---:|---:|---:|---:|---|---|
+| contract_question_jurisdiction | 94 | 1.00000002 | 1.00000014 | 0.99999347 | `e9daa81a2c8511df5ff0ba2fceb7dbb2d77cc99abfbe186cc9d052527a7f6604` | yes |
+| contract_clause_delivery | 131 | 0.99999999 | 1.00000001 | 0.99999380 | `eebee1baba629fe6fc1386ad9caebade924c61b62ccb9a2d7cd5a09856264363` | yes |
+| labor_question_termination | 103 | 1.00000003 | 0.99999972 | 0.99999364 | `086d3f120c829838e091a8ec6697ad458cb4e0abd30567d251225bbb0bb17366` | yes |
+| civil_clause_damages | 140 | 0.99999996 | 1.00000018 | 0.99999393 | `010bcf1be461de585b4950052bc5acef9791e5aa64ecf25d6b63744f3949eb13` | yes |
+| neutral_russian_reference | 102 | 1.00000002 | 1.00000000 | 0.99999386 | `6e91ee154ba634fef76a781035d407347e71e06a464f3ffa6cbd160d4c0f3f86` | yes |
+
+## Verdict
+
+PASS
+
+Raw probe texts are intentionally excluded from this artifact.

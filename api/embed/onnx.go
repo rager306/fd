@@ -6,8 +6,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/sugarme/tokenizer"
-	"github.com/sugarme/tokenizer/pretrained"
 	ort "github.com/yalue/onnxruntime_go"
 )
 
@@ -22,10 +20,20 @@ type ONNXEmbedderOptions struct {
 
 type ONNXEmbedder struct {
 	artifact          *ONNXArtifactValidation
-	tokenizer         *tokenizer.Tokenizer
+	tokenizer         onnxTokenizer
 	session           *ort.DynamicAdvancedSession
 	maxSequenceLength int
 	mu                sync.Mutex
+}
+
+type onnxTokenEncoding struct {
+	InputIDs      []int
+	AttentionMask []int
+}
+
+type onnxTokenizer interface {
+	Encode(text string) (onnxTokenEncoding, error)
+	Close()
 }
 
 var onnxRuntimeEnvMu sync.Mutex
@@ -56,9 +64,9 @@ func NewONNXEmbedder(options ONNXEmbedderOptions) (*ONNXEmbedder, error) {
 		return nil, err
 	}
 
-	tk, err := pretrained.FromFile(options.TokenizerPath)
+	tk, err := newONNXTokenizer(options.TokenizerPath)
 	if err != nil {
-		return nil, fmt.Errorf("load onnx tokenizer %q: %w", options.TokenizerPath, err)
+		return nil, err
 	}
 
 	onnxRuntimeEnvMu.Lock()
@@ -154,10 +162,17 @@ func (e *ONNXEmbedder) Embed(ctx context.Context, texts []string) ([][]float32, 
 }
 
 func (e *ONNXEmbedder) Close() error {
-	if e == nil || e.session == nil {
+	if e == nil {
 		return nil
 	}
-	return e.session.Destroy()
+	var firstErr error
+	if e.session != nil {
+		firstErr = e.session.Destroy()
+	}
+	if e.tokenizer != nil {
+		e.tokenizer.Close()
+	}
+	return firstErr
 }
 
 func (e *ONNXEmbedder) Artifact() *ONNXArtifactValidation {
@@ -169,18 +184,21 @@ func (e *ONNXEmbedder) Artifact() *ONNXArtifactValidation {
 }
 
 func (e *ONNXEmbedder) encodeBatch(texts []string) ([]int64, []int64, int, error) {
-	encoded := make([]*tokenizer.Encoding, len(texts))
+	encoded := make([]onnxTokenEncoding, len(texts))
 	sequenceLength := 0
 	for i, text := range texts {
-		item, err := e.tokenizer.EncodeSingle(text, true)
+		item, err := e.tokenizer.Encode(text)
 		if err != nil {
 			return nil, nil, 0, fmt.Errorf("tokenize input index=%d: %w", i, err)
 		}
-		if len(item.Ids) == 0 {
+		if len(item.InputIDs) == 0 {
 			return nil, nil, 0, fmt.Errorf("tokenize input index=%d produced no tokens", i)
 		}
+		if len(item.InputIDs) != len(item.AttentionMask) {
+			return nil, nil, 0, fmt.Errorf("tokenize input index=%d produced ids/mask length mismatch", i)
+		}
 		encoded[i] = item
-		length := len(item.Ids)
+		length := len(item.InputIDs)
 		if length > e.maxSequenceLength {
 			length = e.maxSequenceLength
 		}
@@ -195,13 +213,13 @@ func (e *ONNXEmbedder) encodeBatch(texts []string) ([]int64, []int64, int, error
 	inputIDs := make([]int64, len(texts)*sequenceLength)
 	attentionMask := make([]int64, len(texts)*sequenceLength)
 	for row, item := range encoded {
-		limit := len(item.Ids)
+		limit := len(item.InputIDs)
 		if limit > sequenceLength {
 			limit = sequenceLength
 		}
 		for col := 0; col < limit; col++ {
 			offset := row*sequenceLength + col
-			inputIDs[offset] = int64(item.Ids[col])
+			inputIDs[offset] = int64(item.InputIDs[col])
 			attentionMask[offset] = int64(item.AttentionMask[col])
 		}
 	}

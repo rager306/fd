@@ -12,10 +12,7 @@ type nativeHFTokenizer struct {
 	tokenizer *tokenizers.Tokenizer
 }
 
-type nativeHFEncoding struct {
-	InputIDs      []int
-	AttentionMask []int
-}
+type nativeHFEncoding = onnxTokenEncoding
 
 func newNativeHFTokenizer(tokenizerPath string) (*nativeHFTokenizer, error) {
 	if tokenizerPath == "" {

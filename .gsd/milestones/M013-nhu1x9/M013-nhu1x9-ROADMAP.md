@@ -18,7 +18,7 @@
 - [x] **S02: S02** `risk:high` `depends:[]`
   > After this: After this, default builds stay clean and the project has an explicit opt-in tokenizer build path or a packaging blocker.
 
-- [ ] **S03: Parity correct ONNX tokenizer integration** `risk:high` `depends:[S02]`
+- [x] **S03: S03** `risk:high` `depends:[]`
   > After this: After this, the ONNX tokenizer path either uses the parity-correct binding under opt-in conditions or remains blocked with exact evidence.
 
 - [ ] **S04: Final native packaging gate decision** `risk:medium` `depends:[S03]`
