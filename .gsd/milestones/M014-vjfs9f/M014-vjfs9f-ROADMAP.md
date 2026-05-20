@@ -15,7 +15,7 @@
 - [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: After this, the benchmark matrix and harness changes are defined before running expensive measurements.
 
-- [ ] **S02: TEI baseline benchmark** `risk:medium` `depends:[S01]`
+- [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: After this, there is a fresh TEI default benchmark artifact to compare against tagged ONNX.
 
 - [ ] **S03: Tagged ONNX benchmark** `risk:high` `depends:[S02]`
