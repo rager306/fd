@@ -1,0 +1,120 @@
+name: ONNX Packaging Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      onnx_source_url:
+        description: "Non-secret URL or file path for user-bge-m3-dense.onnx"
+        required: true
+        type: string
+      native_tokenizer_source_url:
+        description: "Non-secret URL or file path for libtokenizers.a or archive containing it"
+        required: true
+        type: string
+      tokenizer_json_source_url:
+        description: "Optional non-secret URL or file path for tokenizer.json"
+        required: false
+        type: string
+      onnx_runtime_source_url:
+        description: "Optional non-secret URL or file path for libonnxruntime.so.1.26.0"
+        required: false
+        type: string
+      onnx_runtime_sha256:
+        description: "Required when onnx_runtime_source_url is provided"
+        required: false
+        type: string
+      image_tag:
+        description: "Local CI image tag to build"
+        required: false
+        default: "fd-api:onnx1024-ci"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: onnx-packaging-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: Provision and build opt-in ONNX image
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          cache: true
+          cache-dependency-path: api/go.sum
+
+      - name: Validate required inputs
+        env:
+          ONNX_SOURCE_URL: ${{ inputs.onnx_source_url }}
+          NATIVE_TOKENIZER_SOURCE_URL: ${{ inputs.native_tokenizer_source_url }}
+          ONNX_RUNTIME_SOURCE_URL: ${{ inputs.onnx_runtime_source_url }}
+          ONNX_RUNTIME_SHA256: ${{ inputs.onnx_runtime_sha256 }}
+        run: |
+          if [ -z "$ONNX_SOURCE_URL" ] || [ -z "$NATIVE_TOKENIZER_SOURCE_URL" ]; then
+            echo "ONNX and native tokenizer artifact sources are required."
+            exit 1
+          fi
+          if [ -n "$ONNX_RUNTIME_SOURCE_URL" ] && [ -z "$ONNX_RUNTIME_SHA256" ]; then
+            echo "onnx_runtime_sha256 is required when onnx_runtime_source_url is provided."
+            exit 1
+          fi
+
+      - name: Provision ONNX artifacts
+        env:
+          ONNX_SOURCE_URL: ${{ inputs.onnx_source_url }}
+          NATIVE_TOKENIZER_SOURCE_URL: ${{ inputs.native_tokenizer_source_url }}
+          TOKENIZER_JSON_SOURCE_URL: ${{ inputs.tokenizer_json_source_url }}
+          ONNX_RUNTIME_SOURCE_URL: ${{ inputs.onnx_runtime_source_url }}
+          ONNX_RUNTIME_SHA256: ${{ inputs.onnx_runtime_sha256 }}
+        run: |
+          args=(
+            --onnx-manifest docs/onnx-artifacts/user-bge-m3-dense-fp32.json
+            --native-tokenizer-manifest docs/onnx-artifacts/hf-tokenizers-linux-amd64.json
+            --onnx-source "$ONNX_SOURCE_URL"
+            --native-tokenizer-source "$NATIVE_TOKENIZER_SOURCE_URL"
+          )
+          if [ -n "$TOKENIZER_JSON_SOURCE_URL" ]; then
+            args+=(--tokenizer-json-source "$TOKENIZER_JSON_SOURCE_URL")
+          fi
+          if [ -n "$ONNX_RUNTIME_SOURCE_URL" ]; then
+            args+=(--onnx-runtime-source "$ONNX_RUNTIME_SOURCE_URL" --onnx-runtime-sha256 "$ONNX_RUNTIME_SHA256")
+          fi
+          python3 tools/provision_onnx_artifacts.py "${args[@]}"
+
+      - name: Verify provisioned artifacts
+        run: |
+          python3 tools/verify_onnx_artifacts.py \
+            --onnx-manifest docs/onnx-artifacts/user-bge-m3-dense-fp32.json \
+            --native-tokenizer-manifest docs/onnx-artifacts/hf-tokenizers-linux-amd64.json
+
+      - name: Run tagged tokenizer tests
+        working-directory: api
+        env:
+          CGO_LDFLAGS: -L../.gsd/runtime/tokenizers/linux-amd64
+        run: go test -tags hf_tokenizers ./embed -count=1
+
+      - name: Run ONNX native smoke tests
+        working-directory: api
+        env:
+          CGO_LDFLAGS: -L../.gsd/runtime/tokenizers/linux-amd64
+        run: go test -tags "onnx hf_tokenizers" ./embed -run 'TestNewONNXEmbedderRequiresManifestPath|TestNativeHFTokenizerMatchesBaseline' -count=1
+
+      - name: Build opt-in ONNX Docker image
+        env:
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: tools/build_onnx_image.sh
+
+      - name: Summarize next gates
+        run: |
+          echo "ONNX image build completed for manual packaging proof."
+          echo "Run packaged legal quality and packaged performance gates before any production/default promotion claim."

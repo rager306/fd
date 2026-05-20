@@ -21,6 +21,8 @@ Both local artifact paths are intentionally outside tracked source. Do not commi
 
 ## Verification
 
+See `docs/onnx-artifacts/PROVISIONING.md` for the full external artifact provisioning/cache contract. See `docs/onnx-artifacts/OPERATIONS.md` for the operational diagnostics and rollout/rollback contract.
+
 Run this before tagged ONNX tests, local packaging experiments, or benchmark evidence collection:
 
 ```bash
@@ -88,6 +90,8 @@ Full ONNX image CI is intentionally not claimed yet. It requires an external art
 - `libonnxruntime.so.1.26.0` or an equivalent pinned ONNX Runtime distribution.
 
 Only after those artifacts are provisioned and verified should CI run `IMAGE_TAG=... tools/build_onnx_image.sh`, tagged ONNX tests, packaged legal quality, and packaged performance benchmarks.
+
+A manual workflow skeleton exists at `.github/workflows/onnx-packaging.yml`. It is intentionally `workflow_dispatch` only and requires explicit artifact source inputs before it can provision artifacts, run tagged tests, and build the ONNX image. Do not use signed or secret-bearing URLs as plain workflow inputs; use masked secrets or a non-secret immutable artifact URL/cache key.
 
 ## Future Docker/CI gate
 
