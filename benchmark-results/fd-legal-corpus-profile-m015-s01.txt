@@ -1,0 +1,79 @@
+# M015 S01 Legal Corpus Profile
+
+```json
+{
+  "article_id_first_last": [
+    "1",
+    "114"
+  ],
+  "evaluation_implication": "No explicit qrels present; use TEI-vs-ONNX ranking parity plus synthetic known-item checks, not absolute relevance claims.",
+  "file": "tests/44-FZ-2026-articles.jsonl",
+  "invalid_flags": {
+    "articles": 11,
+    "clauses": 17,
+    "parts": 41,
+    "subclauses": 1
+  },
+  "length_chars": {
+    "clauses": {
+      "avg": 463.5,
+      "count": 912,
+      "max": 8216,
+      "min": 14,
+      "p50": 300,
+      "p90": 947,
+      "p95": 1508,
+      "p99": 2464
+    },
+    "parts": {
+      "avg": 1129.0,
+      "count": 668,
+      "max": 42874,
+      "min": 57,
+      "p50": 622,
+      "p90": 2321,
+      "p95": 3388,
+      "p99": 8074
+    },
+    "subclauses": {
+      "avg": 324.1,
+      "count": 272,
+      "max": 1342,
+      "min": 13,
+      "p50": 242,
+      "p90": 656,
+      "p95": 854,
+      "p99": 1108
+    }
+  },
+  "longest_ids": {
+    "clause": {
+      "chars": 8216,
+      "id": "44-FZ:43:part:1:clause:1"
+    },
+    "part": {
+      "chars": 42874,
+      "id": "44-FZ:93:part:1"
+    }
+  },
+  "raw_text_logged": false,
+  "records": {
+    "articles": 94,
+    "clauses": 912,
+    "parts": 668,
+    "subclauses": 272
+  },
+  "schema_top_level": [
+    "doc_id",
+    "chapter",
+    "article",
+    "title",
+    "parts",
+    "invalid"
+  ],
+  "sha256": "de03cda6b266085a9b1f2376afcb9dffbb00fec922dee1f1553cadcfb6d03869",
+  "title_count": 94
+}
+```
+
+Raw legal text is intentionally excluded from this artifact.

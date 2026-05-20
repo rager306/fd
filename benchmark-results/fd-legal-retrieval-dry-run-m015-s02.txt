@@ -1,0 +1,82 @@
+# M015 Russian Legal Retrieval Gate
+
+## Effective Configuration
+
+```json
+{
+  "batch_size": 16,
+  "corpus_path": "tests/44-FZ-2026-articles.jsonl",
+  "corpus_sha256": "de03cda6b266085a9b1f2376afcb9dffbb00fec922dee1f1553cadcfb6d03869",
+  "corpus_stats": {
+    "articles": 94,
+    "candidate_documents_invalid": 197,
+    "candidate_documents_non_invalid": 1655,
+    "candidate_documents_total": 1852,
+    "clauses": 912,
+    "parts": 668,
+    "subclauses": 272,
+    "title_queries_total": 76
+  },
+  "dimensions": 1024,
+  "generated_at": "2026-05-20T04:53:43.791263+00:00",
+  "max_docs": 256,
+  "max_self_queries": 64,
+  "max_title_queries": 32,
+  "model": "deepvk/USER-bge-m3",
+  "onnx": {
+    "api_url": "http://localhost:18000",
+    "cache_namespace": "m015-onnx-legal-quality",
+    "runtime_label": "tagged-onnx-hf"
+  },
+  "raw_text_logged": false,
+  "script_version": 1,
+  "selected": {
+    "document_chars": {
+      "count": 256,
+      "mean": 414.230469,
+      "min": 15.0,
+      "p50": 224.0,
+      "p95": 1577.0
+    },
+    "documents": 256,
+    "queries": 87,
+    "query_chars": {
+      "count": 87,
+      "mean": 362.551724,
+      "min": 8.0,
+      "p50": 201.0,
+      "p95": 1101.0
+    },
+    "self_document_queries": 64,
+    "title_queries": 23
+  },
+  "tei": {
+    "api_url": "http://localhost:8000",
+    "cache_namespace": "default-or-current",
+    "runtime_label": "tei-default"
+  },
+  "thresholds": {
+    "min_cross_backend_cosine": 0.999,
+    "min_mean_overlap_at_5": 0.9,
+    "min_onnx_recall_ratio": 0.98,
+    "min_top1_agreement": 0.9
+  },
+  "top_k": 5
+}
+```
+
+## Metrics
+
+```json
+{}
+```
+
+## Verdict
+
+DRY_RUN
+
+## Caveat
+
+No API calls were made; this validates corpus parsing and sanitized artifact shape only.
+
+Raw legal corpus text is intentionally excluded from this artifact.

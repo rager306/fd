@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-20T04:08:30Z | Files: 70 | Described: 0/70
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T04:08:30Z","fingerprint":"af578b903aa8e28ff87c7bb4bf74f84951c2a4f1","fileCount":70,"truncated":false} -->
+Generated: 2026-05-20T04:43:29Z | Files: 73 | Described: 0/73
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T04:43:29Z","fingerprint":"c03dacea44187cf0462d7899d4911acd8dca01a1","fileCount":73,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -57,25 +57,7 @@ Generated: 2026-05-20T04:08:30Z | Files: 70 | Described: 0/70
 - `api/handlers/health.go`
 
 ### benchmark-results/
-- `benchmark-results/fd-benchmark-baseline-py313.txt`
-- `benchmark-results/fd-benchmark-m004-final.txt`
-- `benchmark-results/fd-benchmark-m004-s01.txt`
-- `benchmark-results/fd-benchmark-m004-s03.txt`
-- `benchmark-results/fd-benchmark-m009-s01.txt`
-- `benchmark-results/fd-benchmark-m009-s02.txt`
-- `benchmark-results/fd-benchmark-m009-s03.txt`
-- `benchmark-results/fd-benchmark-m009-s04.txt`
-- `benchmark-results/fd-dense-comparator-m010-s02.txt`
-- `benchmark-results/fd-environment-inxi-m008.txt`
-- `benchmark-results/fd-go-onnx-hf-tokenizer-m013-s03.txt`
-- `benchmark-results/fd-go-onnx-m011-s03.txt`
-- `benchmark-results/fd-onnx-fp32-m010-s03.txt`
-- `benchmark-results/fd-runtime-stats-logs.txt`
-- `benchmark-results/fd-tokenizer-baseline-m012-s01.txt`
-- `benchmark-results/fd-tokenizer-go-current-m012-s02.txt`
-- `benchmark-results/fd-tokenizer-go-hf-binding-m012-s03.txt`
-- `benchmark-results/fd-tokenizer-tagged-native-m013-s02.txt`
-- `benchmark-results/fd-tokenizers-native-artifact-m013-s01.txt`
+- *(22 files: 22 .txt)*
 
 ### docs/onnx-artifacts/
 - `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`
