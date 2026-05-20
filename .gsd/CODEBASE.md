@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-20T04:43:29Z | Files: 73 | Described: 0/73
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T04:43:29Z","fingerprint":"c03dacea44187cf0462d7899d4911acd8dca01a1","fileCount":73,"truncated":false} -->
+Generated: 2026-05-20T05:13:16Z | Files: 79 | Described: 0/79
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T05:13:16Z","fingerprint":"c58cffae5588399e88e70807445a7d4eb03d589a","fileCount":79,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -57,7 +57,7 @@ Generated: 2026-05-20T04:43:29Z | Files: 73 | Described: 0/73
 - `api/handlers/health.go`
 
 ### benchmark-results/
-- *(22 files: 22 .txt)*
+- *(26 files: 26 .txt)*
 
 ### docs/onnx-artifacts/
 - `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`
@@ -70,6 +70,9 @@ Generated: 2026-05-20T04:43:29Z | Files: 73 | Described: 0/73
 - `docs/superpowers/specs/2026-05-14-fd-embedding-service-v2-design.md`
 - `docs/superpowers/specs/2026-05-14-fd-embedding-service-v2-legal-design.md`
 
+### tests/
+- `tests/44-FZ-2026-articles.jsonl`
+
 ### tests/integration/
 - `tests/integration/api_test.go`
 
@@ -77,4 +80,5 @@ Generated: 2026-05-20T04:43:29Z | Files: 73 | Described: 0/73
 - `tools/compare_dense_embeddings.py`
 - `tools/compare_onnx_dense_embeddings.py`
 - `tools/compare_tokenizers.py`
+- `tools/evaluate_legal_retrieval.py`
 - `tools/export_user_bge_m3_dense_onnx.py`

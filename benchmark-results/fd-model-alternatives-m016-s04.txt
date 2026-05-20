@@ -1,0 +1,273 @@
+# M016 S04 — Alternative Embedding Model Research for Russian Legal Retrieval
+
+## Context
+
+M015 showed that the current tagged ONNX path for `deepvk/USER-bge-m3` fails the first Russian/legal quality gate on the provided 44-ФЗ corpus. The failure is not primarily ranking parity — top-1 agreement and overlap were mostly strong — but severe cross-backend cosine outliers on longer legal fragments. This means model replacement must not be treated as an easy optimization: every candidate below must pass the same 44-ФЗ gate or a stronger labeled-qrels gate before production use.
+
+This artifact is research only. It does not switch the default model. TEI with `deepvk/USER-bge-m3` remains production/default.
+
+## Evaluation constraints for fd
+
+- Russian legal retrieval quality is mandatory.
+- CPU/KVM/QEMU host constraints matter: AMD EPYC, 12 cores, 48 GiB RAM, no swap.
+- Artifacts must record sanitized config snapshots and corpus hashes.
+- Raw legal corpus text must not be printed in artifacts.
+- Redis namespaces must isolate backend/model comparisons.
+- Candidate models must be benchmarked on `tests/44-FZ-2026-articles.jsonl` before any recommendation.
+
+## Ranked candidates
+
+### 1. `BAAI/bge-m3` or current `deepvk/USER-bge-m3` with corrected long-text path
+
+**Why rank first:** This is the closest model family to the current system and directly addresses the suspected root cause: long-context handling. BGE-M3 is designed for multi-functionality, multilinguality, and multi-granularity, with support for inputs up to 8192 tokens. Official docs describe BGE-M3 as supporting dense, sparse, and multi-vector retrieval, over 100 languages, and long documents up to 8192 tokens.
+
+**Evidence:**
+
+- Hugging Face model card: `BAAI/bge-m3` supports dense/sparse/multi-vector retrieval, 100+ languages, and up to 8192 tokens.
+- BGE docs list BGE-M3 as 569M parameters, 2.27GB model size, multilingual, multi-granularity, and 8192-token capable.
+- Milvus docs expose BGE-M3 dense dimension as 1024 and support CPU inference with fp16 disabled.
+
+**Fit for fd:**
+
+- Same 1024-dimensional shape as current API.
+- Long-context capability matches M015 failure class.
+- Existing work already exports dense FP32 ONNX for USER-BGE-M3, but current export/runtime uses max sequence length 128. The first remediation should test longer sequence length and TEI truncation parity before changing model.
+
+**Risks:**
+
+- Longer sequence ONNX may increase memory and latency.
+- Current exact `deepvk/USER-bge-m3` export path may need new export settings and artifact validation.
+- Full BGE-M3 multi-vector/sparse features are not represented by the current OpenAI-compatible dense-only fd API.
+
+**Benchmark requirement:**
+
+- Re-export or run with sequence lengths 512/1024/2048 where feasible.
+- Rerun M015 gate and M014 performance snapshots.
+- Include worst M015 IDs and corpus-wide metrics.
+
+### 2. `Qwen/Qwen3-Embedding-0.6B`
+
+**Why rank high:** It offers 32K context, 1024 dimensions, instruction-aware embeddings, multilingual support, and Apache 2.0 availability according to Qwen technical material. It is closer to current fd dimensionality than larger Qwen3 variants.
+
+**Evidence:**
+
+- Qwen3 Embedding model card lists 0.6B, 4B, and 8B embedding models with 32K sequence length.
+- `Qwen3-Embedding-0.6B` has 1024-dimensional embeddings and MRL support.
+- Qwen technical report states Qwen3 Embedding models are publicly available under Apache 2.0 and perform strongly on multilingual retrieval benchmarks.
+
+**Fit for fd:**
+
+- 1024 dimensions matches current storage/API assumptions.
+- Long context directly targets legal long-text retrieval.
+- Instruction-aware query formatting could improve legal question retrieval if used consistently.
+
+**Risks:**
+
+- 0.6B model is still similar/larger than BGE-M3 class and may be slower on CPU.
+- Architecture is LLM-style last-token pooling, not current BERT/CLS path; Go/ONNX export/runtime integration may be more complex.
+- Needs Russian/legal corpus validation; general multilingual MTEB is not enough.
+
+**Benchmark requirement:**
+
+- Python/SentenceTransformers baseline first; do not start with Go/ONNX.
+- Use Russian legal instruction prompt for queries and no prompt for documents, as model card suggests.
+- Compare against TEI USER-BGE-M3 on 44-ФЗ gate and a larger qrels dataset when available.
+
+### 3. `intfloat/multilingual-e5-large` or `intfloat/multilingual-e5-large-instruct`
+
+**Why rank high:** Strong multilingual retrieval family, 1024-dimensional embeddings, common deployment pattern, and explicit query/passage prefixes. It is a credible non-BGE baseline for Russian legal retrieval.
+
+**Evidence:**
+
+- Hugging Face card: `multilingual-e5-large` has 24 layers and 1024 embedding size, initialized from XLM-RoBERTa-large and trained on multilingual datasets.
+- It supports 100 languages from XLM-RoBERTa, with caveat that low-resource languages may degrade.
+- Model usage requires `query: ` and `passage: ` prefixes.
+- `multilingual-e5-large-instruct` adds instruction-style query formatting.
+
+**Fit for fd:**
+
+- 1024 dimensions match current vector shape.
+- CPU/Transformers path is straightforward.
+- Prefix discipline fits legal query/document separation.
+
+**Risks:**
+
+- Max length is generally 512, so long legal parts still require chunking.
+- Not specifically legal-domain trained.
+- E5 similarity distribution can be high/compressed; ranking metrics matter more than absolute cosine.
+
+**Benchmark requirement:**
+
+- Add model-specific query/passage prefixes in evaluator.
+- Test chunking policy explicitly; do not embed full long parts blindly.
+- Measure quality against USER-BGE-M3 TEI and against any future qrels.
+
+### 4. `d0rj/e5-large-en-ru` or `Nehc/e5-large-ru`
+
+**Why rank as targeted candidates:** These are Russian/English vocabulary-pruned variants of multilingual E5. They may reduce model size while preserving Russian retrieval quality.
+
+**Evidence:**
+
+- `d0rj/e5-large-en-ru` is described as a vocabulary-pruned version of `intfloat/multilingual-e5-large` using only Russian and English tokens.
+- Model card reports smaller size than multilingual-e5-large and comparable SberQuAD dev benchmark numbers.
+- `Nehc/e5-large-ru` is another Russian-focused E5 derivative and notes the standard `query:` / `passage:` prefix requirement and 512-token truncation.
+
+**Fit for fd:**
+
+- Better CPU footprint candidate than full multilingual-e5-large.
+- Russian-focused vocabulary is attractive for legal corpus if quality holds.
+
+**Risks:**
+
+- Smaller community/maintenance signal than intfloat or BAAI/Qwen.
+- Legal-domain evidence absent.
+- Still 512-token truncated; chunking remains necessary.
+
+**Benchmark requirement:**
+
+- Treat as experimental candidates, not production replacements.
+- Run same 44-ФЗ gate plus Sber-style Russian QA if we add a query/qrel set.
+
+### 5. `ai-forever/ru-en-RoSBERTa`
+
+**Why include:** Russian-focused modern embedding model from ai-forever, with explicit Russian/English retrieval usage and ruMTEB context.
+
+**Evidence:**
+
+- Model card: general text embedding model for Russian, based on ruRoBERTa and fine-tuned with ~4M Russian/English pairs.
+- Recommends prefixes such as `search_query:` and `search_document:` and CLS pooling.
+- The ruMTEB paper describes ru-en-RoSBERTa and a Russian-focused embedding benchmark, stating the model is on par with state-of-the-art Russian models.
+
+**Fit for fd:**
+
+- Russian-focused rather than generic multilingual.
+- Prefix design maps cleanly to query/document retrieval.
+
+**Risks:**
+
+- Likely 512-token BERT-class context; long legal documents still need chunking.
+- Dimension/pooling/API integration differs from current BGE dense path.
+- Legal-domain performance unknown.
+
+**Benchmark requirement:**
+
+- Python evaluator first.
+- Test both title/self queries and future human qrels.
+- Compare with E5 and BGE on same chunking policy.
+
+### 6. `deepvk/USER-base`
+
+**Why include:** Same USER family, Russian-only, 768 dimensions, simpler/lighter than USER-BGE-M3.
+
+**Evidence:**
+
+- Model card: Universal Sentence Encoder for Russian, initialized from `deepvk/deberta-v1-base`, trained exclusively for Russian, maps text to 768-dimensional dense vectors.
+- Supports retrieval prompts: `query:` and `passage:`.
+
+**Fit for fd:**
+
+- Russian-only fit and family continuity.
+- Potentially lighter than BGE-M3.
+
+**Risks:**
+
+- 768 dimensions would require dimension/cache/index compatibility handling.
+- May be lower quality than USER-BGE-M3 on legal retrieval.
+- Does not directly solve long-document context unless chunking is added.
+
+**Benchmark requirement:**
+
+- Only benchmark after evaluator supports non-1024 dimensions or via separate artifact path.
+- Do not mix cache namespace with 1024-dimensional backends.
+
+### 7. Reranker candidates: `Qwen3-Reranker-0.6B`, `BAAI/bge-reranker-v2-m3`
+
+**Why include separately:** Rerankers are not embedding replacements; they can improve precision after first-stage retrieval. If the first-stage embedding remains TEI/USER-BGE-M3, a reranker can improve legal results without replacing vector storage.
+
+**Evidence:**
+
+- BGE-M3 docs recommend hybrid retrieval plus reranking for RAG accuracy.
+- Qwen3 model cards list reranker variants at 0.6B/4B/8B with 32K context.
+
+**Fit for fd:**
+
+- Useful as second-stage quality improvement after retrieving top-N chunks.
+- Could avoid replacing the existing embedding cache initially.
+
+**Risks:**
+
+- Higher per-query latency.
+- Requires API/design changes beyond current embedding endpoint.
+- Needs qrels to judge absolute quality properly.
+
+**Benchmark requirement:**
+
+- Needs a qrel-style dataset or synthetic known-item top-N reranking task.
+- Measure latency separately from embedding throughput.
+
+## Models to keep as reference only for now
+
+### `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`
+
+- Good lightweight multilingual reference.
+- 384-dimensional, 128-token max sequence length.
+- Not a serious legal replacement candidate unless the goal is a very small baseline.
+- Useful as a sanity/performance floor only.
+
+### `ai-forever/sbert_large_nlu_ru`
+
+- Older Russian SBERT model.
+- Model card recommends mean pooling and shows Russian sentence embedding use.
+- Useful historical baseline, but likely not first candidate for long legal retrieval.
+
+## Recommended benchmark protocol for model alternatives
+
+1. Do not replace TEI/default. Run candidates in isolated Python evaluator first.
+2. Add evaluator support for model-specific formatting:
+   - BGE/USER: prompt or current sentence-transformer prompts.
+   - E5: `query:` / `passage:`.
+   - Qwen3: instruction-formatted query, plain documents.
+   - RoSBERTa: `search_query:` / `search_document:`.
+3. Use `tests/44-FZ-2026-articles.jsonl` with the same sanitized artifact policy.
+4. Add explicit chunking variants:
+   - no chunking, truncated by model;
+   - clause/subclause documents;
+   - sliding/token chunks for long parts.
+5. Record for every run:
+   - corpus SHA256;
+   - model id/revision/license;
+   - dimensions;
+   - max sequence length;
+   - prompt policy;
+   - runtime provider;
+   - wall time/RSS if feasible;
+   - raw text leakage check.
+6. Compare:
+   - known-item recall/MRR;
+   - top-k overlap against TEI baseline;
+   - if qrels are added, recall@k/MRR/NDCG against labels;
+   - latency and memory separately.
+
+## Recommendation
+
+The next implementation milestone should still investigate current ONNX long-text divergence first. In parallel or after that, the first alternative-model benchmark candidates should be:
+
+1. `Qwen/Qwen3-Embedding-0.6B` — best long-context alternative candidate, but CPU/runtime risk.
+2. `intfloat/multilingual-e5-large-instruct` or `intfloat/multilingual-e5-large` — strong 1024-dim multilingual baseline, needs chunking.
+3. `ai-forever/ru-en-RoSBERTa` — Russian-focused candidate with ruMTEB context.
+4. `d0rj/e5-large-en-ru` — Russian/English E5-size-reduced experiment.
+5. `deepvk/USER-base` — same family, lighter Russian-only baseline, but dimension mismatch.
+
+Do not prioritize MiniLM-style models as replacements for legal retrieval; use them only as speed/reference floors.
+
+## Sources
+
+- BAAI/bge-m3 Hugging Face model card — multi-functionality, multilinguality, 8192-token multi-granularity.
+- BGE documentation — BGE-M3 model size, 569M parameters, 2.27GB, dense/sparse/multi-vector details.
+- Milvus BGE-M3 documentation — CPU usage and dense dimension 1024.
+- Qwen3 Embedding Hugging Face model cards and technical report — 0.6B/4B/8B, 32K context, dimensions, Apache 2.0, multilingual retrieval.
+- LangChain SentenceTransformers docs — common model list and deployment notes for BGE-M3, Qwen3, multilingual E5.
+- intfloat/multilingual-e5-large and multilingual-e5-large-instruct model cards — 1024 dimensions, 512 token truncation, query/passage/instruction formatting.
+- d0rj/e5-large-en-ru and Nehc/e5-large-ru model cards — Russian/English E5 derivatives and SberQuAD evidence.
+- ai-forever/ru-en-RoSBERTa model card and ruMTEB paper — Russian-focused embedding model and benchmark context.
+- deepvk/USER-base model card — Russian-only USER family baseline.
