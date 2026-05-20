@@ -21,7 +21,7 @@
 - [x] **S03: S03** `risk:high` `depends:[]`
   > After this: After this, tagged ONNX performance evidence exists under comparable benchmark conditions.
 
-- [ ] **S04: Benchmark synthesis and decision** `risk:medium` `depends:[S03]`
+- [x] **S04: S04** `risk:medium` `depends:[]`
   > After this: After this, the project has a clear data-backed recommendation for ONNX performance work.
 
 ## Boundary Map

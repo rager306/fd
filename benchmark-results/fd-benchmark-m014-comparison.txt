@@ -1,0 +1,45 @@
+# fd M014 Benchmark Comparison — TEI default vs tagged ONNX HF tokenizer
+
+## Inputs
+
+- TEI baseline: `benchmark-results/fd-benchmark-m014-tei-baseline.txt`
+- Tagged ONNX: `benchmark-results/fd-benchmark-m014-onnx-hf-tokenizer.txt`
+- Correctness gate: `benchmark-results/fd-go-onnx-hf-tokenizer-m013-s03.txt` (`PASS`, cosine threshold `0.999`)
+- Raw benchmark/probe texts are intentionally excluded from artifacts.
+
+## Runtime modes
+
+- TEI: default Compose API on `http://localhost:8000`, snapshot v2, production/default runtime.
+- Tagged ONNX: local opt-in `hf_tokenizers` build on `http://localhost:18000`, snapshot v3, isolated Redis namespace `m014-onnx-hf-tokenizer`.
+- Tagged ONNX artifact metadata records native tokenizer, ONNX model, and ONNX Runtime library checksums.
+
+## Summary deltas
+
+| Metric | TEI | Tagged ONNX | Unit | ONNX delta vs TEI | Ratio | Winner |
+|---|---:|---:|---|---:|---:|---|
+| Best cold latency | 59.00 | 10.20 | ms | -82.7% | 5.78x TEI/ONNX | ONNX lower |
+| Warm latency mean | 2.25 | 1.63 | ms | -27.6% | 1.38x TEI/ONNX | ONNX lower |
+| Max throughput | 750.0 | 891.0 | req/s | +18.8% | 1.19x ONNX/TEI | ONNX higher |
+| Redis L2 restart | 2.82 | 2.70 | ms | -4.3% | 1.04x TEI/ONNX | ONNX lower |
+| Batch L1 p95 | 4.16 | 5.62 | ms | +35.1% | 0.74x TEI/ONNX | TEI lower |
+| Batch L2 p95 | 5.51 | 4.41 | ms | -20.0% | 1.25x TEI/ONNX | ONNX lower |
+| Chunk reuse warm p95 | 7.04 | 9.00 | ms | +27.8% | 0.78x TEI/ONNX | TEI lower |
+
+## Interpretation
+
+Tagged ONNX is materially faster on the uncached/cold model-bound path in this local benchmark. The largest gains are best cold latency (`5.78x` faster) and cold batch prime time (TEI `3144.81ms` vs ONNX `604.64ms`, about `5.20x` faster from the source artifacts). Warm/cache-dominated paths are closer because Redis and in-process cache dominate once vectors are cached.
+
+Throughput peak is slightly higher for ONNX in this run (`+18.8%`), but the peak occurs at 4-way concurrency for ONNX vs 16-way for TEI, so concurrency tuning and repeated runs are needed before treating this as a stable capacity result.
+
+## Caveats
+
+- This is a fixed local host benchmark on the captured KVM/QEMU AMD EPYC environment, not production hardware.
+- ONNX correctness is based on fixed-probe cosine equivalence from M013, not a broad Russian/legal retrieval evaluation.
+- Tagged ONNX still depends on local ignored artifacts: `.gsd/runtime/onnx/...` and `.gsd/runtime/tokenizers/...`.
+- Native tokenizer packaging is not Docker/CI-ready and the native manifest still references an upstream `latest` release URL.
+- Startup/RSS is operationally significant: S03 observed about 1.69 GiB RSS shortly after tagged ONNX startup.
+- TEI remains the production/default backend. No default switch is made by M014.
+
+## Recommendation
+
+Continue ONNX work, but only as an opt-in experimental path. The benchmark evidence justifies a follow-up packaging/tuning milestone for Docker/CI-native artifacts and repeated benchmark runs. It does not justify switching production default away from TEI yet.
