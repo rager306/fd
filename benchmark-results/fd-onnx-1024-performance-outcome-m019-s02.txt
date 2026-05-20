@@ -1,0 +1,72 @@
+# M019 S02 ONNX 1024 Performance Outcome
+
+Generated: 2026-05-20
+Scope: outcome assessment for tagged Go ONNX with `ONNX_MAX_SEQUENCE_LENGTH=1024` performance benchmark.
+Raw benchmark/legal text: intentionally excluded.
+
+## Inputs
+
+- TEI baseline benchmark: `benchmark-results/fd-benchmark-m014-tei-baseline.txt`
+- Prior tagged ONNX benchmark: `benchmark-results/fd-benchmark-m014-onnx-hf-tokenizer.txt`
+- ONNX 1024 benchmark: `benchmark-results/fd-benchmark-m019-onnx1024.txt`
+
+## Outcome Summary
+
+ONNX 1024 is performance-viable on the current local host and remains faster than the TEI baseline for the benchmarked workload. It is not production-ready yet because packaging, CI, artifact distribution, and operational rollout are still unvalidated.
+
+| Runtime | Quality status | Best cold latency | Warm latency mean | Max throughput | Redis L2 restart | Batch L1 p95 | Batch L2 p95 | Chunk reuse warm p95 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| TEI baseline M014 | PASS baseline | `59.0ms` | `2.25ms` | `~750 req/s` | `2.82ms` | `4.16ms` | `5.51ms` | `7.04ms` |
+| Tagged ONNX M014, 128-token path | legal quality FAIL later in M015 | `10.2ms` | `1.63ms` | `~891 req/s` | `2.70ms` | `5.62ms` | `4.41ms` | `9.00ms` |
+| Tagged ONNX M019, 1024-token path | legal quality PASS in M018 | `8.3ms` | `1.19ms` | `~858 req/s` | `2.02ms` | `4.09ms` | `6.70ms` | `6.51ms` |
+
+## Interpretation
+
+### What improved versus TEI
+
+- Cold latency remains much lower than TEI in this benchmark: `8.3ms` vs `59.0ms` best cold latency.
+- Warm latency mean is lower: `1.19ms` vs `2.25ms`.
+- Throughput is higher: `~858 req/s` vs `~750 req/s`.
+- Redis L2 restart latency is lower: `2.02ms` vs `2.82ms`.
+- Batch L1 p95 and chunk reuse p95 are slightly better than TEI in this run.
+
+### What changed versus earlier ONNX benchmark
+
+- 1024 sequence length preserved legal quality while staying in the same performance class as the prior 128-token ONNX benchmark.
+- Max throughput is lower than the earlier ONNX 128 run (`~858` vs `~891 req/s`) but still above TEI baseline.
+- Batch L2 p95 is worse than M014 ONNX 128 (`6.70ms` vs `4.41ms`) and slightly worse than TEI (`5.51ms`), but not enough to block the next packaging gate by itself.
+
+### What this does not prove
+
+- It does not prove Docker/CI reproducibility.
+- It does not prove native tokenizer artifact distribution is production-safe.
+- It does not prove the local ignored ONNX binary can be deployed safely.
+- It does not prove long-running memory stability or production operational behavior.
+- It does not authorize changing the production/default runtime.
+
+## Decision Implication
+
+ONNX 1024 has now passed both selected legal quality and local performance gates. The next gate should be operational packaging, not performance tuning.
+
+Recommended next milestone:
+
+1. Add or update an explicit 1024 runtime/artifact contract in tracked metadata.
+2. Define how the ONNX binary and native tokenizer library are supplied in Docker/CI without committing binaries.
+3. Verify checksum and failure-mode handling for both artifacts.
+4. Run default Go tests, tagged tests, Docker build/run checks, and CI-style commands.
+5. Keep TEI as production/default until packaging and operational rollout gates pass.
+
+## Production Safety
+
+- TEI remains production/default.
+- ONNX remains opt-in experimental.
+- The M019 result permits packaging/CI work to proceed; it does not permit production promotion.
+- Future chunking remains policy work for documents beyond the validated 1024-token gate, not the immediate blocker for current corpus and benchmark scope.
+
+## Required Evidence Before Promotion
+
+- 1024-specific manifest/runtime contract.
+- Artifact distribution and checksum verification.
+- Docker and CI path for native tokenizer + ONNX Runtime + ONNX artifact.
+- Startup health/failure observability for missing or mismatched artifacts.
+- Re-run legal quality and performance gates in the packaged environment.
