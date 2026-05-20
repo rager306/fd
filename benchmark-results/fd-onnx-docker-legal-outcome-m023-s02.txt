@@ -1,0 +1,48 @@
+# M023 S02 — Packaged ONNX Docker Legal Quality Outcome
+
+## Verdict
+
+PASS.
+
+The dedicated opt-in ONNX Docker image preserves the selected Russian/legal retrieval quality gate at `ONNX_MAX_SEQUENCE_LENGTH=1024` when compared against the TEI default baseline.
+
+## Evidence
+
+Primary artifact:
+
+- `benchmark-results/fd-legal-retrieval-m023-s01-onnx-docker1024.txt`
+
+Runtime labels and endpoints:
+
+- TEI baseline: `tei-default-compose` at `http://localhost:8000`
+- Packaged ONNX: `packaged-onnx1024-docker` at `http://localhost:18000`
+- ONNX Docker image: `fd-api:onnx1024-m022-final`
+- ONNX cache namespace: `m023-onnx-docker-legal`
+
+Key metrics:
+
+- minimum cross-backend cosine: `0.99989883`
+- top-1 agreement: `1.0`
+- mean overlap@5: `0.997701`
+- ONNX recall ratio: `1.0`
+
+Artifact hygiene:
+
+- raw legal text logged: `false`
+- raw legal text leak check: `0`
+
+## Interpretation
+
+This is packaged-environment quality evidence for the experimental ONNX 1024 Docker path. It confirms the local Docker image built in M022 did not regress the M018 legal quality result.
+
+It does **not** mean ONNX should become the production/default runtime.
+
+## Remaining blockers before production promotion
+
+- packaged ONNX performance benchmark against TEI baseline;
+- external artifact provisioning/cache for hosted CI and deployments;
+- full hosted CI ONNX image build after artifact provisioning exists;
+- operational diagnostics and rollout plan for missing/mismatched artifacts;
+- production default switch decision with rollback plan.
+
+Raw legal corpus text is intentionally excluded from this artifact.

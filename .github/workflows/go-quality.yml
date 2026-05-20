@@ -64,7 +64,11 @@ jobs:
 
       - name: Ensure native ONNX binaries are not tracked
         run: |
-          tracked="$(git ls-files | grep -E '(\.onnx$|libtokenizers\.a$|libonnxruntime\.so)' || true)"
+          tracked="$(git ls-files | awk '
+            $0 ~ /\.onnx$/ && $0 != "Dockerfile.onnx" { print }
+            $0 ~ /libtokenizers\.a$/ { print }
+            $0 ~ /libonnxruntime\.so(\.|$)/ { print }
+          ')"
           if [ -n "$tracked" ]; then
             echo "Tracked ONNX/native runtime binaries are not allowed:"
             echo "$tracked"

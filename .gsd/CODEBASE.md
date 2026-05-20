@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-20T10:31:24Z | Files: 96 | Described: 0/96
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T10:31:24Z","fingerprint":"c481a9881434c6a42502c4f506c77606ffd1174c","fileCount":96,"truncated":false} -->
+Generated: 2026-05-20T10:51:36Z | Files: 98 | Described: 0/98
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T10:51:36Z","fingerprint":"891dcdc61764b8f9ea129e3fd761ad0c33c0b779","fileCount":98,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -10,6 +10,7 @@ Generated: 2026-05-20T10:31:24Z | Files: 96 | Described: 0/96
 - `CHANGELOG.md`
 - `docker-compose.override.yaml`
 - `docker-compose.yaml`
+- `Dockerfile.onnx`
 - `README.md`
 
 ### .github/workflows/
@@ -81,6 +82,7 @@ Generated: 2026-05-20T10:31:24Z | Files: 96 | Described: 0/96
 - `tests/integration/api_test.go`
 
 ### tools/
+- `tools/build_onnx_image.sh`
 - `tools/compare_dense_embeddings.py`
 - `tools/compare_onnx_dense_embeddings.py`
 - `tools/compare_tokenizers.py`
