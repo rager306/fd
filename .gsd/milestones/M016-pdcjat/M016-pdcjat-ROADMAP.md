@@ -18,7 +18,7 @@
 - [x] **S02: S02** `risk:high` `depends:[]`
   > After this: After this, we know whether max sequence length 128 is the likely cause or whether another ONNX path issue remains.
 
-- [ ] **S03: Remediation option assessment** `risk:medium` `depends:[S02]`
+- [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: After this, there is a concrete next remediation plan for ONNX quality.
 
 - [x] **S04: S04** `risk:medium` `depends:[]`

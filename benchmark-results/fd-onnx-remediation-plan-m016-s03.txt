@@ -1,0 +1,152 @@
+# M016 S03 ONNX Legal Divergence Remediation Plan
+
+Generated: 2026-05-20
+Scope: decision artifact for `deepvk/USER-bge-m3` ONNX legal-divergence remediation.
+Raw legal corpus text: intentionally excluded.
+
+## Inputs
+
+- M015 legal retrieval artifact: `benchmark-results/fd-legal-retrieval-m015-s03.txt`
+- S01 divergence profile: `benchmark-results/fd-legal-divergence-profile-m016-s01.txt`
+- S02 sequence diagnostic: `benchmark-results/fd-onnx-sequence-diagnostics-m016-s02.txt`
+- Corpus: `tests/44-FZ-2026-articles.jsonl`
+
+## Evidence Summary
+
+### M015 failure class
+
+The tagged ONNX legal quality gate failed the strict equivalence threshold. The severe outliers were long legal fragments, not short fixed probes.
+
+Key M015 facts:
+
+- Verdict: FAIL.
+- Top-1 agreement: `0.977011`.
+- Mean overlap@5: `0.908046`.
+- ONNX recall ratio: `0.991422`.
+- Document cross-backend cosine min: `0.369489`.
+- Query cross-backend cosine min: `0.656612`.
+
+### S01 worst-case token profile
+
+S01 resolved all worst-case IDs against the corpus using hashes and did not emit raw text.
+
+- Worst cases: `17`.
+- Resolved cases: `17`.
+- All artifact hashes matched: `true`.
+- Cases truncated at sequence length 128: `17/17`.
+- Cases truncated at sequence length 512: `2/17`.
+- Max tokens with specials among worst cases: `697`.
+
+### S02 sequence-length diagnostic
+
+S02 compared TEI API vectors to local Python ONNX outputs on the same 17 worst cases.
+
+| ONNX max sequence length | Truncated cases | Mean cosine vs TEI | Min cosine vs TEI | Interpretation |
+|---:|---:|---:|---:|---|
+| 128 | 17/17 | `0.9204953` | `0.74389759` | Reproduces truncation-driven divergence. |
+| 512 | 2/17 | `0.99885631` | `0.99026363` | Almost restores equivalence for cases fitting within 512; still insufficient for >512-token legal fragments. |
+
+Root-cause verdict: current 128-token ONNX path is the primary cause of severe legal vector divergence. A 512-token path fixes most profiled failures but does not fully solve very long legal fragments.
+
+## Remediation Options
+
+### Option A — Re-export/wire ONNX at max sequence length 512
+
+Description: produce or configure the ONNX path so it accepts and uses sequence length 512 for `deepvk/USER-bge-m3`, then rerun the full M015 legal retrieval gate under an isolated Redis namespace.
+
+Benefits:
+
+- Directly addresses the confirmed 128-token truncation root cause.
+- S02 shows a large quality recovery on worst cases.
+- Lower implementation complexity than chunk aggregation.
+- Keeps model unchanged.
+
+Risks and gaps:
+
+- Two profiled cases still truncate at 512 and remain around `0.990` cosine, below strict equivalence.
+- Inference latency and memory may increase versus 128 and must be rebenchmarked after quality passes.
+- Go tagged ONNX path still needs runtime verification with the native HF tokenizer.
+
+Verdict: necessary next gate, but not sufficient as the final long-text policy.
+
+### Option B — Explicit legal-text chunking policy
+
+Description: split long legal fragments into deterministic chunks, embed chunks, and aggregate/search at chunk level or with a defined vector aggregation policy.
+
+Benefits:
+
+- Handles texts longer than 512 tokens without requiring very long sequence exports.
+- Aligns with legal corpus structure where clauses/subclauses can exceed model runtime limits.
+- Can reuse Redis L2 cache effectively if chunk IDs and cache namespaces include chunking version.
+
+Risks and gaps:
+
+- Retrieval semantics change and must be benchmarked against legal corpus metrics, not only cosine.
+- Aggregation strategy can hide relevant late-text details if implemented poorly.
+- Requires cache namespace discipline: include model/revision/tokenizer/chunking version and isolate benchmark namespaces.
+
+Verdict: likely required for complete legal quality, especially for cases above 512 tokens.
+
+### Option C — Longer sequence length beyond 512
+
+Description: test 1024-token ONNX/export/runtime where feasible.
+
+Benefits:
+
+- S01 max worst-case length is `697`, so 1024 would cover the profiled worst set.
+- Simpler retrieval semantics than chunking for documents under the chosen max length.
+
+Risks and gaps:
+
+- Higher memory/latency cost.
+- Artifact/runtime compatibility must be validated.
+- Does not eliminate the need for a general policy for texts longer than the selected max length.
+
+Verdict: useful diagnostic/benchmark variant, but should not replace a chunking policy for unbounded legal text.
+
+### Option D — Switch model or runtime default
+
+Description: move production/default away from TEI or replace `deepvk/USER-bge-m3`.
+
+Benefits:
+
+- None justified by M016 evidence.
+
+Risks and gaps:
+
+- Violates the model-preserving optimization decision.
+- M016 S04 alternatives are research candidates only.
+- No alternative has passed the Russian/legal corpus gate.
+
+Verdict: rejected for this remediation.
+
+## Recommended Path
+
+1. Keep TEI as production/default runtime.
+2. Keep ONNX explicit opt-in/experimental.
+3. Implement the next ONNX quality gate around a 512-token path:
+   - artifact/export/runtime accepts 512-token inputs;
+   - tagged Go path uses the native HF tokenizer;
+   - Redis namespace is isolated, for example `EMBEDDING_CACHE_VERSION=m016-onnx-512-quality`.
+4. Rerun the full M015 legal retrieval evaluator, not only the 17 worst cases.
+5. If 512 passes broad retrieval parity except >512 cases, add explicit deterministic chunking policy:
+   - stable chunk IDs;
+   - overlap policy if needed;
+   - cache namespace includes chunking version;
+   - legal retrieval metrics compare TEI baseline, ONNX 512, and chunked ONNX.
+6. Only after legal quality passes, rerun performance benchmarks and packaging/CI gates.
+
+## Acceptance Gates Before Any ONNX Promotion
+
+- Tokenizer parity remains passing for HF/native tokenizer path.
+- Full legal retrieval gate rerun passes or has an explicitly accepted threshold adjustment.
+- Redis cache namespace isolation is used for all backend comparisons.
+- Tagged native-tokenizer Go tests pass.
+- Default Go tests and lint pass.
+- Benchmark artifact records sanitized effective environment/config.
+- No raw legal corpus text appears in artifacts.
+- Native tokenizer and ONNX binaries remain untracked/ignored.
+
+## Decision
+
+The next implementation milestone should not package or tune the current 128-token ONNX path. It should first build and validate a 512-token ONNX quality gate, then add chunking or longer-sequence handling for texts beyond 512 tokens. TEI remains production/default until these gates pass.
