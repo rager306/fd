@@ -1,0 +1,72 @@
+# M024 S02 — Packaged ONNX Docker Performance Outcome
+
+## Verdict
+
+PASS.
+
+The dedicated opt-in ONNX Docker image remains locally performance-viable at `ONNX_MAX_SEQUENCE_LENGTH=1024`.
+
+## Evidence
+
+Primary artifact:
+
+- `benchmark-results/fd-benchmark-m024-onnx-docker1024.txt`
+
+Runtime/config:
+
+- runtime label: `packaged-onnx1024-docker`
+- API URL: `http://localhost:18000`
+- Docker image: `fd-api:onnx1024-m022-final`
+- build tags: `onnx,hf_tokenizers`
+- cache namespace: `m024-onnx-docker-benchmark`
+- restart command: `docker restart fd-onnx-m024-bench >/dev/null`
+- max sequence length: `1024`
+
+## Key metrics
+
+- best cold latency: `7.6ms`
+- warm latency mean: `2.03ms`
+- max throughput: `~864 req/s`
+- Redis L2 restart: `3.36ms`
+- batch L1 p95: `8.91ms`
+- batch L2 p95: `5.47ms`
+- chunk reuse warm p95: `5.24ms`
+
+## Comparison context
+
+Prior TEI baseline from M014:
+
+- best cold latency: `59.0ms`
+- warm latency mean: `2.25ms`
+- max throughput: `~750 req/s`
+
+Prior local ONNX 1024 from M019:
+
+- best cold latency: `8.3ms`
+- warm latency mean: `1.19ms`
+- max throughput: `~858 req/s`
+- Redis L2 restart: `2.02ms`
+- batch L1 p95: `4.09ms`
+- batch L2 p95: `6.70ms`
+- chunk reuse warm p95: `6.51ms`
+
+Interpretation:
+
+- Packaged ONNX cold latency and max throughput remain comparable to local ONNX and faster than the M014 TEI baseline.
+- Packaged warm single-request latency is still comparable to TEI, though slower than the M019 local ONNX run.
+- Packaged batch L1 p95 regressed versus M019 local ONNX, while batch L2 and chunk reuse remain viable.
+
+## Caveats
+
+- `benchmark.py` calls Redis `FLUSHALL`; Redis cache contents should not be assumed preserved after this run.
+- Host-side metadata cannot hash the in-container ONNX Runtime library path `/opt/onnxruntime/libonnxruntime.so.1.26.0`; the image smoke and benchmark prove it is present enough to run.
+- This is local packaged performance evidence, not hosted CI or deployment artifact provisioning evidence.
+
+## Remaining blockers before production promotion
+
+- external artifact provisioning/cache for hosted CI and deployment;
+- full hosted ONNX image build after artifact provisioning exists;
+- operational startup diagnostics for missing/mismatched artifacts;
+- rollout/rollback plan and explicit production default decision.
+
+Raw benchmark input texts are intentionally excluded from this artifact.

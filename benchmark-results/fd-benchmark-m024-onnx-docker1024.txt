@@ -1,0 +1,247 @@
+======================================================================
+EMBEDDING BENCHMARK — Russian Text / Redis Cache
+Model: deepvk/USER-bge-m3 (1024 dimensions)
+======================================================================
+
+## 0. Effective Configuration Snapshot (sanitized)
+
+{
+  "benchmark": {
+    "api_restart_command_configured": true,
+    "api_url": "http://localhost:18000",
+    "dimensions": 1024,
+    "input_texts_logged": false,
+    "model": "deepvk/USER-bge-m3",
+    "script": "benchmark.py"
+  },
+  "docker_compose": {
+    "config_sha256": "1d0e8c11605d4f86daa1fe10c667ff191aa75e3c8a4e96f08ad69fa8e8dcdf63",
+    "images": [
+      "CONTAINER           REPOSITORY                                      TAG                 PLATFORM            IMAGE ID            SIZE                CREATED",
+      "fd_api              fd-api                                          latest              linux/amd64         24cdf4e4c5f4        43.8MB              18 hours ago",
+      "fd_redis            redis/redis-stack                               latest              linux/amd64         5d5154123426        403MB               6 days ago",
+      "fd_tei              ghcr.io/huggingface/text-embeddings-inference   cpu-1.9             linux/amd64         ad950d30878e        239MB               6 days ago"
+    ],
+    "images_available": true,
+    "images_output_sha256": "f5c1229c7cf0c8d7820a044c0de2773699c6ffb1bc136c9e57267f4f99ee918c"
+  },
+  "environment": {
+    "allowlist_size": 50,
+    "omitted_secret_like_keys": [],
+    "values": {
+      "BENCHMARK_API_RESTART_COMMAND": "docker restart fd-onnx-m024-bench >/dev/null",
+      "BENCHMARK_API_URL": "http://localhost:18000",
+      "BENCHMARK_BUILD_TAGS": "onnx,hf_tokenizers",
+      "BENCHMARK_NATIVE_TOKENIZER_MANIFEST": "docs/onnx-artifacts/hf-tokenizers-linux-amd64.json",
+      "BENCHMARK_ONNX_ARTIFACT_MANIFEST": "docs/onnx-artifacts/user-bge-m3-dense-fp32.json",
+      "BENCHMARK_ONNX_RUNTIME_LIBRARY": "/opt/onnxruntime/libonnxruntime.so.1.26.0",
+      "BENCHMARK_RUNTIME_LABEL": "packaged-onnx1024-docker",
+      "EMBEDDING_BACKEND": "onnx",
+      "EMBEDDING_CACHE_VERSION": "m024-onnx-docker-benchmark",
+      "ONNX_ARTIFACT_MANIFEST": "/app/docs/onnx-artifacts/user-bge-m3-dense-fp32.json",
+      "ONNX_MAX_SEQUENCE_LENGTH": "1024",
+      "ONNX_RUNTIME_LIBRARY": "/opt/onnxruntime/libonnxruntime.so.1.26.0",
+      "ONNX_TOKENIZER_PATH": "/app/tokenizer/tokenizer.json"
+    }
+  },
+  "environment_baseline": {
+    "exists": true,
+    "path": "benchmark-results/fd-environment-inxi-m008.txt",
+    "sha256": "97c438a26a3b00e28a9625f98660034bdca513aae22c0831cf14db149fed1ccd"
+  },
+  "git": {
+    "branch": "master",
+    "commit": "fb5ce216a10e013155ffb062e2acab85e19f751c",
+    "dirty": true
+  },
+  "redaction_policy": {
+    "mode": "allowlist_with_secret_like_omission",
+    "raw_benchmark_texts_excluded": true,
+    "secret_key_parts": [
+      "SECRET",
+      "TOKEN",
+      "PASSWORD",
+      "PASS",
+      "KEY",
+      "CREDENTIAL",
+      "AUTH",
+      "COOKIE"
+    ]
+  },
+  "redis_before_run": {
+    "available": true,
+    "config": {
+      "appendonly": "no",
+      "maxmemory": "2147483648",
+      "maxmemory-policy": "allkeys-lru",
+      "save": "300 1"
+    },
+    "db0_keys": 570,
+    "evicted_keys": 0,
+    "expired_keys": 0,
+    "keyspace_hits": 2183,
+    "keyspace_misses": 1910,
+    "mem_fragmentation_ratio": 3.0,
+    "redis_version": "7.4.7",
+    "used_memory_human": "4.07M",
+    "used_memory_peak_human": "7.04M"
+  },
+  "runtime": {
+    "build_tags": [
+      "onnx",
+      "hf_tokenizers"
+    ],
+    "native_tokenizer_artifact": {
+      "artifact_actual_sha256": "e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50",
+      "artifact_exists": true,
+      "artifact_git_tracked": false,
+      "artifact_id": "hf-tokenizers-linux-amd64",
+      "artifact_label": "native_tokenizer",
+      "artifact_local_path": ".gsd/runtime/tokenizers/linux-amd64/libtokenizers.a",
+      "artifact_sha256": "e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50",
+      "artifact_size_bytes": 49776794,
+      "configured": true,
+      "library_go_module": "github.com/daulet/tokenizers",
+      "library_source_url": "https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-amd64.tar.gz",
+      "manifest_exists": true,
+      "manifest_parseable": true,
+      "manifest_path": "docs/onnx-artifacts/hf-tokenizers-linux-amd64.json",
+      "manifest_sha256": "8c1e5d31c6d60038894bd250c87f9ebfb9570709ea396ff61ade06904aa15873",
+      "model_id": null,
+      "model_revision": null,
+      "production_default": false,
+      "status": "prototype_only"
+    },
+    "onnx_artifact": {
+      "artifact_actual_sha256": "28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4",
+      "artifact_exists": true,
+      "artifact_git_tracked": false,
+      "artifact_id": "user-bge-m3-dense-fp32",
+      "artifact_label": "onnx",
+      "artifact_local_path": ".gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx",
+      "artifact_sha256": "28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4",
+      "artifact_size_bytes": 1432482908,
+      "configured": true,
+      "library_go_module": null,
+      "library_source_url": null,
+      "manifest_exists": true,
+      "manifest_parseable": true,
+      "manifest_path": "docs/onnx-artifacts/user-bge-m3-dense-fp32.json",
+      "manifest_sha256": "aacf05080240fa03f5eca4b5d874ea8e2db3daa3d4c7ccb24c43830697b428bc",
+      "model_id": "deepvk/USER-bge-m3",
+      "model_revision": "0cc6cfe48e260fb0474c753087a69369e88709ae",
+      "production_default": false,
+      "status": "experimental_validated_quality_performance_local"
+    },
+    "onnx_runtime_library": {
+      "configured": true,
+      "exists": false,
+      "path": "/opt/onnxruntime/libonnxruntime.so.1.26.0",
+      "sha256": null
+    },
+    "runtime_label": "packaged-onnx1024-docker"
+  },
+  "snapshot_version": 3
+}
+
+[warmup]... OK
+
+## 1. Single-Request Latency (cold vs warm, 5 runs each)
+
+Label                     Chars     COLD mean  WARM mean  Speedup
+-----------------------------------------------------------------
+short (17 chars)             17         7.6ms      3.48ms     2.2x
+medium (73 chars)            73        14.5ms      1.39ms    10.4x
+long (422 chars)            422        21.9ms      1.37ms    16.0x
+very_long (693 chars)       693        51.5ms      1.89ms    27.2x
+
+## 2. Repeated Requests — Cache Hit Behavior (100 requests)
+
+  text_label: medium (73 chars)
+  chars: 73
+  mean:   1.03ms
+  stdev:  0.41ms
+  min:    0.74ms
+  p50:    0.93ms
+  p95:    1.86ms
+  p99:    4.09ms
+  max:    4.09ms
+  redis_delta/l1_hot_repeated: hits=0 misses=0 evicted=0 expired=0 commands=2 db0_key_delta=0
+
+## 3. Throughput — Concurrent Requests (5s window)
+
+ Concurrency    Req/s  Mean ms   p50 ms   p95 ms
+--------------------------------------------------
+           1    754.0      1.2ms      1.1ms      1.8ms
+           4    778.6      4.4ms      4.2ms      7.4ms
+           8    863.8      8.2ms      7.7ms     13.9ms
+          16    813.0     17.6ms     16.6ms     31.3ms
+
+## 4. Response Format Verification
+
+  dimensions:  1024
+  model:       deepvk/USER-bge-m3
+  object:      list
+  usage/prompt_tokens: 2
+
+## 5. Redis L2 Persistence — After API Restart
+
+  prime/cold request:      55.06ms
+  after API restart:       3.36ms
+  expectation:             served from Redis L2, then backfilled into L1
+  redis_delta/l2_after_api_restart: hits=1 misses=0 evicted=0 expired=0 commands=3 db0_key_delta=0
+
+## 6. Cached Batch Endpoint — L1 and Redis L2
+
+  batch_size:               16
+  prime/cold batch:         1229.25ms
+  prime/count:              16
+  l1_hot_batch:
+    mean:   2.67ms
+    stdev:  1.76ms
+    min:    1.58ms
+    p50:    1.84ms
+    p95:    8.91ms
+    p99:    8.91ms
+    max:    8.91ms
+  redis_delta/batch_l1_hot: hits=0 misses=0 evicted=0 expired=0 commands=2 db0_key_delta=0
+  redis_l2_batch_after_api_restart:
+    mean:   2.28ms
+    stdev:  1.22ms
+    min:    1.45ms
+    p50:    1.81ms
+    p95:    5.47ms
+    p99:    5.47ms
+    max:    5.47ms
+  redis_delta/batch_l2_after_api_restart: hits=16 misses=0 evicted=0 expired=0 commands=18 db0_key_delta=0
+
+## 7. Repeated Chunk Reuse Pattern
+
+  unique_chunks:            8
+  batch_items_per_round:    32
+  rounds:                   8
+  first_cold_round:         394.37ms
+  warm_reuse_rounds:
+    mean:   3.09ms
+    stdev:  1.12ms
+    min:    1.96ms
+    p50:    2.74ms
+    p95:    5.24ms
+    p99:    5.24ms
+    max:    5.24ms
+  redis_delta/repeated_chunk_reuse: hits=0 misses=8 evicted=0 expired=0 commands=19 db0_key_delta=8
+
+======================================================================
+SUMMARY
+======================================================================
+
+  Best cold latency:  7.6ms (short (17 chars))
+  Cache speedup:      27.2x (median text)
+  Warm latency mean:  2.03ms
+  Max throughput:     ~864 req/s (8 concurrent)
+  Redis L2 restart:   3.36ms after API restart
+  Batch L1 p95:       8.91ms (16 items)
+  Batch L2 p95:       5.47ms after API restart
+  Chunk reuse warm p95: 5.24ms
+
+======================================================================
