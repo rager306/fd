@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-20T01:43:58Z | Files: 52 | Described: 0/52
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T01:43:58Z","fingerprint":"fa52d1a8e9310c7c370a3ebdbf92496c0d0d2b43","fileCount":52,"truncated":false} -->
+Generated: 2026-05-20T03:31:30Z | Files: 62 | Described: 0/62
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T03:31:30Z","fingerprint":"11d7f0dae8e7cd700d58b15d19bb478d11294f84","fileCount":62,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -37,6 +37,10 @@ Generated: 2026-05-20T01:43:58Z | Files: 52 | Described: 0/52
 
 ### api/embed/
 - `api/embed/dimensions_test.go`
+- `api/embed/onnx_manifest_test.go`
+- `api/embed/onnx_manifest.go`
+- `api/embed/onnx_test.go`
+- `api/embed/onnx.go`
 - `api/embed/tei.go`
 - `api/embed/types_test.go`
 - `api/embed/types.go`
@@ -59,8 +63,15 @@ Generated: 2026-05-20T01:43:58Z | Files: 52 | Described: 0/52
 - `benchmark-results/fd-benchmark-m009-s04.txt`
 - `benchmark-results/fd-dense-comparator-m010-s02.txt`
 - `benchmark-results/fd-environment-inxi-m008.txt`
+- `benchmark-results/fd-go-onnx-m011-s03.txt`
 - `benchmark-results/fd-onnx-fp32-m010-s03.txt`
 - `benchmark-results/fd-runtime-stats-logs.txt`
+- `benchmark-results/fd-tokenizer-baseline-m012-s01.txt`
+- `benchmark-results/fd-tokenizer-go-current-m012-s02.txt`
+- `benchmark-results/fd-tokenizer-go-hf-binding-m012-s03.txt`
+
+### docs/onnx-artifacts/
+- `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`
 
 ### docs/superpowers/plans/
 - `docs/superpowers/plans/2026-05-14-fd-tiered-cache-redesign.md`
@@ -75,4 +86,5 @@ Generated: 2026-05-20T01:43:58Z | Files: 52 | Described: 0/52
 ### tools/
 - `tools/compare_dense_embeddings.py`
 - `tools/compare_onnx_dense_embeddings.py`
+- `tools/compare_tokenizers.py`
 - `tools/export_user_bge_m3_dense_onnx.py`

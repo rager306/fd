@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "artifact_id": "hf-tokenizers-linux-amd64",
+  "status": "prototype_only",
+  "production_default": false,
+  "description": "Native Hugging Face Rust tokenizers static library used to test parity-correct Go tokenizer bindings for the opt-in ONNX backend. This manifest is tracked; the native binary is not tracked.",
+  "library": {
+    "go_module": "github.com/daulet/tokenizers",
+    "native_filename": "libtokenizers.a",
+    "native_kind": "static_library",
+    "upstream": "Hugging Face tokenizers Rust library via daulet/tokenizers release asset",
+    "source_url": "https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-amd64.tar.gz",
+    "archive_filename": "libtokenizers.linux-amd64.tar.gz",
+    "platform": {
+      "os": "linux",
+      "architecture": "amd64",
+      "cgo_required": true
+    }
+  },
+  "artifact": {
+    "format": "ar_static_library",
+    "local_path": ".gsd/runtime/tokenizers/linux-amd64/libtokenizers.a",
+    "s03_temp_evidence_path": "/tmp/fd-daulet-tokenizers-probe/libtokenizers.a",
+    "size_bytes": 49776794,
+    "sha256": "e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50",
+    "git_tracked": false,
+    "storage_note": "Local development artifact downloaded from the daulet/tokenizers release asset during M012/M013. Future CI/Docker use must download or cache this artifact and verify checksum before tagged builds. Do not commit the binary to git."
+  },
+  "linking": {
+    "go_build_env": {
+      "CGO_LDFLAGS": "-L.gsd/runtime/tokenizers/linux-amd64"
+    },
+    "expected_build_tag": "hf_tokenizers",
+    "default_build_requirement": "Default fd API builds must not require this artifact. The native tokenizer path must remain opt-in via build tags or equivalent isolation."
+  },
+  "validation": {
+    "tokenizer_baseline_artifact": "benchmark-results/fd-tokenizer-baseline-m012-s01.txt",
+    "current_go_mismatch_artifact": "benchmark-results/fd-tokenizer-go-current-m012-s02.txt",
+    "hf_binding_comparison_artifact": "benchmark-results/fd-tokenizer-go-hf-binding-m012-s03.txt",
+    "fixed_probe_parity": "pass",
+    "fixed_probe_count": 5,
+    "raw_probe_texts_logged": false,
+    "verdict": "pass_for_tokenizer_parity_feasibility_not_runtime_packaging"
+  },
+  "failure_contract": {
+    "missing_file": "Tagged/native tokenizer builds must fail with an actionable message naming the configured library directory and expected libtokenizers.a filename.",
+    "checksum_mismatch": "Fail before build/test use with expected and actual sha256; do not run parity or ONNX comparisons with an unverified native library.",
+    "wrong_platform": "Fail when os/architecture does not match the manifest platform.",
+    "default_build_dependency": "Default builds must fail the milestone gate if they require this native artifact without an explicit opt-in tag.",
+    "raw_text_logging": "Never log raw tokenizer probe text while validating native artifact or parity artifacts."
+  },
+  "future_gates_before_runtime_integration": [
+    "Documented local setup command to download and verify libtokenizers.a into .gsd/runtime/tokenizers/linux-amd64/",
+    "Build-tagged Go tokenizer implementation that imports github.com/daulet/tokenizers only for opt-in builds",
+    "Docker and CI path for supplying libtokenizers.a without committing it",
+    "Tagged token parity tests against benchmark-results/fd-tokenizer-baseline-m012-s01.txt",
+    "Isolated-cache TEI-vs-ONNX cosine comparison after runtime integration"
+  ]
+}

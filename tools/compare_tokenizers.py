@@ -35,7 +35,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Compare tokenizer output for fd ONNX parity work.")
     parser.add_argument(
         "--mode",
-        choices=["baseline", "go-current", "go-hf-binding"],
+        choices=["baseline", "go-current", "go-hf-binding", "validate-native-artifact"],
         default="baseline",
         help="Operation mode. Writes the HF baseline or compares the current Go tokenizer against it.",
     )
@@ -61,6 +61,18 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=Path(os.getenv("HF_TOKENIZERS_LIB_DIR", "")) if os.getenv("HF_TOKENIZERS_LIB_DIR") else None,
         help="Directory containing libtokenizers.a for go-hf-binding mode.",
+    )
+    parser.add_argument(
+        "--native-artifact-manifest",
+        type=Path,
+        default=Path("docs/onnx-artifacts/hf-tokenizers-linux-amd64.json"),
+        help="Native tokenizer artifact manifest for validate-native-artifact mode.",
+    )
+    parser.add_argument(
+        "--native-artifact-path",
+        type=Path,
+        default=None,
+        help="Optional override for the native artifact path validated against the manifest.",
     )
     parser.add_argument(
         "--baseline",
@@ -428,6 +440,77 @@ def build_go_binding_comparison(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def build_native_artifact_validation(args: argparse.Namespace) -> dict[str, Any]:
+    manifest_path = args.native_artifact_manifest
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise RuntimeError(f"failed to read native artifact manifest {manifest_path}") from exc
+    artifact = manifest.get("artifact")
+    library = manifest.get("library")
+    if not isinstance(artifact, dict) or not isinstance(library, dict):
+        raise RuntimeError("native artifact manifest missing artifact/library objects")
+    expected_sha = artifact.get("sha256")
+    expected_size = artifact.get("size_bytes")
+    manifest_local_path = artifact.get("local_path")
+    if not isinstance(expected_sha, str) or not isinstance(expected_size, int) or not isinstance(manifest_local_path, str):
+        raise RuntimeError("native artifact manifest has invalid sha256/size/local_path fields")
+    artifact_path = args.native_artifact_path or Path(manifest_local_path)
+    if not artifact_path.exists():
+        raise RuntimeError(f"native artifact missing: {artifact_path}")
+    if artifact_path.is_dir():
+        raise RuntimeError(f"native artifact path is a directory: {artifact_path}")
+    actual_size = artifact_path.stat().st_size
+    actual_sha = sha256_file(artifact_path)
+    size_ok = actual_size == expected_size
+    sha_ok = actual_sha == expected_sha
+    tracked_ok = artifact.get("git_tracked") is False
+    passed = size_ok and sha_ok and tracked_ok
+    return {
+        "script_version": SCRIPT_VERSION,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "mode": args.mode,
+        "manifest_path": str(manifest_path),
+        "artifact_id": manifest.get("artifact_id"),
+        "library": {
+            "go_module": library.get("go_module"),
+            "native_filename": library.get("native_filename"),
+            "source_url": library.get("source_url"),
+            "platform": library.get("platform"),
+        },
+        "artifact_path": str(artifact_path),
+        "expected_size_bytes": expected_size,
+        "actual_size_bytes": actual_size,
+        "expected_sha256": expected_sha,
+        "actual_sha256": actual_sha,
+        "size_ok": size_ok,
+        "sha256_ok": sha_ok,
+        "git_tracked_false": tracked_ok,
+        "raw_probe_texts_logged": False,
+        "passed": passed,
+    }
+
+
+def render_native_artifact_validation(result: dict[str, Any]) -> str:
+    lines = [
+        "# Native HF Tokenizers Artifact Validation — M013 S01",
+        "",
+        "## Result",
+        "",
+        "```json",
+        json.dumps({key: value for key, value in result.items() if key != "passed"}, ensure_ascii=False, indent=2, sort_keys=True),
+        "```",
+        "",
+        "## Verdict",
+        "",
+        "PASS" if result["passed"] else "FAIL",
+        "",
+        "Raw probe texts are intentionally excluded from this artifact.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def load_tokenizer(tokenizer_path: Path) -> Any:
     if not tokenizer_path.exists():
         raise RuntimeError(f"tokenizer path does not exist: {tokenizer_path}")
@@ -612,9 +695,12 @@ def main() -> int:
     elif args.mode == "go-current":
         result = build_go_current_comparison(args)
         artifact = render_comparison_markdown(result)
-    else:
+    elif args.mode == "go-hf-binding":
         result = build_go_binding_comparison(args)
         artifact = render_comparison_markdown(result)
+    else:
+        result = build_native_artifact_validation(args)
+        artifact = render_native_artifact_validation(result)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(artifact, encoding="utf-8")
     print(artifact)

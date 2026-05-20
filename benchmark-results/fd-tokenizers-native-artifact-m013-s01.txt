@@ -1,0 +1,38 @@
+# Native HF Tokenizers Artifact Validation — M013 S01
+
+## Result
+
+```json
+{
+  "actual_sha256": "e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50",
+  "actual_size_bytes": 49776794,
+  "artifact_id": "hf-tokenizers-linux-amd64",
+  "artifact_path": ".gsd/runtime/tokenizers/linux-amd64/libtokenizers.a",
+  "expected_sha256": "e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50",
+  "expected_size_bytes": 49776794,
+  "generated_at": "2026-05-20T03:39:03.134994+00:00",
+  "git_tracked_false": true,
+  "library": {
+    "go_module": "github.com/daulet/tokenizers",
+    "native_filename": "libtokenizers.a",
+    "platform": {
+      "architecture": "amd64",
+      "cgo_required": true,
+      "os": "linux"
+    },
+    "source_url": "https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-amd64.tar.gz"
+  },
+  "manifest_path": "docs/onnx-artifacts/hf-tokenizers-linux-amd64.json",
+  "mode": "validate-native-artifact",
+  "raw_probe_texts_logged": false,
+  "script_version": 1,
+  "sha256_ok": true,
+  "size_ok": true
+}
+```
+
+## Verdict
+
+PASS
+
+Raw probe texts are intentionally excluded from this artifact.
