@@ -21,8 +21,8 @@
 - [x] **S03: S03** `risk:high` `depends:[]`
   > After this: After this, the ONNX tokenizer path either uses the parity-correct binding under opt-in conditions or remains blocked with exact evidence.
 
-- [ ] **S04: Final native packaging gate decision** `risk:medium` `depends:[S03]`
-  > After this: After this, the project has a final gate decision: proceed to ONNX benchmark, continue packaging work, or defer ONNX runtime.
+- [x] **S04: S04** `risk:medium` `depends:[]`
+  > After this: After this, M013 closes with proof that tagged ONNX is benchmark-ready on fixed probes, while production readiness remains gated by Docker/CI packaging and broader quality evaluation.
 
 ## Boundary Map
 
