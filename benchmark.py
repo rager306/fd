@@ -19,7 +19,12 @@ API = os.getenv("BENCHMARK_API_URL", "http://localhost:8000")
 MODEL = os.getenv("BENCHMARK_MODEL", "deepvk/USER-bge-m3")
 DIMENSIONS = int(os.getenv("BENCHMARK_DIMENSIONS", "1024"))
 ENVIRONMENT_BASELINE = Path(os.getenv("BENCHMARK_ENVIRONMENT_BASELINE", "benchmark-results/fd-environment-inxi-m008.txt"))
-SNAPSHOT_VERSION = 1
+RUNTIME_LABEL = os.getenv("BENCHMARK_RUNTIME_LABEL", "tei-default")
+BUILD_TAGS = os.getenv("BENCHMARK_BUILD_TAGS", "")
+ONNX_ARTIFACT_MANIFEST = os.getenv("BENCHMARK_ONNX_ARTIFACT_MANIFEST", "")
+NATIVE_TOKENIZER_MANIFEST = os.getenv("BENCHMARK_NATIVE_TOKENIZER_MANIFEST", "")
+ONNX_RUNTIME_LIBRARY = os.getenv("BENCHMARK_ONNX_RUNTIME_LIBRARY", "")
+SNAPSHOT_VERSION = 2
 R = redis.Redis(host=os.getenv("BENCHMARK_REDIS_HOST", "localhost"), port=int(os.getenv("BENCHMARK_REDIS_PORT", "6379")), decode_responses=True)
 
 SAFE_ENV_KEYS = [
@@ -29,6 +34,11 @@ SAFE_ENV_KEYS = [
     "BENCHMARK_REDIS_HOST",
     "BENCHMARK_REDIS_PORT",
     "BENCHMARK_ENVIRONMENT_BASELINE",
+    "BENCHMARK_RUNTIME_LABEL",
+    "BENCHMARK_BUILD_TAGS",
+    "BENCHMARK_ONNX_ARTIFACT_MANIFEST",
+    "BENCHMARK_NATIVE_TOKENIZER_MANIFEST",
+    "BENCHMARK_ONNX_RUNTIME_LIBRARY",
     "PORT",
     "MODEL_ID",
     "LOG_LEVEL",
@@ -158,6 +168,76 @@ def collect_redis_metadata():
         }
 
 
+def read_json_file(path: Path):
+    if not path.exists() or not path.is_file():
+        return None
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def artifact_metadata_from_manifest(path_value: str, artifact_label: str):
+    if not path_value:
+        return {
+            "configured": False,
+        }
+    path = Path(path_value)
+    manifest = read_json_file(path)
+    metadata = {
+        "configured": True,
+        "manifest_path": str(path),
+        "manifest_exists": path.exists(),
+        "manifest_sha256": sha256_file(path),
+        "manifest_parseable": manifest is not None,
+    }
+    if manifest is None:
+        return metadata
+    artifact = manifest.get("artifact", {}) if isinstance(manifest, dict) else {}
+    library = manifest.get("library", {}) if isinstance(manifest, dict) else {}
+    model = manifest.get("model", {}) if isinstance(manifest, dict) else {}
+    artifact_path = artifact.get("local_path") if isinstance(artifact, dict) else None
+    local_path = Path(artifact_path) if isinstance(artifact_path, str) else None
+    metadata.update(
+        {
+            "artifact_label": artifact_label,
+            "artifact_id": manifest.get("artifact_id"),
+            "status": manifest.get("status"),
+            "production_default": manifest.get("production_default"),
+            "artifact_local_path": str(local_path) if local_path else None,
+            "artifact_exists": local_path.exists() if local_path else None,
+            "artifact_size_bytes": artifact.get("size_bytes") if isinstance(artifact, dict) else None,
+            "artifact_sha256": artifact.get("sha256") if isinstance(artifact, dict) else None,
+            "artifact_actual_sha256": sha256_file(local_path) if local_path else None,
+            "artifact_git_tracked": artifact.get("git_tracked") if isinstance(artifact, dict) else None,
+            "library_go_module": library.get("go_module") if isinstance(library, dict) else None,
+            "library_source_url": library.get("source_url") if isinstance(library, dict) else None,
+            "model_id": model.get("id") if isinstance(model, dict) else None,
+            "model_revision": model.get("revision") if isinstance(model, dict) else None,
+        }
+    )
+    return metadata
+
+
+def collect_runtime_benchmark_metadata():
+    ort_path = Path(ONNX_RUNTIME_LIBRARY) if ONNX_RUNTIME_LIBRARY else None
+    return {
+        "runtime_label": RUNTIME_LABEL,
+        "build_tags": [tag for tag in BUILD_TAGS.split(",") if tag],
+        "onnx_artifact": artifact_metadata_from_manifest(ONNX_ARTIFACT_MANIFEST, "onnx") if ONNX_ARTIFACT_MANIFEST else {"configured": False},
+        "native_tokenizer_artifact": artifact_metadata_from_manifest(NATIVE_TOKENIZER_MANIFEST, "native_tokenizer")
+        if NATIVE_TOKENIZER_MANIFEST
+        else {"configured": False},
+        "onnx_runtime_library": {
+            "configured": bool(ort_path),
+            "path": str(ort_path) if ort_path else None,
+            "exists": ort_path.exists() if ort_path else None,
+            "sha256": sha256_file(ort_path) if ort_path else None,
+        },
+    }
+
+
 def collect_environment_baseline_metadata():
     return {
         "path": str(ENVIRONMENT_BASELINE),
@@ -180,6 +260,7 @@ def effective_config_snapshot():
         "docker_compose": collect_compose_metadata(),
         "environment": collect_safe_environment(),
         "redis_before_run": collect_redis_metadata(),
+        "runtime": collect_runtime_benchmark_metadata(),
         "environment_baseline": collect_environment_baseline_metadata(),
         "redaction_policy": {
             "mode": "allowlist_with_secret_like_omission",

@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-20T03:31:30Z | Files: 62 | Described: 0/62
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T03:31:30Z","fingerprint":"11d7f0dae8e7cd700d58b15d19bb478d11294f84","fileCount":62,"truncated":false} -->
+Generated: 2026-05-20T04:08:30Z | Files: 70 | Described: 0/70
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T04:08:30Z","fingerprint":"af578b903aa8e28ff87c7bb4bf74f84951c2a4f1","fileCount":70,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -37,9 +37,13 @@ Generated: 2026-05-20T03:31:30Z | Files: 62 | Described: 0/62
 
 ### api/embed/
 - `api/embed/dimensions_test.go`
+- `api/embed/hf_tokenizer_native_test.go`
+- `api/embed/hf_tokenizer_native.go`
 - `api/embed/onnx_manifest_test.go`
 - `api/embed/onnx_manifest.go`
 - `api/embed/onnx_test.go`
+- `api/embed/onnx_tokenizer_default.go`
+- `api/embed/onnx_tokenizer_hf.go`
 - `api/embed/onnx.go`
 - `api/embed/tei.go`
 - `api/embed/types_test.go`
@@ -63,14 +67,18 @@ Generated: 2026-05-20T03:31:30Z | Files: 62 | Described: 0/62
 - `benchmark-results/fd-benchmark-m009-s04.txt`
 - `benchmark-results/fd-dense-comparator-m010-s02.txt`
 - `benchmark-results/fd-environment-inxi-m008.txt`
+- `benchmark-results/fd-go-onnx-hf-tokenizer-m013-s03.txt`
 - `benchmark-results/fd-go-onnx-m011-s03.txt`
 - `benchmark-results/fd-onnx-fp32-m010-s03.txt`
 - `benchmark-results/fd-runtime-stats-logs.txt`
 - `benchmark-results/fd-tokenizer-baseline-m012-s01.txt`
 - `benchmark-results/fd-tokenizer-go-current-m012-s02.txt`
 - `benchmark-results/fd-tokenizer-go-hf-binding-m012-s03.txt`
+- `benchmark-results/fd-tokenizer-tagged-native-m013-s02.txt`
+- `benchmark-results/fd-tokenizers-native-artifact-m013-s01.txt`
 
 ### docs/onnx-artifacts/
+- `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`
 - `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`
 
 ### docs/superpowers/plans/
