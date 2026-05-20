@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-20T09:58:07Z | Files: 91 | Described: 0/91
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T09:58:07Z","fingerprint":"154d8f218701831825b2be717c1ed6e690f28cfd","fileCount":91,"truncated":false} -->
+Generated: 2026-05-20T10:31:24Z | Files: 96 | Described: 0/96
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T10:31:24Z","fingerprint":"c481a9881434c6a42502c4f506c77606ffd1174c","fileCount":96,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -39,11 +39,14 @@ Generated: 2026-05-20T09:58:07Z | Files: 91 | Described: 0/91
 - `api/embed/dimensions_test.go`
 - `api/embed/hf_tokenizer_native_test.go`
 - `api/embed/hf_tokenizer_native.go`
+- `api/embed/onnx_disabled.go`
 - `api/embed/onnx_manifest_test.go`
 - `api/embed/onnx_manifest.go`
 - `api/embed/onnx_test.go`
+- `api/embed/onnx_token_types.go`
 - `api/embed/onnx_tokenizer_default.go`
 - `api/embed/onnx_tokenizer_hf.go`
+- `api/embed/onnx_types.go`
 - `api/embed/onnx.go`
 - `api/embed/tei.go`
 - `api/embed/types_test.go`
@@ -61,6 +64,7 @@ Generated: 2026-05-20T09:58:07Z | Files: 91 | Described: 0/91
 
 ### docs/onnx-artifacts/
 - `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`
+- `docs/onnx-artifacts/README.md`
 - `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`
 
 ### docs/superpowers/plans/
@@ -84,3 +88,4 @@ Generated: 2026-05-20T09:58:07Z | Files: 91 | Described: 0/91
 - `tools/evaluate_legal_retrieval.py`
 - `tools/export_user_bge_m3_dense_onnx.py`
 - `tools/profile_legal_divergence.py`
+- `tools/verify_onnx_artifacts.py`

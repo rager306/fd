@@ -61,6 +61,34 @@ The exact ONNX Runtime shared library path is environment-specific and should be
 - Local performance viability at 1024: `benchmark-results/fd-benchmark-m019-onnx1024.txt`
 - Runtime contract decision: `.gsd/DECISIONS.md` decision D018
 
+
+## Local ONNX Docker image proof
+
+Use the dedicated opt-in packaging script after local artifacts are provisioned and verified:
+
+```bash
+IMAGE_TAG=fd-api:onnx1024-local tools/build_onnx_image.sh
+```
+
+The script creates a temporary Docker context under `.gsd/runtime/docker/`, copies only the API source plus verified local artifacts, and builds with `-tags "onnx hf_tokenizers"`. The default `api/Dockerfile` remains the TEI/default image and must not require these artifacts.
+
+## CI boundary
+
+The regular Go Quality workflow now runs only artifact-free ONNX packaging checks:
+
+- `tools/verify_onnx_artifacts.py --allow-missing` validates manifest shape and safety metadata without requiring local binaries;
+- a binary hygiene check fails if `.onnx`, `libtokenizers.a`, or `libonnxruntime.so` are tracked;
+- default Go tests and lint remain TEI/default-path checks.
+
+Full ONNX image CI is intentionally not claimed yet. It requires an external artifact store/cache/provisioning step for:
+
+- `.gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx`;
+- `.gsd/runtime/tokenizers/linux-amd64/libtokenizers.a`;
+- `tei-models/deepvk--USER-bge-m3/tokenizer.json` or an equivalent pinned tokenizer artifact;
+- `libonnxruntime.so.1.26.0` or an equivalent pinned ONNX Runtime distribution.
+
+Only after those artifacts are provisioned and verified should CI run `IMAGE_TAG=... tools/build_onnx_image.sh`, tagged ONNX tests, packaged legal quality, and packaged performance benchmarks.
+
 ## Future Docker/CI gate
 
 A future packaging milestone should define how CI or Docker builds obtain these artifacts without committing binaries. That gate should verify:
