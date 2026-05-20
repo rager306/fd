@@ -85,12 +85,21 @@ Implemented in M026:
 - startup logs safe ONNX preflight metadata after manifest verification;
 - Redis connection logs the effective cache namespace.
 
+Implemented in M027:
+
+- manifest validation exposes `model.source_files["tokenizer.json"]` size and sha256 metadata;
+- ONNX startup validates tokenizer JSON existence, size, and sha256 when manifest metadata is present;
+- ONNX startup optionally validates `ONNX_RUNTIME_LIBRARY` sha256 when `ONNX_RUNTIME_SHA256` is supplied;
+- ONNX startup rejects unsupported configured providers before runtime initialization;
+- current configured-provider support is `CPUExecutionProvider` only;
+- ONNX `/health.runtime` metadata includes provider, tokenizer verification status, and runtime library verification status without exposing filesystem paths.
+
 Not yet implemented:
 
-- tokenizer JSON checksum preflight in Go startup;
-- ONNX Runtime shared library sha256 preflight in Go startup;
-- provider availability diagnostics;
+- runtime provider enumeration/availability diagnostics beyond configured-provider validation;
+- mandatory ONNX Runtime shared library sha256 preflight from a tracked runtime manifest;
 - a richer health endpoint status object for failed preflight, because failed preflight exits before serving HTTP;
+- security review of artifact path logging/error messages;
 - staging rollout/rollback execution proof.
 
 ## Rollout stages
@@ -119,9 +128,9 @@ Do not delete verified artifacts during rollback unless the artifact itself is s
 
 ## Current open gaps
 
-- Tokenizer JSON checksum preflight is not yet implemented in Go startup.
-- ONNX Runtime shared library sha256/provider diagnostics are not yet implemented in Go startup.
+- Runtime provider enumeration/availability diagnostics are not implemented beyond configured-provider validation.
+- ONNX Runtime shared library sha256 preflight is optional via `ONNX_RUNTIME_SHA256`; it is not yet mandatory from a tracked runtime manifest/source.
 - Hosted artifact provisioning/cache is not selected.
 - Hosted full ONNX CI is not enabled as a required workflow.
-- Security review for artifact path handling and signed URL handling remains future work.
+- Security review for artifact path handling, startup error messages, and signed URL handling remains future work.
 - Production rollout and rollback have not been tested in staging.

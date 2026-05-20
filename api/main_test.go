@@ -101,10 +101,11 @@ func TestLoadEmbeddingRuntimeConfigRequiresONNXTokenizerPath(t *testing.T) {
 
 func TestLoadEmbeddingRuntimeConfigValidatesONNXManifest(t *testing.T) {
 	manifestPath, artifactPath := writeMainTestONNXManifest(t, false)
+	tokenizerPath := filepath.Join(filepath.Dir(manifestPath), "tokenizer.json")
 	t.Setenv("EMBEDDING_BACKEND", "onnx")
 	t.Setenv("ONNX_ARTIFACT_MANIFEST", manifestPath)
 	t.Setenv("ONNX_RUNTIME_LIBRARY", "/tmp/libonnxruntime.so")
-	t.Setenv("ONNX_TOKENIZER_PATH", "/tmp/tokenizer.json")
+	t.Setenv("ONNX_TOKENIZER_PATH", tokenizerPath)
 	t.Setenv("ONNX_MAX_SEQUENCE_LENGTH", "128")
 
 	config, err := loadEmbeddingRuntimeConfig()
@@ -123,7 +124,7 @@ func TestLoadEmbeddingRuntimeConfigValidatesONNXManifest(t *testing.T) {
 	if config.ONNXRuntimeLibraryPath != "/tmp/libonnxruntime.so" {
 		t.Fatalf("runtime library path = %q", config.ONNXRuntimeLibraryPath)
 	}
-	if config.ONNXTokenizerPath != "/tmp/tokenizer.json" {
+	if config.ONNXTokenizerPath != tokenizerPath {
 		t.Fatalf("tokenizer path = %q", config.ONNXTokenizerPath)
 	}
 	if config.ONNXMaxSequenceLength != 128 {
@@ -136,10 +137,11 @@ func TestLoadEmbeddingRuntimeConfigValidatesONNXManifest(t *testing.T) {
 
 func TestLoadEmbeddingRuntimeConfigRejectsSequenceLengthAboveManifestContract(t *testing.T) {
 	manifestPath, _ := writeMainTestONNXManifest(t, false)
+	tokenizerPath := filepath.Join(filepath.Dir(manifestPath), "tokenizer.json")
 	t.Setenv("EMBEDDING_BACKEND", "onnx")
 	t.Setenv("ONNX_ARTIFACT_MANIFEST", manifestPath)
 	t.Setenv("ONNX_RUNTIME_LIBRARY", "/tmp/libonnxruntime.so")
-	t.Setenv("ONNX_TOKENIZER_PATH", "/tmp/tokenizer.json")
+	t.Setenv("ONNX_TOKENIZER_PATH", tokenizerPath)
 	t.Setenv("ONNX_MAX_SEQUENCE_LENGTH", "2048")
 
 	_, err := loadEmbeddingRuntimeConfig()
@@ -153,8 +155,11 @@ func TestLoadEmbeddingRuntimeConfigRejectsSequenceLengthAboveManifestContract(t 
 
 func TestEmbeddingRuntimeConfigHealthForONNX(t *testing.T) {
 	config := &embeddingRuntimeConfig{
-		Backend:               embeddingBackendONNX,
-		ONNXMaxSequenceLength: 1024,
+		Backend:                    embeddingBackendONNX,
+		ONNXMaxSequenceLength:      1024,
+		ONNXProvider:               onnxProviderCPU,
+		ONNXTokenizerVerified:      true,
+		ONNXRuntimeLibraryVerified: true,
 		ONNXArtifact: &embed.ONNXArtifactValidation{
 			ArtifactID:                 "artifact-test",
 			Dimensions:                 1024,
@@ -170,6 +175,9 @@ func TestEmbeddingRuntimeConfigHealthForONNX(t *testing.T) {
 	if health.ArtifactID != "artifact-test" || health.CacheNamespace != "m026-test" || !health.ArtifactVerified {
 		t.Fatalf("unexpected health metadata: %#v", health)
 	}
+	if health.Provider != onnxProviderCPU || !health.TokenizerVerified || !health.RuntimeLibraryVerified {
+		t.Fatalf("unexpected verification metadata: %#v", health)
+	}
 }
 
 func TestEmbeddingRuntimeConfigHealthNilForTEI(t *testing.T) {
@@ -179,12 +187,96 @@ func TestEmbeddingRuntimeConfigHealthNilForTEI(t *testing.T) {
 	}
 }
 
+func TestLoadEmbeddingRuntimeConfigRejectsTokenizerChecksumMismatch(t *testing.T) {
+	manifestPath, _ := writeMainTestONNXManifest(t, false)
+	tokenizerPath := filepath.Join(filepath.Dir(manifestPath), "tokenizer.json")
+	if err := os.WriteFile(tokenizerPath, []byte("tampered tokenizer"), 0o600); err != nil {
+		t.Fatalf("tamper tokenizer: %v", err)
+	}
+	t.Setenv("EMBEDDING_BACKEND", "onnx")
+	t.Setenv("ONNX_ARTIFACT_MANIFEST", manifestPath)
+	t.Setenv("ONNX_RUNTIME_LIBRARY", "/tmp/libonnxruntime.so")
+	t.Setenv("ONNX_TOKENIZER_PATH", tokenizerPath)
+
+	_, err := loadEmbeddingRuntimeConfig()
+	if err == nil {
+		t.Fatal("expected tokenizer checksum error")
+	}
+	if got := err.Error(); !strings.Contains(got, "ONNX tokenizer JSON") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestLoadEmbeddingRuntimeConfigRejectsUnsupportedProvider(t *testing.T) {
+	manifestPath, _ := writeMainTestONNXManifest(t, false)
+	tokenizerPath := filepath.Join(filepath.Dir(manifestPath), "tokenizer.json")
+	t.Setenv("EMBEDDING_BACKEND", "onnx")
+	t.Setenv("ONNX_ARTIFACT_MANIFEST", manifestPath)
+	t.Setenv("ONNX_RUNTIME_LIBRARY", "/tmp/libonnxruntime.so")
+	t.Setenv("ONNX_TOKENIZER_PATH", tokenizerPath)
+	t.Setenv("ONNX_PROVIDER", "CUDAExecutionProvider")
+
+	_, err := loadEmbeddingRuntimeConfig()
+	if err == nil {
+		t.Fatal("expected unsupported provider error")
+	}
+	if got := err.Error(); !strings.Contains(got, "ONNX_PROVIDER") || !strings.Contains(got, "CPUExecutionProvider") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestLoadEmbeddingRuntimeConfigValidatesRuntimeLibrarySHAWhenConfigured(t *testing.T) {
+	manifestPath, _ := writeMainTestONNXManifest(t, false)
+	tokenizerPath := filepath.Join(filepath.Dir(manifestPath), "tokenizer.json")
+	runtimeLibraryPath := filepath.Join(filepath.Dir(manifestPath), "libonnxruntime.so")
+	runtimeBytes := []byte("fake onnx runtime")
+	if err := os.WriteFile(runtimeLibraryPath, runtimeBytes, 0o600); err != nil {
+		t.Fatalf("write runtime library: %v", err)
+	}
+	digest := sha256.Sum256(runtimeBytes)
+	t.Setenv("EMBEDDING_BACKEND", "onnx")
+	t.Setenv("ONNX_ARTIFACT_MANIFEST", manifestPath)
+	t.Setenv("ONNX_RUNTIME_LIBRARY", runtimeLibraryPath)
+	t.Setenv("ONNX_TOKENIZER_PATH", tokenizerPath)
+	t.Setenv("ONNX_RUNTIME_SHA256", hex.EncodeToString(digest[:]))
+
+	config, err := loadEmbeddingRuntimeConfig()
+	if err != nil {
+		t.Fatalf("loadEmbeddingRuntimeConfig onnx returned error: %v", err)
+	}
+	if !config.ONNXRuntimeLibraryVerified {
+		t.Fatal("expected runtime library verification flag")
+	}
+}
+
+func TestLoadEmbeddingRuntimeConfigRejectsRuntimeLibrarySHAMismatch(t *testing.T) {
+	manifestPath, _ := writeMainTestONNXManifest(t, false)
+	tokenizerPath := filepath.Join(filepath.Dir(manifestPath), "tokenizer.json")
+	runtimeLibraryPath := filepath.Join(filepath.Dir(manifestPath), "libonnxruntime.so")
+	if err := os.WriteFile(runtimeLibraryPath, []byte("fake onnx runtime"), 0o600); err != nil {
+		t.Fatalf("write runtime library: %v", err)
+	}
+	t.Setenv("EMBEDDING_BACKEND", "onnx")
+	t.Setenv("ONNX_ARTIFACT_MANIFEST", manifestPath)
+	t.Setenv("ONNX_RUNTIME_LIBRARY", runtimeLibraryPath)
+	t.Setenv("ONNX_TOKENIZER_PATH", tokenizerPath)
+	t.Setenv("ONNX_RUNTIME_SHA256", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+
+	_, err := loadEmbeddingRuntimeConfig()
+	if err == nil {
+		t.Fatal("expected runtime library checksum error")
+	}
+	if got := err.Error(); !strings.Contains(got, "ONNX runtime library verification failed") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestLoadEmbeddingRuntimeConfigRejectsInvalidONNXManifest(t *testing.T) {
 	manifestPath, _ := writeMainTestONNXManifest(t, true)
 	t.Setenv("EMBEDDING_BACKEND", "onnx")
 	t.Setenv("ONNX_ARTIFACT_MANIFEST", manifestPath)
 	t.Setenv("ONNX_RUNTIME_LIBRARY", "/tmp/libonnxruntime.so")
-	t.Setenv("ONNX_TOKENIZER_PATH", "/tmp/tokenizer.json")
+	t.Setenv("ONNX_TOKENIZER_PATH", filepath.Join(filepath.Dir(manifestPath), "tokenizer.json"))
 
 	_, err := loadEmbeddingRuntimeConfig()
 	if err == nil {
@@ -201,6 +293,13 @@ func writeMainTestONNXManifest(t *testing.T, corruptDigest bool) (manifestPath s
 	if err := os.WriteFile(artifactPath, artifactBytes, 0o600); err != nil {
 		t.Fatalf("write artifact: %v", err)
 	}
+	tokenizerPath := filepath.Join(dir, "tokenizer.json")
+	tokenizerBytes := []byte("fake tokenizer json for main config test")
+	if err := os.WriteFile(tokenizerPath, tokenizerBytes, 0o600); err != nil {
+		t.Fatalf("write tokenizer: %v", err)
+	}
+	tokenizerDigest := sha256.Sum256(tokenizerBytes)
+	tokenizerDigestHex := hex.EncodeToString(tokenizerDigest[:])
 	digest := sha256.Sum256(artifactBytes)
 	digestHex := hex.EncodeToString(digest[:])
 	if corruptDigest {
@@ -217,6 +316,14 @@ func writeMainTestONNXManifest(t *testing.T, corruptDigest bool) (manifestPath s
 			"size_bytes":  len(artifactBytes),
 			"sha256":      digestHex,
 			"git_tracked": false,
+		},
+		"model": map[string]any{
+			"source_files": map[string]any{
+				"tokenizer.json": map[string]any{
+					"size_bytes": len(tokenizerBytes),
+					"sha256":     tokenizerDigestHex,
+				},
+			},
 		},
 		"runtime": map[string]any{
 			"outputs": []map[string]any{

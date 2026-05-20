@@ -1,0 +1,56 @@
+# M027 S02 — ONNX Preflight Diagnostics Outcome
+
+## Verdict
+
+PASS.
+
+M027 implements the next ONNX startup preflight diagnostics gate while preserving TEI as the default production runtime.
+
+## Implemented
+
+- `ONNXArtifactValidation` now exposes tokenizer JSON source metadata from `model.source_files["tokenizer.json"]`:
+  - size bytes;
+  - sha256.
+- ONNX startup validates tokenizer JSON:
+  - path exists;
+  - path is not a directory;
+  - size matches manifest metadata when present;
+  - sha256 matches manifest metadata when present.
+- ONNX startup optionally validates the runtime shared library sha256 when `ONNX_RUNTIME_SHA256` is supplied.
+- ONNX startup rejects unsupported configured providers before runtime initialization.
+- Current provider support is explicit and narrow: `CPUExecutionProvider`.
+- ONNX `/health.runtime` safe metadata now includes:
+  - provider;
+  - tokenizer verification status;
+  - runtime library verification status.
+
+## Safety boundaries
+
+- TEI remains the default runtime.
+- ONNX remains opt-in experimental.
+- Runtime library sha verification is optional until an immutable/tracked runtime artifact source is selected.
+- Provider diagnostics validate configured provider support only; runtime provider enumeration remains future work.
+- Health metadata does not expose manifest path, tokenizer path, runtime library path, signed URLs, or raw input text.
+
+## Verification evidence
+
+- Targeted manifest/startup/health tests: pass.
+- Default Go tests: `85 passed in 4 packages`.
+- GolangCI-Lint: `0 issues`.
+- `hf_tokenizers` tests: `18 passed in 1 package`.
+- `onnx hf_tokenizers` smoke tests: `2 passed in 1 package`.
+- Default Docker build: pass.
+- actionlint: pass.
+- scripts/verifier: pass.
+- Binary hygiene: pass.
+- Runtime cleanup: pass.
+
+## Remaining gaps
+
+- Runtime provider enumeration/availability diagnostics are not implemented beyond configured-provider validation.
+- Runtime library sha verification is not mandatory because the runtime library source is not yet represented by a tracked manifest/source contract.
+- Hosted artifact provisioning/cache and required hosted ONNX CI remain future gates.
+- Security review for artifact path handling, startup error messages, signed URLs, and logging remains future work.
+- Staging rollout/rollback proof remains future work.
+
+Raw embedding input text is intentionally excluded from this artifact.

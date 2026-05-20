@@ -30,7 +30,15 @@ type ONNXArtifactManifest struct {
 	Status            string `json:"status"`
 	ProductionDefault bool   `json:"production_default"`
 	manifestDir       string
-	Artifact          struct {
+	Model             struct {
+		SourceFiles struct {
+			TokenizerJSON struct {
+				SizeBytes int64  `json:"size_bytes"`
+				SHA256    string `json:"sha256"`
+			} `json:"tokenizer.json"`
+		} `json:"source_files"`
+	} `json:"model"`
+	Artifact struct {
 		LocalPath  string `json:"local_path"`
 		SizeBytes  int64  `json:"size_bytes"`
 		SHA256     string `json:"sha256"`
@@ -57,6 +65,8 @@ type ONNXArtifactValidation struct {
 	Dimensions                 int
 	ProductionDefault          bool
 	ValidatedMaxSequenceLength int
+	TokenizerJSONSizeBytes     int64
+	TokenizerJSONSHA256        string
 }
 
 func LoadONNXArtifactManifest(path string) (*ONNXArtifactManifest, error) {
@@ -94,8 +104,11 @@ func (m *ONNXArtifactManifest) ValidateArtifact() (*ONNXArtifactValidation, erro
 	if m.Artifact.SizeBytes <= 0 {
 		return nil, fmt.Errorf("%w: artifact_id=%q invalid artifact.size_bytes=%d", ErrONNXManifestMetadataMismatch, m.ArtifactID, m.Artifact.SizeBytes)
 	}
-	if len(m.Artifact.SHA256) != sha256HexLength {
-		return nil, fmt.Errorf("%w: artifact_id=%q invalid artifact.sha256", ErrONNXManifestMetadataMismatch, m.ArtifactID)
+	if m.Model.SourceFiles.TokenizerJSON.SizeBytes < 0 {
+		return nil, fmt.Errorf("%w: artifact_id=%q tokenizer.json size_bytes=%d", ErrONNXManifestMetadataMismatch, m.ArtifactID, m.Model.SourceFiles.TokenizerJSON.SizeBytes)
+	}
+	if m.Model.SourceFiles.TokenizerJSON.SHA256 != "" && len(m.Model.SourceFiles.TokenizerJSON.SHA256) != sha256HexLength {
+		return nil, fmt.Errorf("%w: artifact_id=%q invalid tokenizer.json sha256", ErrONNXManifestMetadataMismatch, m.ArtifactID)
 	}
 	if m.Runtime.ExpectedDimensions != ONNXExpectedDimensions {
 		return nil, fmt.Errorf("%w: artifact_id=%q expected_dimensions=%d want %d", ErrONNXManifestMetadataMismatch, m.ArtifactID, m.Runtime.ExpectedDimensions, ONNXExpectedDimensions)
@@ -149,6 +162,8 @@ func (m *ONNXArtifactManifest) ValidateArtifact() (*ONNXArtifactValidation, erro
 		Dimensions:                 m.Runtime.ExpectedDimensions,
 		ProductionDefault:          m.ProductionDefault,
 		ValidatedMaxSequenceLength: m.Runtime.ValidatedMaxSequenceLength,
+		TokenizerJSONSizeBytes:     m.Model.SourceFiles.TokenizerJSON.SizeBytes,
+		TokenizerJSONSHA256:        m.Model.SourceFiles.TokenizerJSON.SHA256,
 	}, nil
 }
 

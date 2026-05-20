@@ -48,6 +48,9 @@ func TestNewHealthHandlerIncludesSafeRuntimeMetadata(t *testing.T) {
 		ValidatedMaxSequenceLength: 1024,
 		ProductionDefault:          false,
 		ArtifactVerified:           true,
+		TokenizerVerified:          true,
+		RuntimeLibraryVerified:     true,
+		Provider:                   "CPUExecutionProvider",
 		CacheNamespace:             "m026-test",
 	}))
 
@@ -71,6 +74,9 @@ func TestNewHealthHandlerIncludesSafeRuntimeMetadata(t *testing.T) {
 	}
 	if runtime["artifact_id"] != "user-bge-m3-dense-fp32" {
 		t.Fatalf("artifact_id = %#v", runtime["artifact_id"])
+	}
+	if runtime["provider"] != "CPUExecutionProvider" || runtime["tokenizer_verified"] != true || runtime["runtime_library_verified"] != true {
+		t.Fatalf("verification metadata = %#v", runtime)
 	}
 	if _, ok := runtime["manifest_path"]; ok {
 		t.Fatal("runtime health must not expose manifest_path")

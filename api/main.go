@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -41,6 +44,55 @@ func getEnvInt(key string, default_ int) int {
 	return n
 }
 
+func sha256FileHex(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("open %q for sha256: %w", path, err)
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, file); err != nil {
+		return "", fmt.Errorf("hash %q: %w", path, err)
+	}
+	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func verifyFileSHA256(path, expected string) error {
+	if expected == "" {
+		return nil
+	}
+	actual, err := sha256FileHex(path)
+	if err != nil {
+		return err
+	}
+	if actual != expected {
+		return fmt.Errorf("sha256 mismatch for %q: expected=%s actual=%s", path, expected, actual)
+	}
+	return nil
+}
+
+func verifyTokenizerJSON(path string, validation *embed.ONNXArtifactValidation) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("stat ONNX tokenizer JSON: %w", err)
+	}
+	if info.IsDir() {
+		return fmt.Errorf("ONNX_TOKENIZER_PATH must point to tokenizer JSON file, got directory")
+	}
+	if validation != nil && validation.TokenizerJSONSizeBytes > 0 && info.Size() != validation.TokenizerJSONSizeBytes {
+		return fmt.Errorf("ONNX tokenizer JSON size mismatch: size=%d expected=%d", info.Size(), validation.TokenizerJSONSizeBytes)
+	}
+	if validation != nil && validation.TokenizerJSONSHA256 != "" {
+		if err := verifyFileSHA256(path, validation.TokenizerJSONSHA256); err != nil {
+			return fmt.Errorf("ONNX tokenizer JSON verification failed: %w", err)
+		}
+	}
+	return nil
+}
+
 func getLogLevel(value string) slog.Level {
 	switch strings.ToLower(value) {
 	case "debug":
@@ -59,15 +111,19 @@ type embeddingBackend string
 const (
 	embeddingBackendTEI  embeddingBackend = "tei"
 	embeddingBackendONNX embeddingBackend = "onnx"
+	onnxProviderCPU      string           = "CPUExecutionProvider"
 )
 
 type embeddingRuntimeConfig struct {
-	Backend                embeddingBackend
-	ONNXManifestPath       string
-	ONNXRuntimeLibraryPath string
-	ONNXTokenizerPath      string
-	ONNXMaxSequenceLength  int
-	ONNXArtifact           *embed.ONNXArtifactValidation
+	Backend                    embeddingBackend
+	ONNXManifestPath           string
+	ONNXRuntimeLibraryPath     string
+	ONNXTokenizerPath          string
+	ONNXMaxSequenceLength      int
+	ONNXProvider               string
+	ONNXArtifact               *embed.ONNXArtifactValidation
+	ONNXTokenizerVerified      bool
+	ONNXRuntimeLibraryVerified bool
 }
 
 func (c *embeddingRuntimeConfig) Health(modelID, cacheNamespace string) *handlers.RuntimeHealth {
@@ -83,6 +139,9 @@ func (c *embeddingRuntimeConfig) Health(modelID, cacheNamespace string) *handler
 		ValidatedMaxSequenceLength: c.ONNXArtifact.ValidatedMaxSequenceLength,
 		ProductionDefault:          c.ONNXArtifact.ProductionDefault,
 		ArtifactVerified:           true,
+		TokenizerVerified:          c.ONNXTokenizerVerified,
+		RuntimeLibraryVerified:     c.ONNXRuntimeLibraryVerified,
+		Provider:                   c.ONNXProvider,
 		CacheNamespace:             cacheNamespace,
 	}
 }
@@ -111,9 +170,29 @@ func loadEmbeddingRuntimeConfig() (*embeddingRuntimeConfig, error) {
 		if err != nil {
 			return nil, fmt.Errorf("onnx artifact validation failed: %w", err)
 		}
+		provider := getEnv("ONNX_PROVIDER", onnxProviderCPU)
+		if provider != onnxProviderCPU {
+			return nil, fmt.Errorf("ONNX_PROVIDER=%q is not supported by the current Go ONNX runtime path; supported provider=%q", provider, onnxProviderCPU)
+		}
+		if err := verifyTokenizerJSON(tokenizerPath, validation); err != nil {
+			return nil, err
+		}
+		runtimeLibraryVerified := false
+		if expectedRuntimeSHA256 := getEnv("ONNX_RUNTIME_SHA256", ""); expectedRuntimeSHA256 != "" {
+			if len(expectedRuntimeSHA256) != 64 {
+				return nil, fmt.Errorf("ONNX_RUNTIME_SHA256 must be a 64-character sha256 hex digest")
+			}
+			if err := verifyFileSHA256(runtimeLibraryPath, expectedRuntimeSHA256); err != nil {
+				return nil, fmt.Errorf("ONNX runtime library verification failed: %w", err)
+			}
+			runtimeLibraryVerified = true
+		}
 		config.ONNXManifestPath = manifestPath
 		config.ONNXRuntimeLibraryPath = runtimeLibraryPath
 		config.ONNXTokenizerPath = tokenizerPath
+		config.ONNXProvider = provider
+		config.ONNXTokenizerVerified = validation.TokenizerJSONSHA256 != "" || validation.TokenizerJSONSizeBytes > 0
+		config.ONNXRuntimeLibraryVerified = runtimeLibraryVerified
 		config.ONNXMaxSequenceLength = getEnvInt("ONNX_MAX_SEQUENCE_LENGTH", 512)
 		if validation.ValidatedMaxSequenceLength > 0 && config.ONNXMaxSequenceLength > validation.ValidatedMaxSequenceLength {
 			return nil, fmt.Errorf("ONNX_MAX_SEQUENCE_LENGTH=%d exceeds validated_max_sequence_length=%d artifact_id=%q manifest=%q", config.ONNXMaxSequenceLength, validation.ValidatedMaxSequenceLength, validation.ArtifactID, manifestPath)
@@ -153,6 +232,9 @@ func main() {
 			"max_sequence_length", runtimeConfig.ONNXMaxSequenceLength,
 			"validated_max_sequence_length", runtimeConfig.ONNXArtifact.ValidatedMaxSequenceLength,
 			"production_default", runtimeConfig.ONNXArtifact.ProductionDefault,
+			"tokenizer_verified", runtimeConfig.ONNXTokenizerVerified,
+			"runtime_library_verified", runtimeConfig.ONNXRuntimeLibraryVerified,
+			"provider", runtimeConfig.ONNXProvider,
 		)
 	}
 

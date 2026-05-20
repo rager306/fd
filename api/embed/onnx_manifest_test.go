@@ -25,6 +25,9 @@ func TestValidateONNXArtifactManifestValid(t *testing.T) {
 	require.Equal(t, ONNXExpectedOutputName, validation.OutputName)
 	require.Equal(t, ONNXExpectedDimensions, validation.Dimensions)
 	require.Equal(t, 1024, validation.ValidatedMaxSequenceLength)
+	tokenizerDigest := sha256.Sum256(testTokenizerJSONBytes())
+	require.Equal(t, int64(len(testTokenizerJSONBytes())), validation.TokenizerJSONSizeBytes)
+	require.Equal(t, hex.EncodeToString(tokenizerDigest[:]), validation.TokenizerJSONSHA256)
 	require.False(t, validation.ProductionDefault)
 }
 
@@ -99,6 +102,20 @@ func TestValidateONNXArtifactManifestRejectsNegativeValidatedMaxSequenceLength(t
 	require.Contains(t, err.Error(), "validated_max_sequence_length=-1")
 }
 
+func TestValidateONNXArtifactManifestRejectsInvalidTokenizerJSONSHA(t *testing.T) {
+	manifestPath, _, _ := writeTestONNXManifest(t, func(m map[string]any) {
+		model := m["model"].(map[string]any)
+		sourceFiles := model["source_files"].(map[string]any)
+		tokenizer := sourceFiles["tokenizer.json"].(map[string]any)
+		tokenizer["sha256"] = "bad"
+	})
+
+	_, err := ValidateONNXArtifactManifest(manifestPath)
+
+	require.ErrorIs(t, err, ErrONNXManifestMetadataMismatch)
+	require.Contains(t, err.Error(), "invalid tokenizer.json sha256")
+}
+
 func TestLoadONNXArtifactManifestInvalidJSON(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "manifest.json")
 	require.NoError(t, os.WriteFile(path, []byte("{"), 0o600))
@@ -116,6 +133,7 @@ func writeTestONNXManifest(t *testing.T, mutate func(map[string]any)) (manifestP
 	artifactPath = filepath.Join(dir, "user-bge-m3-dense.onnx")
 	artifactBytes := testONNXArtifactBytes()
 	require.NoError(t, os.WriteFile(artifactPath, artifactBytes, 0o600))
+	tokenizerDigest := sha256.Sum256(testTokenizerJSONBytes())
 	rawDigest := sha256.Sum256(artifactBytes)
 	digest = hex.EncodeToString(rawDigest[:])
 
@@ -125,7 +143,15 @@ func writeTestONNXManifest(t *testing.T, mutate func(map[string]any)) (manifestP
 		"status":             ONNXArtifactStatusPrototypeOnly,
 		"production_default": false,
 		"description":        "test manifest",
-		"model":              map[string]any{"id": "deepvk/USER-bge-m3"},
+		"model": map[string]any{
+			"id": "deepvk/USER-bge-m3",
+			"source_files": map[string]any{
+				"tokenizer.json": map[string]any{
+					"size_bytes": len(testTokenizerJSONBytes()),
+					"sha256":     hex.EncodeToString(tokenizerDigest[:]),
+				},
+			},
+		},
 		"artifact": map[string]any{
 			"format":      "onnx",
 			"dtype":       "fp32",
@@ -159,4 +185,8 @@ func writeTestONNXManifest(t *testing.T, mutate func(map[string]any)) (manifestP
 
 func testONNXArtifactBytes() []byte {
 	return []byte("fake onnx bytes for manifest validation")
+}
+
+func testTokenizerJSONBytes() []byte {
+	return []byte("fake tokenizer json for manifest validation")
 }

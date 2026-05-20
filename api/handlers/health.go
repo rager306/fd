@@ -16,6 +16,9 @@ type RuntimeHealth struct {
 	ValidatedMaxSequenceLength int    `json:"validated_max_sequence_length,omitempty"`
 	ProductionDefault          bool   `json:"production_default"`
 	ArtifactVerified           bool   `json:"artifact_verified"`
+	TokenizerVerified          bool   `json:"tokenizer_verified"`
+	RuntimeLibraryVerified     bool   `json:"runtime_library_verified"`
+	Provider                   string `json:"provider,omitempty"`
 	CacheNamespace             string `json:"cache_namespace,omitempty"`
 }
 
