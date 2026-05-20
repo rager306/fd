@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "taskId": "T04",
+  "sliceId": "S03",
+  "milestoneId": "M011-33b7wf",
+  "question": "How should M011 handle the Go tokenizer parity blocker discovered in S03?",
+  "options": [
+    {
+      "id": "A",
+      "label": "Resolve tokenizer parity next",
+      "tradeoffs": "Focus next slice/remediation on finding a Go tokenizer path that exactly matches Hugging Face tokenizer.json before performance benchmarking. This is the most direct route to a valid Go ONNX backend."
+    },
+    {
+      "id": "B",
+      "label": "Use Python sidecar prototype",
+      "tradeoffs": "Avoids Go tokenizer mismatch by reusing Transformers tokenizer/ONNX Runtime Python, but introduces sidecar operational complexity and does not prove pure Go integration."
+    },
+    {
+      "id": "C",
+      "label": "Stop ONNX integration",
+      "tradeoffs": "Keeps TEI runtime and records ONNX Go integration as blocked by tokenizer parity. Avoids more complexity but leaves potential ONNX performance gains unexplored."
+    }
+  ],
+  "recommendation": "A",
+  "recommendationRationale": "Tokenizer parity is the root cause for failed equivalence; resolving it is required before any Go ONNX performance benchmark is meaningful.",
+  "continueWithDefault": true,
+  "createdAt": "2026-05-19T19:26:25.428Z"
+}

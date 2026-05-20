@@ -1,0 +1,31 @@
+# Go ONNX API Comparison — M011 S03
+
+## Effective Configuration
+
+```json
+{
+  "cosine_threshold": 0.999,
+  "dimensions": 1024,
+  "model": "deepvk/USER-bge-m3",
+  "onnx_api_url": "http://localhost:18000",
+  "onnx_cache_version": "m011-onnx",
+  "raw_probe_texts_logged": false,
+  "tei_api_url": "http://localhost:8000"
+}
+```
+
+## TEI default vs Go ONNX opt-in
+
+| Label | Chars | TEI Norm | ONNX Norm | Cosine | ONNX SHA256 (float32) | Passed |
+|---|---:|---:|---:|---:|---|---|
+| contract_question_jurisdiction | 94 | 1.00000002 | 1.00000003 | 0.99560995 | `2e6641b4dbcfe10287b00530eec693de4a353be4172287e8280c1062b08de1da` | no |
+| contract_clause_delivery | 131 | 0.99999999 | 0.99999976 | 0.99476433 | `b4992adf3ef8e58a325670a50d748c726ee75347df857bad04fa7734c7c9dc09` | no |
+| labor_question_termination | 103 | 1.00000003 | 0.99999988 | 0.98266755 | `17153d411c36c3923099f8500aa91dd72ecb3fb9083f0b2ca9f756450ac9bf34` | no |
+| civil_clause_damages | 140 | 0.99999996 | 0.99999975 | 0.99474895 | `0b98dd5ffe1f6e80df2437fab8681114ed0957cb9c8480f9a66087a7527a58cc` | no |
+| neutral_russian_reference | 102 | 1.00000002 | 1.00000022 | 0.99713198 | `b0ea29843bd7cb8901d7c5136fbf9124186898adce91493dc7ce136498d452b9` | no |
+
+## Verdict
+
+FAIL
+
+Raw probe texts are intentionally excluded from this artifact.

@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-19T18:22:26Z | Files: 47 | Described: 0/47
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-19T18:22:26Z","fingerprint":"5c809e87249560d30dea765d0c5f3c50446d58a1","fileCount":47,"truncated":false} -->
+Generated: 2026-05-20T01:43:58Z | Files: 52 | Described: 0/52
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T01:43:58Z","fingerprint":"fa52d1a8e9310c7c370a3ebdbf92496c0d0d2b43","fileCount":52,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -57,7 +57,9 @@ Generated: 2026-05-19T18:22:26Z | Files: 47 | Described: 0/47
 - `benchmark-results/fd-benchmark-m009-s02.txt`
 - `benchmark-results/fd-benchmark-m009-s03.txt`
 - `benchmark-results/fd-benchmark-m009-s04.txt`
+- `benchmark-results/fd-dense-comparator-m010-s02.txt`
 - `benchmark-results/fd-environment-inxi-m008.txt`
+- `benchmark-results/fd-onnx-fp32-m010-s03.txt`
 - `benchmark-results/fd-runtime-stats-logs.txt`
 
 ### docs/superpowers/plans/
@@ -69,3 +71,8 @@ Generated: 2026-05-19T18:22:26Z | Files: 47 | Described: 0/47
 
 ### tests/integration/
 - `tests/integration/api_test.go`
+
+### tools/
+- `tools/compare_dense_embeddings.py`
+- `tools/compare_onnx_dense_embeddings.py`
+- `tools/export_user_bge_m3_dense_onnx.py`

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -53,6 +54,57 @@ func getLogLevel(value string) slog.Level {
 	}
 }
 
+type embeddingBackend string
+
+const (
+	embeddingBackendTEI  embeddingBackend = "tei"
+	embeddingBackendONNX embeddingBackend = "onnx"
+)
+
+type embeddingRuntimeConfig struct {
+	Backend                embeddingBackend
+	ONNXManifestPath       string
+	ONNXRuntimeLibraryPath string
+	ONNXTokenizerPath      string
+	ONNXMaxSequenceLength  int
+	ONNXArtifact           *embed.ONNXArtifactValidation
+}
+
+func loadEmbeddingRuntimeConfig() (*embeddingRuntimeConfig, error) {
+	backend := embeddingBackend(strings.ToLower(getEnv("EMBEDDING_BACKEND", string(embeddingBackendTEI))))
+	config := &embeddingRuntimeConfig{Backend: backend}
+
+	switch backend {
+	case embeddingBackendTEI:
+		return config, nil
+	case embeddingBackendONNX:
+		manifestPath := getEnv("ONNX_ARTIFACT_MANIFEST", "")
+		if manifestPath == "" {
+			return nil, fmt.Errorf("ONNX_ARTIFACT_MANIFEST is required when EMBEDDING_BACKEND=onnx")
+		}
+		runtimeLibraryPath := getEnv("ONNX_RUNTIME_LIBRARY", "")
+		if runtimeLibraryPath == "" {
+			return nil, fmt.Errorf("ONNX_RUNTIME_LIBRARY is required when EMBEDDING_BACKEND=onnx")
+		}
+		tokenizerPath := getEnv("ONNX_TOKENIZER_PATH", "")
+		if tokenizerPath == "" {
+			return nil, fmt.Errorf("ONNX_TOKENIZER_PATH is required when EMBEDDING_BACKEND=onnx")
+		}
+		validation, err := embed.ValidateONNXArtifactManifest(manifestPath)
+		if err != nil {
+			return nil, fmt.Errorf("onnx artifact validation failed: %w", err)
+		}
+		config.ONNXManifestPath = manifestPath
+		config.ONNXRuntimeLibraryPath = runtimeLibraryPath
+		config.ONNXTokenizerPath = tokenizerPath
+		config.ONNXMaxSequenceLength = getEnvInt("ONNX_MAX_SEQUENCE_LENGTH", 512)
+		config.ONNXArtifact = validation
+		return config, nil
+	default:
+		return nil, fmt.Errorf("EMBEDDING_BACKEND must be tei or onnx, got %q", backend)
+	}
+}
+
 func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -66,6 +118,13 @@ func main() {
 	bindHost := getEnv("BIND_HOST", "0.0.0.0")
 	port := getEnv("PORT", "8000")
 	redisPoolSize := getEnvInt("REDIS_POOL_SIZE", 50)
+
+	runtimeConfig, err := loadEmbeddingRuntimeConfig()
+	if err != nil {
+		logger.Error("embedding runtime config invalid", "error", err)
+		os.Exit(1)
+	}
+	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
 
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
@@ -111,8 +170,35 @@ func main() {
 		},
 	}
 
-	teiClient := embed.NewTEIClient(teiURL, modelID, httpClient)
-	logger.Info("tei client configured", "url", teiURL, "model", modelID)
+	var embeddingClient handlers.Embedder
+	if runtimeConfig.Backend == embeddingBackendONNX {
+		onnxClient, err := embed.NewONNXEmbedder(embed.ONNXEmbedderOptions{
+			ManifestPath:      runtimeConfig.ONNXManifestPath,
+			SharedLibraryPath: runtimeConfig.ONNXRuntimeLibraryPath,
+			TokenizerPath:     runtimeConfig.ONNXTokenizerPath,
+			MaxSequenceLength: runtimeConfig.ONNXMaxSequenceLength,
+		})
+		if err != nil {
+			logger.Error("onnx backend init failed", "error", err)
+			os.Exit(1)
+		}
+		defer func() {
+			if err := onnxClient.Close(); err != nil {
+				logger.Warn("onnx close failed", "error", err)
+			}
+		}()
+		embeddingClient = onnxClient
+		logger.Info(
+			"onnx backend ready",
+			"artifact_id", runtimeConfig.ONNXArtifact.ArtifactID,
+			"dimensions", runtimeConfig.ONNXArtifact.Dimensions,
+			"max_sequence_length", runtimeConfig.ONNXMaxSequenceLength,
+		)
+	} else {
+		teiClient := embed.NewTEIClient(teiURL, modelID, httpClient)
+		embeddingClient = teiClient
+		logger.Info("tei client configured", "url", teiURL, "model", modelID)
+	}
 
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -121,8 +207,8 @@ func main() {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
-	embedHandler := handlers.NewEmbeddingsHandler(teiClient, tiered, modelID, logger)
-	batchHandler := handlers.NewBatchHandler(teiClient, tiered, modelID, logger)
+	embedHandler := handlers.NewEmbeddingsHandler(embeddingClient, tiered, modelID, logger)
+	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
 
 	r.GET("/health", handlers.HealthHandler)
 	r.POST("/v1/embeddings", embedHandler.CreateEmbedding)
