@@ -1,0 +1,198 @@
+# Go Tokenizer HF Binding Comparison — M012 S03
+
+## Effective Configuration
+
+```json
+{
+  "baseline": "benchmark-results/fd-tokenizer-baseline-m012-s01.txt",
+  "generated_at": "2026-05-20T02:18:46.926321+00:00",
+  "go_tokenizer_library": "github.com/daulet/tokenizers + Hugging Face Rust tokenizers libtokenizers.a",
+  "hf_tokenizers_lib_dir": "/tmp/fd-daulet-tokenizers-probe",
+  "mode": "go-hf-binding",
+  "model": "deepvk/USER-bge-m3",
+  "probe_count": 5,
+  "probes_source": "tools/compare_dense_embeddings.py",
+  "probes_source_sha256": "5605f68bf1b778992326b4ab4e059fdcd21a829d5ff3aecd9a9191ea8278e874",
+  "raw_probe_texts_logged": false,
+  "script_version": 1,
+  "tokenizer_path": "tei-models/deepvk--USER-bge-m3"
+}
+```
+
+## HF Baseline vs Current Go Tokenizer
+
+| Label | Chars | HF Tokens | Go Tokens | IDs Equal | Mask Equal | First IDs Mismatch | Passed |
+|---|---:|---:|---:|---|---|---:|---|
+| contract_question_jurisdiction | 94 | 21 | 21 | yes | yes |  | yes |
+| contract_clause_delivery | 131 | 29 | 29 | yes | yes |  | yes |
+| labor_question_termination | 103 | 21 | 21 | yes | yes |  | yes |
+| civil_clause_damages | 140 | 35 | 35 | yes | yes |  | yes |
+| neutral_russian_reference | 102 | 26 | 26 | yes | yes |  | yes |
+
+## Mismatch Evidence
+
+```json
+[
+  {
+    "attention_mask_equal": true,
+    "chars": 94,
+    "first_attention_mask_mismatch_index": null,
+    "first_input_ids_mismatch_index": null,
+    "go_attention_mask_sha256": "7e6e5633f5da80d0a6f26d5c71f30c87b7c21937aba61b50548d15063aa02fb8",
+    "go_ids_window": [
+      0,
+      2832,
+      36581,
+      721,
+      9895,
+      4515
+    ],
+    "go_input_ids_sha256": "d4de69e6cc102b92fa0196f6763fa9448f07c10ce642467d5bf99c7866246b2b",
+    "go_token_count": 21,
+    "hf_attention_mask_sha256": "7e6e5633f5da80d0a6f26d5c71f30c87b7c21937aba61b50548d15063aa02fb8",
+    "hf_ids_window": [
+      0,
+      2832,
+      36581,
+      721,
+      9895,
+      4515
+    ],
+    "hf_input_ids_sha256": "d4de69e6cc102b92fa0196f6763fa9448f07c10ce642467d5bf99c7866246b2b",
+    "hf_token_count": 21,
+    "input_ids_equal": true,
+    "label": "contract_question_jurisdiction",
+    "passed": true
+  },
+  {
+    "attention_mask_equal": true,
+    "chars": 131,
+    "first_attention_mask_mismatch_index": null,
+    "first_input_ids_mismatch_index": null,
+    "go_attention_mask_sha256": "309b10c54bd816d70a6297582606e0e881dc97d1e14d02dfe6dd5374b1befa14",
+    "go_ids_window": [
+      0,
+      678,
+      4434,
+      21241,
+      20495,
+      44175
+    ],
+    "go_input_ids_sha256": "b44625c364dbb178e9fa40babb14a29c514e92f16dd7dd7a2dd890094fd9bc3f",
+    "go_token_count": 29,
+    "hf_attention_mask_sha256": "309b10c54bd816d70a6297582606e0e881dc97d1e14d02dfe6dd5374b1befa14",
+    "hf_ids_window": [
+      0,
+      678,
+      4434,
+      21241,
+      20495,
+      44175
+    ],
+    "hf_input_ids_sha256": "b44625c364dbb178e9fa40babb14a29c514e92f16dd7dd7a2dd890094fd9bc3f",
+    "hf_token_count": 29,
+    "input_ids_equal": true,
+    "label": "contract_clause_delivery",
+    "passed": true
+  },
+  {
+    "attention_mask_equal": true,
+    "chars": 103,
+    "first_attention_mask_mismatch_index": null,
+    "first_input_ids_mismatch_index": null,
+    "go_attention_mask_sha256": "7e6e5633f5da80d0a6f26d5c71f30c87b7c21937aba61b50548d15063aa02fb8",
+    "go_ids_window": [
+      0,
+      41090,
+      9634,
+      1333,
+      44536,
+      738
+    ],
+    "go_input_ids_sha256": "e87a2ca88a47c9803c404a22b92080948b5a6f6192daf743526977a668de412f",
+    "go_token_count": 21,
+    "hf_attention_mask_sha256": "7e6e5633f5da80d0a6f26d5c71f30c87b7c21937aba61b50548d15063aa02fb8",
+    "hf_ids_window": [
+      0,
+      41090,
+      9634,
+      1333,
+      44536,
+      738
+    ],
+    "hf_input_ids_sha256": "e87a2ca88a47c9803c404a22b92080948b5a6f6192daf743526977a668de412f",
+    "hf_token_count": 21,
+    "input_ids_equal": true,
+    "label": "labor_question_termination",
+    "passed": true
+  },
+  {
+    "attention_mask_equal": true,
+    "chars": 140,
+    "first_attention_mask_mismatch_index": null,
+    "first_input_ids_mismatch_index": null,
+    "go_attention_mask_sha256": "9de7bfb2f44e892395e5838e90995fa49b664fda332e474e4353bfd3cbfd0f66",
+    "go_ids_window": [
+      0,
+      4682,
+      13707,
+      4,
+      2164,
+      11286
+    ],
+    "go_input_ids_sha256": "fbdc9331c6f9c77cf9ce5a6566de6deb07753d117524109debc07b9628825fac",
+    "go_token_count": 35,
+    "hf_attention_mask_sha256": "9de7bfb2f44e892395e5838e90995fa49b664fda332e474e4353bfd3cbfd0f66",
+    "hf_ids_window": [
+      0,
+      4682,
+      13707,
+      4,
+      2164,
+      11286
+    ],
+    "hf_input_ids_sha256": "fbdc9331c6f9c77cf9ce5a6566de6deb07753d117524109debc07b9628825fac",
+    "hf_token_count": 35,
+    "input_ids_equal": true,
+    "label": "civil_clause_damages",
+    "passed": true
+  },
+  {
+    "attention_mask_equal": true,
+    "chars": 102,
+    "first_attention_mask_mismatch_index": null,
+    "first_input_ids_mismatch_index": null,
+    "go_attention_mask_sha256": "800fce65fe37abdd8ee5cfa671ca420354faeceba125bd00be5d9e3d4154837f",
+    "go_ids_window": [
+      0,
+      10009,
+      261,
+      15667,
+      1417,
+      29
+    ],
+    "go_input_ids_sha256": "0552e04f9107461102f6748920c86b2d299fa84ab5291df22a3ca840db2824fe",
+    "go_token_count": 26,
+    "hf_attention_mask_sha256": "800fce65fe37abdd8ee5cfa671ca420354faeceba125bd00be5d9e3d4154837f",
+    "hf_ids_window": [
+      0,
+      10009,
+      261,
+      15667,
+      1417,
+      29
+    ],
+    "hf_input_ids_sha256": "0552e04f9107461102f6748920c86b2d299fa84ab5291df22a3ca840db2824fe",
+    "hf_token_count": 26,
+    "input_ids_equal": true,
+    "label": "neutral_russian_reference",
+    "passed": true
+  }
+]
+```
+
+## Verdict
+
+PASS
+
+Raw probe texts are intentionally excluded from this artifact.

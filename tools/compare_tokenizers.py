@@ -35,7 +35,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Compare tokenizer output for fd ONNX parity work.")
     parser.add_argument(
         "--mode",
-        choices=["baseline", "go-current"],
+        choices=["baseline", "go-current", "go-hf-binding"],
         default="baseline",
         help="Operation mode. Writes the HF baseline or compares the current Go tokenizer against it.",
     )
@@ -55,6 +55,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_PROBES_SOURCE,
         help="Python source file containing the fixed PROBES literal.",
+    )
+    parser.add_argument(
+        "--hf-tokenizers-lib-dir",
+        type=Path,
+        default=Path(os.getenv("HF_TOKENIZERS_LIB_DIR", "")) if os.getenv("HF_TOKENIZERS_LIB_DIR") else None,
+        help="Directory containing libtokenizers.a for go-hf-binding mode.",
     )
     parser.add_argument(
         "--baseline",
@@ -279,6 +285,149 @@ def build_go_current_comparison(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def run_go_hf_binding_tokenizer(args: argparse.Namespace, probes: list[dict[str, str]]) -> list[dict[str, Any]]:
+    if args.hf_tokenizers_lib_dir is None:
+        raise RuntimeError("--hf-tokenizers-lib-dir or HF_TOKENIZERS_LIB_DIR is required for go-hf-binding mode")
+    lib_dir = args.hf_tokenizers_lib_dir.resolve()
+    if not (lib_dir / "libtokenizers.a").exists():
+        raise RuntimeError(f"libtokenizers.a not found in {lib_dir}")
+    go_tokenizer_path = args.tokenizer_path / "tokenizer.json" if args.tokenizer_path.is_dir() else args.tokenizer_path
+    payload = {
+        "tokenizer_path": str(go_tokenizer_path.resolve()),
+        "probes": probes,
+    }
+    go_source = r'''
+package main
+
+import (
+  "encoding/json"
+  "fmt"
+  "os"
+
+  "github.com/daulet/tokenizers"
+)
+
+type probe struct {
+  Label string `json:"label"`
+  Text string `json:"text"`
+}
+
+type payload struct {
+  TokenizerPath string `json:"tokenizer_path"`
+  Probes []probe `json:"probes"`
+}
+
+type result struct {
+  Label string `json:"label"`
+  InputIDs []uint32 `json:"input_ids"`
+  AttentionMask []uint32 `json:"attention_mask"`
+}
+
+func main() {
+  if len(os.Args) != 2 {
+    fmt.Fprintln(os.Stderr, "usage: go-hf-tokenizer <payload.json>")
+    os.Exit(2)
+  }
+  data, err := os.ReadFile(os.Args[1])
+  if err != nil { panic(err) }
+  var in payload
+  if err := json.Unmarshal(data, &in); err != nil { panic(err) }
+  tk, err := tokenizers.FromFile(in.TokenizerPath)
+  if err != nil { panic(err) }
+  defer tk.Close()
+  out := make([]result, 0, len(in.Probes))
+  for _, p := range in.Probes {
+    enc := tk.EncodeWithOptions(p.Text, true, tokenizers.WithReturnAttentionMask())
+    out = append(out, result{Label: p.Label, InputIDs: enc.IDs, AttentionMask: enc.AttentionMask})
+  }
+  encoded, err := json.Marshal(out)
+  if err != nil { panic(err) }
+  fmt.Println(string(encoded))
+}
+'''
+    with tempfile.TemporaryDirectory(prefix="fd-hf-tokenizer-") as temp_dir:
+        temp = Path(temp_dir)
+        payload_path = temp / "payload.json"
+        source_path = temp / "go_hf_tokenizer_probe.go"
+        payload_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        source_path.write_text(go_source, encoding="utf-8")
+        subprocess.run(["go", "mod", "init", "fd-hf-tokenizer-probe"], cwd=temp, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=60)
+        subprocess.run(["go", "get", "github.com/daulet/tokenizers@latest"], cwd=temp, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, timeout=120)
+        completed = subprocess.run(
+            ["go", "run", str(source_path), str(payload_path)],
+            cwd=temp,
+            env={**os.environ, "CGO_LDFLAGS": f"-L{lib_dir}"},
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            timeout=180,
+        )
+    if completed.returncode != 0:
+        raise RuntimeError(f"go hf tokenizer probe failed with exit {completed.returncode}: {completed.stderr.strip()}")
+    value = json.loads(completed.stdout)
+    if not isinstance(value, list):
+        raise RuntimeError("go hf tokenizer output must be a list")
+    return value
+
+
+def build_go_binding_comparison(args: argparse.Namespace) -> dict[str, Any]:
+    probes_input = load_probes(args.probes_source)
+    baseline_items = extract_token_evidence(args.baseline)
+    go_items = run_go_hf_binding_tokenizer(args, probes_input)
+    baseline_by_label = {item["label"]: item for item in baseline_items}
+    all_passed = True
+    comparisons: list[dict[str, Any]] = []
+    for probe, go_item in zip(probes_input, go_items):
+        label = probe["label"]
+        expected = baseline_by_label[label]
+        go_ids = [int(value) for value in go_item["input_ids"]]
+        go_mask = [int(value) for value in go_item["attention_mask"]]
+        hf_ids = [int(value) for value in expected["input_ids"]]
+        hf_mask = [int(value) for value in expected["attention_mask"]]
+        ids_equal = go_ids == hf_ids
+        mask_equal = go_mask == hf_mask
+        passed = ids_equal and mask_equal
+        all_passed = all_passed and passed
+        ids_mismatch = first_mismatch(hf_ids, go_ids)
+        mask_mismatch = first_mismatch(hf_mask, go_mask)
+        comparisons.append(
+            {
+                "label": label,
+                "chars": len(probe["text"]),
+                "hf_token_count": len(hf_ids),
+                "go_token_count": len(go_ids),
+                "hf_input_ids_sha256": sha256_json(hf_ids),
+                "go_input_ids_sha256": sha256_json(go_ids),
+                "hf_attention_mask_sha256": sha256_json(hf_mask),
+                "go_attention_mask_sha256": sha256_json(go_mask),
+                "input_ids_equal": ids_equal,
+                "attention_mask_equal": mask_equal,
+                "first_input_ids_mismatch_index": ids_mismatch,
+                "first_attention_mask_mismatch_index": mask_mismatch,
+                "hf_ids_window": list_window(hf_ids, ids_mismatch),
+                "go_ids_window": list_window(go_ids, ids_mismatch),
+                "passed": passed,
+            }
+        )
+    return {
+        "script_version": SCRIPT_VERSION,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "mode": args.mode,
+        "model": args.model,
+        "baseline": str(args.baseline),
+        "probes_source": str(args.probes_source),
+        "probes_source_sha256": sha256_file(args.probes_source),
+        "tokenizer_path": str(args.tokenizer_path),
+        "go_tokenizer_library": "github.com/daulet/tokenizers + Hugging Face Rust tokenizers libtokenizers.a",
+        "hf_tokenizers_lib_dir": str(args.hf_tokenizers_lib_dir) if args.hf_tokenizers_lib_dir else None,
+        "raw_probe_texts_logged": False,
+        "probe_count": len(probes_input),
+        "comparisons": comparisons,
+        "passed": all_passed,
+    }
+
+
 def load_tokenizer(tokenizer_path: Path) -> Any:
     if not tokenizer_path.exists():
         raise RuntimeError(f"tokenizer path does not exist: {tokenizer_path}")
@@ -400,8 +549,9 @@ def render_markdown(result: dict[str, Any]) -> str:
 
 def render_comparison_markdown(result: dict[str, Any]) -> str:
     config = {key: value for key, value in result.items() if key not in {"comparisons", "passed"}}
+    title = "# Go Tokenizer HF Binding Comparison — M012 S03" if result.get("mode") == "go-hf-binding" else "# Go Tokenizer Comparison — M012 S02"
     lines = [
-        "# Go Tokenizer Comparison — M012 S02",
+        title,
         "",
         "## Effective Configuration",
         "",
@@ -450,12 +600,20 @@ def render_comparison_markdown(result: dict[str, Any]) -> str:
 def main() -> int:
     args = parse_args()
     if args.output is None:
-        args.output = DEFAULT_OUTPUT if args.mode == "baseline" else Path("benchmark-results/fd-tokenizer-go-current-m012-s02.txt")
+        if args.mode == "baseline":
+            args.output = DEFAULT_OUTPUT
+        elif args.mode == "go-current":
+            args.output = Path("benchmark-results/fd-tokenizer-go-current-m012-s02.txt")
+        else:
+            args.output = Path("benchmark-results/fd-tokenizer-go-hf-binding-m012-s03.txt")
     if args.mode == "baseline":
         result = build_baseline(args)
         artifact = render_markdown(result)
-    else:
+    elif args.mode == "go-current":
         result = build_go_current_comparison(args)
+        artifact = render_comparison_markdown(result)
+    else:
+        result = build_go_binding_comparison(args)
         artifact = render_comparison_markdown(result)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(artifact, encoding="utf-8")

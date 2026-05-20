@@ -19,8 +19,8 @@
 - [x] **S02: S02** `risk:high` `depends:[]`
   > After this: After this, current and candidate Go tokenizers are compared against the HF baseline with exact mismatch evidence.
 
-- [ ] **S03: Tokenizer parity implementation or blocker** `risk:high` `depends:[S02]`
-  > After this: After this, Go tokenizer parity either passes or is blocked with concrete dependency/runtime evidence.
+- [x] **S03: S03** `risk:high` `depends:[]`
+  > After this: After this, Go tokenizer parity either passes through a tested HF Rust tokenizers binding or is blocked with concrete linking/correctness evidence.
 
 - [ ] **S04: Final parity decision and ONNX gate** `risk:medium` `depends:[S03]`
   > After this: After this, the project either has a valid post-parity ONNX cosine comparison or a final recommendation to defer ONNX benchmarking.
