@@ -1,0 +1,405 @@
+# M015 Russian Legal Retrieval Gate
+
+## Effective Configuration
+
+```json
+{
+  "batch_size": 16,
+  "corpus_path": "tests/44-FZ-2026-articles.jsonl",
+  "corpus_sha256": "de03cda6b266085a9b1f2376afcb9dffbb00fec922dee1f1553cadcfb6d03869",
+  "corpus_stats": {
+    "articles": 94,
+    "candidate_documents_invalid": 197,
+    "candidate_documents_non_invalid": 1655,
+    "candidate_documents_total": 1852,
+    "clauses": 912,
+    "parts": 668,
+    "subclauses": 272,
+    "title_queries_total": 76
+  },
+  "dimensions": 1024,
+  "generated_at": "2026-05-20T05:01:20.867607+00:00",
+  "max_docs": 256,
+  "max_self_queries": 64,
+  "max_title_queries": 32,
+  "model": "deepvk/USER-bge-m3",
+  "onnx": {
+    "api_url": "http://localhost:18000",
+    "cache_namespace": "m015-onnx-legal-quality",
+    "runtime_label": "tagged-onnx-hf"
+  },
+  "raw_text_logged": false,
+  "script_version": 1,
+  "selected": {
+    "document_chars": {
+      "count": 256,
+      "mean": 414.230469,
+      "min": 15.0,
+      "p50": 224.0,
+      "p95": 1577.0
+    },
+    "documents": 256,
+    "queries": 87,
+    "query_chars": {
+      "count": 87,
+      "mean": 362.551724,
+      "min": 8.0,
+      "p50": 201.0,
+      "p95": 1101.0
+    },
+    "self_document_queries": 64,
+    "title_queries": 23
+  },
+  "tei": {
+    "api_url": "http://localhost:8000",
+    "cache_namespace": "default-or-current",
+    "runtime_label": "tei-default"
+  },
+  "thresholds": {
+    "min_cross_backend_cosine": 0.999,
+    "min_mean_overlap_at_5": 0.9,
+    "min_onnx_recall_ratio": 0.98,
+    "min_top1_agreement": 0.9
+  },
+  "top_k": 5
+}
+```
+
+## Metrics
+
+```json
+{
+  "cross_backend_cosine": {
+    "documents": {
+      "count": 256,
+      "mean": 0.980829,
+      "min": 0.369489,
+      "p50": 0.999992,
+      "p95": 0.999994
+    },
+    "minimum_overall": 0.36948916,
+    "queries": {
+      "count": 87,
+      "mean": 0.988261,
+      "min": 0.656612,
+      "p50": 0.999993,
+      "p95": 0.999994
+    },
+    "worst_documents": [
+      {
+        "article": "15",
+        "chars": 1643,
+        "cosine": 0.36948916,
+        "id": "44-FZ:a15:p2:c2",
+        "kind": "clause",
+        "text_sha256": "fa670277ce38a449da912e260c148c9bfcb3fda15a7bec3e0282bf15c83d14e5"
+      },
+      {
+        "article": "19",
+        "chars": 1300,
+        "cosine": 0.37324017,
+        "id": "44-FZ:a19:p4:c2",
+        "kind": "clause",
+        "text_sha256": "c0ad17c29a41ffee7a35215e95d77246922ca05e1986919141c6449d4fde04c8"
+      },
+      {
+        "article": "24.1",
+        "chars": 2411,
+        "cosine": 0.38915715,
+        "id": "44-FZ:a24.1:p2:c1",
+        "kind": "clause",
+        "text_sha256": "0f1f6d9f4bb570b8916b31acca5c4225b5cc3a988f116474836891dea1cb6a87"
+      },
+      {
+        "article": "14",
+        "chars": 1101,
+        "cosine": 0.65661198,
+        "id": "44-FZ:a14:p4:c3:sidx1",
+        "kind": "subclause",
+        "text_sha256": "3661ff74576f026582fd3e4bf5987aeec07d02a191b689b0a67094a281ddd726"
+      },
+      {
+        "article": "33",
+        "chars": 637,
+        "cosine": 0.70447775,
+        "id": "44-FZ:a33:p1:c3",
+        "kind": "clause",
+        "text_sha256": "e1ff7707c26c7168c53a595ec3a61d51e219245e9f082a929650db0a58f88dc7"
+      },
+      {
+        "article": "14",
+        "chars": 1816,
+        "cosine": 0.81426832,
+        "id": "44-FZ:a14:p5:c3",
+        "kind": "clause",
+        "text_sha256": "70f53c280701cda40c95f063b7aab3378ea55ec99904b259e3256466ba589330"
+      },
+      {
+        "article": "4",
+        "chars": 705,
+        "cosine": 0.8244999,
+        "id": "44-FZ:a4:p10:c1",
+        "kind": "clause",
+        "text_sha256": "e3d2bd4e7e41f83e1164ce33a418e2f97c16b56924151ffb0dcf7583ba3f6868"
+      },
+      {
+        "article": "14",
+        "chars": 1837,
+        "cosine": 0.83398911,
+        "id": "44-FZ:a14:p4:c3",
+        "kind": "clause",
+        "text_sha256": "8847dd081d661f94e81224078e952b11cfef281a38e4f9d36efdc8462cedf334"
+      },
+      {
+        "article": "24",
+        "chars": 3108,
+        "cosine": 0.85883673,
+        "id": "44-FZ:a24:p11:c5",
+        "kind": "clause",
+        "text_sha256": "3afd0d56f9021bf517addc53440fb8ead72b54dcbc5ec48e75e100d5aaf4e862"
+      },
+      {
+        "article": "24",
+        "chars": 2398,
+        "cosine": 0.86114855,
+        "id": "44-FZ:a24:p10:c2",
+        "kind": "clause",
+        "text_sha256": "092c1b4ecd0301520e83faa4d996e7d3feba631fcf7597105a182490bb89c3e4"
+      }
+    ],
+    "worst_queries": [
+      {
+        "article": "14",
+        "chars": 1101,
+        "cosine": 0.65661198,
+        "id": "self:44-FZ:a14:p4:c3:sidx1",
+        "kind": "self_document",
+        "text_sha256": "3661ff74576f026582fd3e4bf5987aeec07d02a191b689b0a67094a281ddd726"
+      },
+      {
+        "article": "4",
+        "chars": 705,
+        "cosine": 0.8244999,
+        "id": "self:44-FZ:a4:p10:c1",
+        "kind": "self_document",
+        "text_sha256": "e3d2bd4e7e41f83e1164ce33a418e2f97c16b56924151ffb0dcf7583ba3f6868"
+      },
+      {
+        "article": "14",
+        "chars": 1837,
+        "cosine": 0.83398911,
+        "id": "self:44-FZ:a14:p4:c3",
+        "kind": "self_document",
+        "text_sha256": "8847dd081d661f94e81224078e952b11cfef281a38e4f9d36efdc8462cedf334"
+      },
+      {
+        "article": "4",
+        "chars": 1070,
+        "cosine": 0.9192897,
+        "id": "self:44-FZ:a4:p14:c4",
+        "kind": "self_document",
+        "text_sha256": "32359a657b907c75c0819a42a6eb93c2d85f7aadbcbf60ad35c3d2c1912ed9d7"
+      },
+      {
+        "article": "3",
+        "chars": 3376,
+        "cosine": 0.94922301,
+        "id": "self:44-FZ:a3:p1:c8",
+        "kind": "self_document",
+        "text_sha256": "19c0d928b2bfbd6e5076da61a0141fba970f60d1f41840ca0e616a32c4063c84"
+      },
+      {
+        "article": "3",
+        "chars": 1310,
+        "cosine": 0.94943691,
+        "id": "self:44-FZ:a3:p1:c4",
+        "kind": "self_document",
+        "text_sha256": "f11a2397cbfe7df51c2262ec221fbf6447db8c7039b09bb662f17f4ff160280a"
+      },
+      {
+        "article": "14",
+        "chars": 767,
+        "cosine": 0.96290745,
+        "id": "self:44-FZ:a14:p2:c1",
+        "kind": "self_document",
+        "text_sha256": "f9a4480c430262cd1d2c30f1e634d1e90f3b58967e2393abadc85f8bb4b2a2cc"
+      },
+      {
+        "article": "3",
+        "chars": 1577,
+        "cosine": 0.96735846,
+        "id": "self:44-FZ:a3:p1:c1",
+        "kind": "self_document",
+        "text_sha256": "96d52338d7ccc94decaf0b4ac25c7cda4ac5103515eed778dadf2075bb8edb82"
+      },
+      {
+        "article": "3",
+        "chars": 885,
+        "cosine": 0.96795372,
+        "id": "self:44-FZ:a3:p1:c7",
+        "kind": "self_document",
+        "text_sha256": "8b16027ef0d38d7d52660d0805d0fd19a03f0863c432955d9eb8e4041b109224"
+      },
+      {
+        "article": "14",
+        "chars": 892,
+        "cosine": 0.98586268,
+        "id": "self:44-FZ:a14:p4:c2",
+        "kind": "self_document",
+        "text_sha256": "ad4ea443d9d2a301be6772b461e3ed20cedb0f26155b3182ce7b5153ef292a6e"
+      }
+    ]
+  },
+  "onnx_recall_ratio": 0.991422,
+  "ranking": {
+    "mean_overlap_at_5": 0.908046,
+    "onnx_mean_recall_at_5": 0.797126,
+    "onnx_mrr": 0.848809,
+    "tei_mean_recall_at_5": 0.804023,
+    "tei_mrr": 0.862557,
+    "top1_agreement": 0.977011,
+    "worst_queries": [
+      {
+        "onnx_mrr": 0.1429,
+        "onnx_recall_at_5": 0.0,
+        "onnx_top1": "44-FZ:a24:p11:c2",
+        "overlap_at_5": 0.4,
+        "query_chars": 61,
+        "query_id": "44-FZ:a14:title",
+        "query_kind": "title",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 0.6,
+        "tei_top1": "44-FZ:a14:p4:c3",
+        "top1_agreement": false
+      },
+      {
+        "onnx_mrr": 1.0,
+        "onnx_recall_at_5": 1.0,
+        "onnx_top1": "44-FZ:a3:p1:c7",
+        "overlap_at_5": 0.6,
+        "query_chars": 885,
+        "query_id": "self:44-FZ:a3:p1:c7",
+        "query_kind": "self_document",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 1.0,
+        "tei_top1": "44-FZ:a3:p1:c7",
+        "top1_agreement": true
+      },
+      {
+        "onnx_mrr": 1.0,
+        "onnx_recall_at_5": 1.0,
+        "onnx_top1": "44-FZ:a4:p14:c4",
+        "overlap_at_5": 0.6,
+        "query_chars": 1070,
+        "query_id": "self:44-FZ:a4:p14:c4",
+        "query_kind": "self_document",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 1.0,
+        "tei_top1": "44-FZ:a4:p14:c4",
+        "top1_agreement": true
+      },
+      {
+        "onnx_mrr": 1.0,
+        "onnx_recall_at_5": 1.0,
+        "onnx_top1": "44-FZ:a14:p4:c3:sidx1",
+        "overlap_at_5": 0.6,
+        "query_chars": 1101,
+        "query_id": "self:44-FZ:a14:p4:c3:sidx1",
+        "query_kind": "self_document",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 1.0,
+        "tei_top1": "44-FZ:a14:p4:c3:sidx1",
+        "top1_agreement": true
+      },
+      {
+        "onnx_mrr": 0.5,
+        "onnx_recall_at_5": 0.4,
+        "onnx_top1": "44-FZ:a16:p2:c2",
+        "overlap_at_5": 0.8,
+        "query_chars": 32,
+        "query_id": "44-FZ:a33:title",
+        "query_kind": "title",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 0.6,
+        "tei_top1": "44-FZ:a33:p1:c8",
+        "top1_agreement": false
+      },
+      {
+        "onnx_mrr": 1.0,
+        "onnx_recall_at_5": 0.2,
+        "onnx_top1": "44-FZ:a15:p2:c3",
+        "overlap_at_5": 0.8,
+        "query_chars": 155,
+        "query_id": "44-FZ:a15:title",
+        "query_kind": "title",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 0.2,
+        "tei_top1": "44-FZ:a15:p2:c3",
+        "top1_agreement": true
+      },
+      {
+        "onnx_mrr": 0.5,
+        "onnx_recall_at_5": 0.4,
+        "onnx_top1": "44-FZ:a1:p1:c1",
+        "overlap_at_5": 0.8,
+        "query_chars": 20,
+        "query_id": "44-FZ:a16:title",
+        "query_kind": "title",
+        "tei_mrr": 0.5,
+        "tei_recall_at_5": 0.4,
+        "tei_top1": "44-FZ:a1:p1:c1",
+        "top1_agreement": true
+      },
+      {
+        "onnx_mrr": 1.0,
+        "onnx_recall_at_5": 1.0,
+        "onnx_top1": "44-FZ:a36:p2:c1",
+        "overlap_at_5": 0.8,
+        "query_chars": 14,
+        "query_id": "44-FZ:a36:title",
+        "query_kind": "title",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 1.0,
+        "tei_top1": "44-FZ:a36:p2:c1",
+        "top1_agreement": true
+      },
+      {
+        "onnx_mrr": 1.0,
+        "onnx_recall_at_5": 1.0,
+        "onnx_top1": "44-FZ:a1:p1:c3",
+        "overlap_at_5": 0.8,
+        "query_chars": 125,
+        "query_id": "self:44-FZ:a1:p1:c3",
+        "query_kind": "self_document",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 1.0,
+        "tei_top1": "44-FZ:a1:p1:c3",
+        "top1_agreement": true
+      },
+      {
+        "onnx_mrr": 1.0,
+        "onnx_recall_at_5": 1.0,
+        "onnx_top1": "44-FZ:a3:p1:c1",
+        "overlap_at_5": 0.8,
+        "query_chars": 1577,
+        "query_id": "self:44-FZ:a3:p1:c1",
+        "query_kind": "self_document",
+        "tei_mrr": 1.0,
+        "tei_recall_at_5": 1.0,
+        "tei_top1": "44-FZ:a3:p1:c1",
+        "top1_agreement": true
+      }
+    ]
+  }
+}
+```
+
+## Verdict
+
+FAIL
+
+## Caveat
+
+Unlabeled corpus: metrics show TEI-vs-ONNX parity and synthetic known-item behavior, not absolute human relevance quality.
+
+Raw legal corpus text is intentionally excluded from this artifact.

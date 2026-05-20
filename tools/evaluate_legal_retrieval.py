@@ -84,7 +84,9 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def stable_number(value: Any) -> str:
+def stable_number(value: Any, fallback: str) -> str:
+    if value is None or value == "":
+        return fallback
     return str(value).replace(" ", "_")
 
 
@@ -100,13 +102,13 @@ def load_corpus(path: Path) -> tuple[list[Document], list[Query], dict[str, Any]
             continue
         obj = json.loads(line)
         articles += 1
-        article = stable_number(obj.get("article"))
-        doc_prefix = stable_number(obj.get("doc_id", "doc"))
+        article = stable_number(obj.get("article"), f"line{articles}")
+        doc_prefix = stable_number(obj.get("doc_id", "doc"), "doc")
         article_doc_ids: list[str] = []
 
-        for part in obj.get("parts") or []:
+        for part_index, part in enumerate(obj.get("parts") or [], 1):
             parts += 1
-            part_no = stable_number(part.get("number"))
+            part_no = stable_number(part.get("number"), f"idx{part_index}")
             part_invalid = bool(part.get("invalid"))
             part_text = part.get("text") or ""
             part_id = f"{doc_prefix}:a{article}:p{part_no}"
@@ -124,9 +126,9 @@ def load_corpus(path: Path) -> tuple[list[Document], list[Query], dict[str, Any]
                 article_doc_ids.append(document.doc_id)
                 invalid_docs += int(part_invalid)
 
-            for clause in part.get("clauses") or []:
+            for clause_index, clause in enumerate(part.get("clauses") or [], 1):
                 clauses += 1
-                clause_no = stable_number(clause.get("number"))
+                clause_no = stable_number(clause.get("number"), f"idx{clause_index}")
                 clause_invalid = part_invalid or bool(clause.get("invalid"))
                 clause_text = clause.get("text") or ""
                 clause_id = f"{doc_prefix}:a{article}:p{part_no}:c{clause_no}"
@@ -144,9 +146,9 @@ def load_corpus(path: Path) -> tuple[list[Document], list[Query], dict[str, Any]
                     article_doc_ids.append(document.doc_id)
                     invalid_docs += int(clause_invalid)
 
-                for subclause in clause.get("subclauses") or []:
+                for subclause_index, subclause in enumerate(clause.get("subclauses") or [], 1):
                     subclauses += 1
-                    sub_no = stable_number(subclause.get("number"))
+                    sub_no = stable_number(subclause.get("number"), f"idx{subclause_index}")
                     sub_invalid = clause_invalid or bool(subclause.get("invalid"))
                     sub_text = subclause.get("text") or ""
                     sub_id = f"{doc_prefix}:a{article}:p{part_no}:c{clause_no}:s{sub_no}"
@@ -407,6 +409,23 @@ def build_config(args: argparse.Namespace, corpus_hash: str, corpus_stats: dict[
     }
 
 
+def worst_cross_backend_cosines(items: list[Any], cosines: list[float], limit: int = 10) -> list[dict[str, Any]]:
+    rows = []
+    for item, value in zip(items, cosines):
+        rows.append(
+            {
+                "id": getattr(item, "doc_id", getattr(item, "query_id", "unknown")),
+                "kind": item.kind,
+                "article": item.article,
+                "chars": item.chars,
+                "cosine": round(value, 8),
+                "text_sha256": item.text_sha256,
+            }
+        )
+    rows.sort(key=lambda row: row["cosine"])
+    return rows[:limit]
+
+
 def build_result(args: argparse.Namespace) -> dict[str, Any]:
     documents_all, title_queries, corpus_stats = load_corpus(args.corpus)
     docs = select_documents(documents_all, args.max_docs)
@@ -454,6 +473,8 @@ def build_result(args: argparse.Namespace) -> dict[str, Any]:
                 "documents": summarize(doc_cosines),
                 "queries": summarize(query_cosines),
                 "minimum_overall": round(cross_backend_cosine, 8),
+                "worst_documents": worst_cross_backend_cosines(docs, doc_cosines),
+                "worst_queries": worst_cross_backend_cosines(queries, query_cosines),
             },
             "ranking": ranking_metrics,
             "onnx_recall_ratio": round(recall_ratio, 6),

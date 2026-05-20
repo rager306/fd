@@ -18,7 +18,7 @@
 - [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: After this, there is a reusable local evaluator for the provided legal JSONL file.
 
-- [ ] **S03: Run legal retrieval quality gate** `risk:high` `depends:[S02]`
+- [x] **S03: S03** `risk:high` `depends:[]`
   > After this: After this, ONNX has a real first-pass Russian/legal retrieval parity result.
 
 - [ ] **S04: Quality verdict and closure** `risk:medium` `depends:[S03]`
