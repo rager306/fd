@@ -15,7 +15,7 @@
 - [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: After this, the M015 failure cases are concrete and diagnosable by ID/hash/length/token counts.
 
-- [ ] **S02: Truncation root-cause diagnostics** `risk:high` `depends:[S01]`
+- [x] **S02: S02** `risk:high` `depends:[]`
   > After this: After this, we know whether max sequence length 128 is the likely cause or whether another ONNX path issue remains.
 
 - [ ] **S03: Remediation option assessment** `risk:medium` `depends:[S02]`

@@ -1,0 +1,391 @@
+# M016 S02 ONNX Sequence Length Diagnostics
+
+## Result
+
+```json
+{
+  "caveat": "This compares TEI API vectors with local Python ONNX outputs at selected tokenizer max lengths. It isolates sequence length effects from the Go service path but does not change production runtime.",
+  "config": {
+    "api_url": "http://localhost:8000",
+    "case_count": 17,
+    "corpus": "tests/44-FZ-2026-articles.jsonl",
+    "corpus_sha256": "de03cda6b266085a9b1f2376afcb9dffbb00fec922dee1f1553cadcfb6d03869",
+    "dimensions": 1024,
+    "model": "deepvk/USER-bge-m3",
+    "onnx_path": ".gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx",
+    "onnx_sha256": "28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4",
+    "profile": "benchmark-results/fd-legal-divergence-profile-m016-s01.txt",
+    "profile_sha256": "7f27a41f719d0dbf862f30e5a2ca7bd7c8aa15f404bc6ef1fd7e258b59be5df4",
+    "sequence_lengths": [
+      128,
+      512
+    ],
+    "tokenizer_json_sha256": "068d9f7ed9dd190a00a567e5f7750fdc591b93bc623072ac8050a303c25f5937",
+    "tokenizer_path": "tei-models/deepvk--USER-bge-m3"
+  },
+  "generated_at": "2026-05-20T05:40:20.947435+00:00",
+  "onnxruntime": {
+    "inputs": [
+      {
+        "name": "input_ids",
+        "shape": [
+          "batch_size",
+          "sequence_length"
+        ],
+        "type": "tensor(int64)"
+      },
+      {
+        "name": "attention_mask",
+        "shape": [
+          "batch_size",
+          "sequence_length"
+        ],
+        "type": "tensor(int64)"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "dense_vecs",
+        "shape": [
+          "batch_size",
+          1024
+        ],
+        "type": "tensor(float)"
+      }
+    ],
+    "providers": [
+      "CPUExecutionProvider"
+    ]
+  },
+  "raw_text_logged": false,
+  "results_by_sequence_length": {
+    "128": {
+      "summary": {
+        "count": 17,
+        "mean": 0.9204953,
+        "min": 0.74389759,
+        "p50": 0.94417767,
+        "p95": 0.99560437
+      },
+      "truncated_cases": 17,
+      "worst_cases": [
+        {
+          "article": "19",
+          "chars": 1300,
+          "id": "44-FZ:a19:p4:c2",
+          "kind": "clause",
+          "m015_cosine": 0.37324017,
+          "onnx_norm": 0.99999973,
+          "onnx_sha256_float32": "caac15409aa9d2c01c1171d93c5439b0986efd4501384fff4806075b81cc3e9f",
+          "tei_norm": 1.00000001,
+          "tei_onnx_cosine": 0.74389759,
+          "text_sha256": "c0ad17c29a41ffee7a35215e95d77246922ca05e1986919141c6449d4fde04c8",
+          "tokens_dropped_at_length": 129,
+          "tokens_with_specials": 257,
+          "truncated_at_length": true
+        },
+        {
+          "article": "14",
+          "chars": 1816,
+          "id": "44-FZ:a14:p5:c3",
+          "kind": "clause",
+          "m015_cosine": 0.81426832,
+          "onnx_norm": 1.00000022,
+          "onnx_sha256_float32": "b9ecfe335ff438baaaa95c18feb9be11e3a98c266f8825c3a5405bcddbcdaa04",
+          "tei_norm": 1.0,
+          "tei_onnx_cosine": 0.81059711,
+          "text_sha256": "70f53c280701cda40c95f063b7aab3378ea55ec99904b259e3256466ba589330",
+          "tokens_dropped_at_length": 264,
+          "tokens_with_specials": 392,
+          "truncated_at_length": true
+        },
+        {
+          "article": "14",
+          "chars": 1837,
+          "id": "44-FZ:a14:p4:c3",
+          "kind": "clause",
+          "m015_cosine": 0.83398911,
+          "onnx_norm": 1.00000054,
+          "onnx_sha256_float32": "4288fca63301953064b9eb307ad6747c55ed6078756b91fa6db0840940fe3b2b",
+          "tei_norm": 0.99999997,
+          "tei_onnx_cosine": 0.85147539,
+          "text_sha256": "8847dd081d661f94e81224078e952b11cfef281a38e4f9d36efdc8462cedf334",
+          "tokens_dropped_at_length": 252,
+          "tokens_with_specials": 380,
+          "truncated_at_length": true
+        },
+        {
+          "article": "24",
+          "chars": 3108,
+          "id": "44-FZ:a24:p11:c5",
+          "kind": "clause",
+          "m015_cosine": 0.85883673,
+          "onnx_norm": 1.00000034,
+          "onnx_sha256_float32": "1ab48ade1cf26b65453654a1f74b5e68087a7120aae17c5b8fbbc9bff87abb19",
+          "tei_norm": 0.99999996,
+          "tei_onnx_cosine": 0.86036102,
+          "text_sha256": "3afd0d56f9021bf517addc53440fb8ead72b54dcbc5ec48e75e100d5aaf4e862",
+          "tokens_dropped_at_length": 493,
+          "tokens_with_specials": 621,
+          "truncated_at_length": true
+        },
+        {
+          "article": "24",
+          "chars": 2398,
+          "id": "44-FZ:a24:p10:c2",
+          "kind": "clause",
+          "m015_cosine": 0.86114855,
+          "onnx_norm": 1.00000072,
+          "onnx_sha256_float32": "21c8fb3eae0737afcc8f3ce087c9eb96141808e520893c7aac123992b9b91133",
+          "tei_norm": 0.99999999,
+          "tei_onnx_cosine": 0.86262931,
+          "text_sha256": "092c1b4ecd0301520e83faa4d996e7d3feba631fcf7597105a182490bb89c3e4",
+          "tokens_dropped_at_length": 354,
+          "tokens_with_specials": 482,
+          "truncated_at_length": true
+        },
+        {
+          "article": "4",
+          "chars": 1070,
+          "id": "44-FZ:a4:p14:c4",
+          "kind": "clause",
+          "m015_cosine": 0.9192897,
+          "onnx_norm": 1.00000011,
+          "onnx_sha256_float32": "ae806935cbabfb7f3e78eee66ab693bda73de58a3cebd421cac0dfe3fa9a40a5",
+          "tei_norm": 1.00000001,
+          "tei_onnx_cosine": 0.92401677,
+          "text_sha256": "32359a657b907c75c0819a42a6eb93c2d85f7aadbcbf60ad35c3d2c1912ed9d7",
+          "tokens_dropped_at_length": 98,
+          "tokens_with_specials": 226,
+          "truncated_at_length": true
+        },
+        {
+          "article": "15",
+          "chars": 1643,
+          "id": "44-FZ:a15:p2:c2",
+          "kind": "clause",
+          "m015_cosine": 0.36948916,
+          "onnx_norm": 0.99999988,
+          "onnx_sha256_float32": "3a7828e555de276ab811249674d0b0dc1ba0446732af7584144de0190a786a70",
+          "tei_norm": 0.99999998,
+          "tei_onnx_cosine": 0.93838843,
+          "text_sha256": "fa670277ce38a449da912e260c148c9bfcb3fda15a7bec3e0282bf15c83d14e5",
+          "tokens_dropped_at_length": 213,
+          "tokens_with_specials": 341,
+          "truncated_at_length": true
+        },
+        {
+          "article": "14",
+          "chars": 1101,
+          "id": "44-FZ:a14:p4:c3:sidx1",
+          "kind": "subclause",
+          "m015_cosine": 0.65661198,
+          "onnx_norm": 1.00000005,
+          "onnx_sha256_float32": "2fb5e021beeaa4ae48c9a46ca1840381d1439b3f8e1682c13d5ec46beeef1df6",
+          "tei_norm": 0.99999997,
+          "tei_onnx_cosine": 0.94230981,
+          "text_sha256": "3661ff74576f026582fd3e4bf5987aeec07d02a191b689b0a67094a281ddd726",
+          "tokens_dropped_at_length": 114,
+          "tokens_with_specials": 242,
+          "truncated_at_length": true
+        },
+        {
+          "article": "3",
+          "chars": 3376,
+          "id": "44-FZ:a3:p1:c8",
+          "kind": "clause",
+          "m015_cosine": 0.94922301,
+          "onnx_norm": 1.0,
+          "onnx_sha256_float32": "3fe90c8ca514d040933d2a2c80fe7862f4dd66c8b0b5c4b9f9165dc9bb102b3a",
+          "tei_norm": 0.99999997,
+          "tei_onnx_cosine": 0.94417767,
+          "text_sha256": "19c0d928b2bfbd6e5076da61a0141fba970f60d1f41840ca0e616a32c4063c84",
+          "tokens_dropped_at_length": 569,
+          "tokens_with_specials": 697,
+          "truncated_at_length": true
+        },
+        {
+          "article": "24.1",
+          "chars": 2411,
+          "id": "44-FZ:a24.1:p2:c1",
+          "kind": "clause",
+          "m015_cosine": 0.38915715,
+          "onnx_norm": 1.00000018,
+          "onnx_sha256_float32": "9a70227516487c51c9e3f275f9d48f0614551383dc594fa77c13caeac0213150",
+          "tei_norm": 1.00000002,
+          "tei_onnx_cosine": 0.9469632,
+          "text_sha256": "0f1f6d9f4bb570b8916b31acca5c4225b5cc3a988f116474836891dea1cb6a87",
+          "tokens_dropped_at_length": 315,
+          "tokens_with_specials": 443,
+          "truncated_at_length": true
+        }
+      ]
+    },
+    "512": {
+      "summary": {
+        "count": 17,
+        "mean": 0.99885631,
+        "min": 0.99026363,
+        "p50": 0.9999905,
+        "p95": 0.99999351
+      },
+      "truncated_cases": 2,
+      "worst_cases": [
+        {
+          "article": "24",
+          "chars": 3108,
+          "id": "44-FZ:a24:p11:c5",
+          "kind": "clause",
+          "m015_cosine": 0.85883673,
+          "onnx_norm": 1.00000062,
+          "onnx_sha256_float32": "38136bff3ab4cc95a01aa2822eb41e2a8ae8f72031811b1bf8da90093edfbdec",
+          "tei_norm": 0.99999996,
+          "tei_onnx_cosine": 0.99026363,
+          "text_sha256": "3afd0d56f9021bf517addc53440fb8ead72b54dcbc5ec48e75e100d5aaf4e862",
+          "tokens_dropped_at_length": 109,
+          "tokens_with_specials": 621,
+          "truncated_at_length": true
+        },
+        {
+          "article": "3",
+          "chars": 3376,
+          "id": "44-FZ:a3:p1:c8",
+          "kind": "clause",
+          "m015_cosine": 0.94922301,
+          "onnx_norm": 1.00000041,
+          "onnx_sha256_float32": "e2a54602a29d04e2312d33b75d31d68a4ae81b935db12e2014485ded4b48848a",
+          "tei_norm": 0.99999997,
+          "tei_onnx_cosine": 0.9904441,
+          "text_sha256": "19c0d928b2bfbd6e5076da61a0141fba970f60d1f41840ca0e616a32c4063c84",
+          "tokens_dropped_at_length": 185,
+          "tokens_with_specials": 697,
+          "truncated_at_length": true
+        },
+        {
+          "article": "3",
+          "chars": 885,
+          "id": "44-FZ:a3:p1:c7",
+          "kind": "clause",
+          "m015_cosine": 0.96795372,
+          "onnx_norm": 1.00000024,
+          "onnx_sha256_float32": "3cb36939de325c17660c8aa0b926d5d6bcf9be17b7a42809d82ef30a6c54a421",
+          "tei_norm": 0.99999997,
+          "tei_onnx_cosine": 0.99997498,
+          "text_sha256": "8b16027ef0d38d7d52660d0805d0fd19a03f0863c432955d9eb8e4041b109224",
+          "tokens_dropped_at_length": 0,
+          "tokens_with_specials": 177,
+          "truncated_at_length": false
+        },
+        {
+          "article": "24.1",
+          "chars": 2411,
+          "id": "44-FZ:a24.1:p2:c1",
+          "kind": "clause",
+          "m015_cosine": 0.38915715,
+          "onnx_norm": 1.00000017,
+          "onnx_sha256_float32": "0e6391975822967ca79e96485c6c79f34f89b2803497d152ab1837ddbb994619",
+          "tei_norm": 1.00000002,
+          "tei_onnx_cosine": 0.99998791,
+          "text_sha256": "0f1f6d9f4bb570b8916b31acca5c4225b5cc3a988f116474836891dea1cb6a87",
+          "tokens_dropped_at_length": 0,
+          "tokens_with_specials": 443,
+          "truncated_at_length": false
+        },
+        {
+          "article": "15",
+          "chars": 1643,
+          "id": "44-FZ:a15:p2:c2",
+          "kind": "clause",
+          "m015_cosine": 0.36948916,
+          "onnx_norm": 0.99999989,
+          "onnx_sha256_float32": "7116eda6c1349197b4ebe6a46cf9447636d36ac2ec62da615435bd5846d343c6",
+          "tei_norm": 0.99999998,
+          "tei_onnx_cosine": 0.99998965,
+          "text_sha256": "fa670277ce38a449da912e260c148c9bfcb3fda15a7bec3e0282bf15c83d14e5",
+          "tokens_dropped_at_length": 0,
+          "tokens_with_specials": 341,
+          "truncated_at_length": false
+        },
+        {
+          "article": "14",
+          "chars": 1101,
+          "id": "44-FZ:a14:p4:c3:sidx1",
+          "kind": "subclause",
+          "m015_cosine": 0.65661198,
+          "onnx_norm": 1.00000029,
+          "onnx_sha256_float32": "fe49ea8c8f8028a8d60d1135a287cf84636700d5dc1f7aaea059030606308036",
+          "tei_norm": 0.99999997,
+          "tei_onnx_cosine": 0.99998986,
+          "text_sha256": "3661ff74576f026582fd3e4bf5987aeec07d02a191b689b0a67094a281ddd726",
+          "tokens_dropped_at_length": 0,
+          "tokens_with_specials": 242,
+          "truncated_at_length": false
+        },
+        {
+          "article": "14",
+          "chars": 1837,
+          "id": "44-FZ:a14:p4:c3",
+          "kind": "clause",
+          "m015_cosine": 0.83398911,
+          "onnx_norm": 0.99999986,
+          "onnx_sha256_float32": "d1d7d47fad81efc0bf417af57baa813a8e4a048b8f2198e33cdd186939bc9188",
+          "tei_norm": 0.99999997,
+          "tei_onnx_cosine": 0.99999035,
+          "text_sha256": "8847dd081d661f94e81224078e952b11cfef281a38e4f9d36efdc8462cedf334",
+          "tokens_dropped_at_length": 0,
+          "tokens_with_specials": 380,
+          "truncated_at_length": false
+        },
+        {
+          "article": "14",
+          "chars": 767,
+          "id": "44-FZ:a14:p2:c1",
+          "kind": "clause",
+          "m015_cosine": 0.96290745,
+          "onnx_norm": 1.00000033,
+          "onnx_sha256_float32": "34b716bd6e4e66a337daef19068c38d84f26b70cae15ff38d9d00e7cfbd67215",
+          "tei_norm": 1.00000001,
+          "tei_onnx_cosine": 0.99999044,
+          "text_sha256": "f9a4480c430262cd1d2c30f1e634d1e90f3b58967e2393abadc85f8bb4b2a2cc",
+          "tokens_dropped_at_length": 0,
+          "tokens_with_specials": 174,
+          "truncated_at_length": false
+        },
+        {
+          "article": "14",
+          "chars": 892,
+          "id": "44-FZ:a14:p4:c2",
+          "kind": "clause",
+          "m015_cosine": 0.98586268,
+          "onnx_norm": 0.99999998,
+          "onnx_sha256_float32": "1c9532405500f84bd70b6d314c7f926ad4c21607b507b25fc415183a2b0b66b2",
+          "tei_norm": 1.00000001,
+          "tei_onnx_cosine": 0.9999905,
+          "text_sha256": "ad4ea443d9d2a301be6772b461e3ed20cedb0f26155b3182ce7b5153ef292a6e",
+          "tokens_dropped_at_length": 0,
+          "tokens_with_specials": 167,
+          "truncated_at_length": false
+        },
+        {
+          "article": "24",
+          "chars": 2398,
+          "id": "44-FZ:a24:p10:c2",
+          "kind": "clause",
+          "m015_cosine": 0.86114855,
+          "onnx_norm": 0.99999989,
+          "onnx_sha256_float32": "98c3be7a8d74bceecf22abd15151f2777a43450f69c91e40c0476c16009a5dd9",
+          "tei_norm": 0.99999999,
+          "tei_onnx_cosine": 0.99999059,
+          "text_sha256": "092c1b4ecd0301520e83faa4d996e7d3feba631fcf7597105a182490bb89c3e4",
+          "tokens_dropped_at_length": 0,
+          "tokens_with_specials": 482,
+          "truncated_at_length": false
+        }
+      ]
+    }
+  },
+  "script_version": 1
+}
+```
+
+Raw legal corpus text is intentionally excluded from this artifact.
