@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "artifact_id": "user-bge-m3-dense-fp32",
-  "status": "prototype_only",
+  "status": "experimental_validated_quality_performance_local",
   "production_default": false,
-  "description": "Model-preserving FP32 dense-only ONNX artifact exported from deepvk/USER-bge-m3 during M010. This manifest is tracked; the ONNX binary is not tracked.",
+  "description": "Model-preserving FP32 dense-only ONNX artifact exported from deepvk/USER-bge-m3 during M010. This manifest is tracked; the ONNX binary is not tracked. The artifact was exported with dynamic sequence axes and has been validated for opt-in runtime use at max sequence length 1024, but it is not production/default.",
   "model": {
     "id": "deepvk/USER-bge-m3",
     "revision": "0cc6cfe48e260fb0474c753087a69369e88709ae",
@@ -110,7 +110,16 @@
       }
     ],
     "expected_dimensions": 1024,
-    "expected_normalized": true
+    "expected_normalized": true,
+    "validated_max_sequence_length": 1024,
+    "validated_sequence_length_note": "Export provenance uses sequence_length=128, but dynamic axes allow runtime sequence lengths. M018 validated tagged Go ONNX at ONNX_MAX_SEQUENCE_LENGTH=1024 for the selected Russian/legal quality gate; M019 validated local performance at the same runtime length.",
+    "validated_runtime_env": {
+      "EMBEDDING_BACKEND": "onnx",
+      "ONNX_MAX_SEQUENCE_LENGTH": "1024",
+      "ONNX_TOKENIZER_PATH": "tei-models/deepvk--USER-bge-m3/tokenizer.json",
+      "ONNX_ARTIFACT_MANIFEST": "docs/onnx-artifacts/user-bge-m3-dense-fp32.json",
+      "BENCHMARK_BUILD_TAGS": "hf_tokenizers"
+    }
   },
   "validation": {
     "tei_baseline_artifact": "benchmark-results/fd-dense-comparator-m010-s02.txt",
@@ -118,21 +127,51 @@
     "fixed_probe_cosine_min_observed": 0.99999347,
     "fixed_probe_cosine_threshold_used": 0.999,
     "raw_probe_texts_logged": false,
-    "verdict": "pass_for_local_feasibility_not_production_readiness"
+    "verdict": "pass_for_local_feasibility_not_production_readiness",
+    "fixed_probe_verdict": "pass_for_local_feasibility_not_production_readiness",
+    "legal_quality_1024": {
+      "artifact": "benchmark-results/fd-legal-retrieval-m018-s01-onnx1024.txt",
+      "verdict": "PASS",
+      "min_cross_backend_cosine": 0.99989883,
+      "top1_agreement": 1.0,
+      "mean_overlap_at_5": 0.997701,
+      "onnx_recall_ratio": 1.0,
+      "raw_legal_text_logged": false,
+      "cache_namespace": "m018-onnx-1024-legal-quality"
+    },
+    "performance_1024": {
+      "artifact": "benchmark-results/fd-benchmark-m019-onnx1024.txt",
+      "verdict": "local_performance_viable_not_production_ready",
+      "best_cold_latency_ms": 8.3,
+      "warm_latency_mean_ms": 1.19,
+      "max_throughput_rps": 858,
+      "redis_l2_restart_ms": 2.02,
+      "batch_l1_p95_ms": 4.09,
+      "batch_l2_p95_ms": 6.7,
+      "chunk_reuse_warm_p95_ms": 6.51,
+      "raw_benchmark_text_logged": false,
+      "cache_namespace": "m019-onnx-1024-benchmark"
+    },
+    "overall_runtime_1024_verdict": "pass_for_selected_quality_and_local_performance_not_packaging_or_production_readiness"
   },
   "failure_contract": {
     "missing_file": "Fail before ONNX Runtime load with an actionable message naming the configured artifact path and manifest artifact_id.",
     "checksum_mismatch": "Fail before ONNX Runtime load with expected and actual sha256 plus artifact_id; do not attempt inference.",
     "metadata_mismatch": "Fail if ONNX inputs/outputs/dimensions do not match manifest runtime metadata.",
     "unsupported_provider": "Fail with provider name and available providers; do not silently fall back for benchmark evidence.",
-    "raw_text_logging": "Never log raw embedding input text while validating or loading artifacts."
+    "raw_text_logging": "Never log raw embedding input text while validating or loading artifacts.",
+    "sequence_length_mismatch": "Fail or clearly report when configured ONNX_MAX_SEQUENCE_LENGTH exceeds the validated runtime contract or does not match the benchmark/quality gate being claimed.",
+    "production_default_misuse": "This manifest must not be used to imply production default readiness while production_default is false and packaging/operational gates remain open."
   },
   "future_gates_before_production": [
     "External artifact storage or download procedure with checksum verification",
-    "Explicit opt-in backend configuration with TEI default preserved",
-    "Latency and throughput benchmark against TEI plus Redis baseline",
-    "Larger Russian/legal retrieval quality evaluation",
-    "Startup health and failure observability for ONNX load path",
-    "Security review for artifact path handling and logging"
+    "1024-specific runtime contract consumed by startup validation and benchmark artifacts",
+    "Docker and CI path for supplying ONNX binary and native tokenizer without committing binaries",
+    "Tagged native tokenizer build/test path in CI or documented equivalent",
+    "Packaged-environment legal quality rerun at ONNX_MAX_SEQUENCE_LENGTH=1024",
+    "Packaged-environment latency and throughput benchmark against TEI plus Redis baseline",
+    "Startup health and failure observability for missing/mismatched ONNX and tokenizer artifacts",
+    "Security review for artifact path handling and logging",
+    "Controlled opt-in rollout plan with TEI default preserved"
   ]
 }
