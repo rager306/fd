@@ -1,0 +1,75 @@
+# M018 S02 ONNX 1024 Legal Quality Outcome
+
+Generated: 2026-05-20
+Scope: outcome assessment for tagged Go ONNX with `ONNX_MAX_SEQUENCE_LENGTH=1024`.
+Raw legal corpus text: intentionally excluded.
+
+## Inputs
+
+- M015 ONNX 128 legal retrieval gate: `benchmark-results/fd-legal-retrieval-m015-s03.txt`
+- M017 tagged Go ONNX 512 gate: `benchmark-results/fd-legal-retrieval-m017-s01-onnx512.txt`
+- M018 tagged Go ONNX 1024 gate: `benchmark-results/fd-legal-retrieval-m018-s01-onnx1024.txt`
+
+## Outcome Summary
+
+The tagged Go ONNX 1024 runtime passes the selected Russian/legal quality gate under the current strict thresholds.
+
+| Gate | Runtime path | Verdict | Top-1 agreement | Mean overlap@5 | ONNX recall ratio | Minimum cross-backend cosine |
+|---|---|---:|---:|---:|---:|---:|
+| M015 | tagged ONNX HF tokenizer, 128 tokens | FAIL | `0.977011` | `0.908046` | `0.991422` | `0.369489` |
+| M017 | tagged Go ONNX HF tokenizer, 512 tokens | FAIL | `1.0` | `0.997701` | `1.0` | `0.98982302` |
+| M018 | tagged Go ONNX HF tokenizer, 1024 tokens | PASS | `1.0` | `0.997701` | `1.0` | `0.99989883` |
+
+## Interpretation
+
+### What changed
+
+- Increasing max sequence length from 512 to 1024 removed the remaining strict cosine failure on the selected legal gate.
+- The worst remaining document cosine is `0.99989883`, above the `0.999` threshold.
+- Ranking metrics are unchanged from the strong 512 result and remain excellent:
+  - top-1 agreement: `1.0`;
+  - mean overlap@5: `0.997701`;
+  - ONNX recall ratio: `1.0`.
+
+### What this proves
+
+- The previous M015/M017 failures were sequence-length quality failures, not model replacement failures.
+- For the selected 44-ФЗ gate, tagged Go ONNX with the native HF tokenizer and max sequence length 1024 can satisfy strict TEI-vs-ONNX quality thresholds.
+- Deterministic chunking is not the immediate blocker for this selected corpus gate.
+
+### What this does not prove
+
+- It does not prove production readiness.
+- It does not prove acceptable latency, memory use, throughput, Docker packaging, CI reproducibility, or artifact distribution.
+- It does not prove quality for legal fragments longer than 1024 tokens.
+- It does not justify switching the production/default runtime away from TEI.
+
+## Recommended Next Gate
+
+The next milestone should validate ONNX 1024 as an experimental runtime candidate, not promote it.
+
+Recommended sequence:
+
+1. Update tracked metadata/manifests or add a 1024-specific manifest so the sequence-length contract is explicit.
+2. Run tagged Go ONNX 1024 performance and memory benchmarks against the TEI baseline.
+3. Validate native tokenizer and ONNX artifact packaging for Docker/CI without committing binaries.
+4. Add or verify health/failure diagnostics for the 1024 ONNX load path.
+5. Only after quality, performance, packaging, and operational gates pass, discuss a controlled opt-in rollout.
+
+Chunking remains a future policy for unbounded legal text, but it is no longer the next immediate blocker for this selected gate.
+
+## Production Safety
+
+- TEI remains production/default.
+- ONNX remains opt-in experimental.
+- No model replacement is recommended.
+- The 1024 quality PASS allows performance/package validation to proceed; it does not authorize production promotion.
+
+## Acceptance Gates Before Promotion
+
+- 1024-specific artifact/runtime contract is documented and checksum-verified.
+- Full benchmark artifact records sanitized effective environment/config.
+- Default Go tests and tagged HF tokenizer tests pass.
+- Docker/CI packaging supplies native tokenizer and ONNX artifacts without committing binaries.
+- Runtime health and failure modes are observable.
+- No raw legal text appears in artifacts.
