@@ -70,6 +70,23 @@ type embeddingRuntimeConfig struct {
 	ONNXArtifact           *embed.ONNXArtifactValidation
 }
 
+func (c *embeddingRuntimeConfig) Health(modelID, cacheNamespace string) *handlers.RuntimeHealth {
+	if c == nil || c.Backend != embeddingBackendONNX || c.ONNXArtifact == nil {
+		return nil
+	}
+	return &handlers.RuntimeHealth{
+		Backend:                    string(c.Backend),
+		Model:                      modelID,
+		ArtifactID:                 c.ONNXArtifact.ArtifactID,
+		Dimensions:                 c.ONNXArtifact.Dimensions,
+		MaxSequenceLength:          c.ONNXMaxSequenceLength,
+		ValidatedMaxSequenceLength: c.ONNXArtifact.ValidatedMaxSequenceLength,
+		ProductionDefault:          c.ONNXArtifact.ProductionDefault,
+		ArtifactVerified:           true,
+		CacheNamespace:             cacheNamespace,
+	}
+}
+
 func loadEmbeddingRuntimeConfig() (*embeddingRuntimeConfig, error) {
 	backend := embeddingBackend(strings.ToLower(getEnv("EMBEDDING_BACKEND", string(embeddingBackendTEI))))
 	config := &embeddingRuntimeConfig{Backend: backend}
@@ -98,6 +115,9 @@ func loadEmbeddingRuntimeConfig() (*embeddingRuntimeConfig, error) {
 		config.ONNXRuntimeLibraryPath = runtimeLibraryPath
 		config.ONNXTokenizerPath = tokenizerPath
 		config.ONNXMaxSequenceLength = getEnvInt("ONNX_MAX_SEQUENCE_LENGTH", 512)
+		if validation.ValidatedMaxSequenceLength > 0 && config.ONNXMaxSequenceLength > validation.ValidatedMaxSequenceLength {
+			return nil, fmt.Errorf("ONNX_MAX_SEQUENCE_LENGTH=%d exceeds validated_max_sequence_length=%d artifact_id=%q manifest=%q", config.ONNXMaxSequenceLength, validation.ValidatedMaxSequenceLength, validation.ArtifactID, manifestPath)
+		}
 		config.ONNXArtifact = validation
 		return config, nil
 	default:
@@ -125,6 +145,16 @@ func main() {
 		os.Exit(1)
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
+	if runtimeConfig.Backend == embeddingBackendONNX && runtimeConfig.ONNXArtifact != nil {
+		logger.Info(
+			"onnx artifact preflight verified",
+			"artifact_id", runtimeConfig.ONNXArtifact.ArtifactID,
+			"dimensions", runtimeConfig.ONNXArtifact.Dimensions,
+			"max_sequence_length", runtimeConfig.ONNXMaxSequenceLength,
+			"validated_max_sequence_length", runtimeConfig.ONNXArtifact.ValidatedMaxSequenceLength,
+			"production_default", runtimeConfig.ONNXArtifact.ProductionDefault,
+		)
+	}
 
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
@@ -156,7 +186,7 @@ func main() {
 		os.Exit(1)
 	}
 	cancel()
-	logger.Info("redis connected", "addr", redisHost)
+	logger.Info("redis connected", "addr", redisHost, "cache_namespace", redisOptions.Namespace.String())
 
 	// Two-tier cache
 	tiered := cache.NewTieredCache(localCache, redisCache, 30*time.Second)
@@ -193,6 +223,8 @@ func main() {
 			"artifact_id", runtimeConfig.ONNXArtifact.ArtifactID,
 			"dimensions", runtimeConfig.ONNXArtifact.Dimensions,
 			"max_sequence_length", runtimeConfig.ONNXMaxSequenceLength,
+			"validated_max_sequence_length", runtimeConfig.ONNXArtifact.ValidatedMaxSequenceLength,
+			"production_default", runtimeConfig.ONNXArtifact.ProductionDefault,
 		)
 	} else {
 		teiClient := embed.NewTEIClient(teiURL, modelID, httpClient)
@@ -210,7 +242,7 @@ func main() {
 	embedHandler := handlers.NewEmbeddingsHandler(embeddingClient, tiered, modelID, logger)
 	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
 
-	r.GET("/health", handlers.HealthHandler)
+	r.GET("/health", handlers.NewHealthHandler(runtimeConfig.Health(modelID, redisOptions.Namespace.String())))
 	r.POST("/v1/embeddings", embedHandler.CreateEmbedding)
 	r.POST("/embeddings/batch", batchHandler.CreateBatchEmbeddings)
 

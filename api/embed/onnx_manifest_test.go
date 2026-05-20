@@ -24,6 +24,8 @@ func TestValidateONNXArtifactManifestValid(t *testing.T) {
 	require.Equal(t, digest, validation.SHA256)
 	require.Equal(t, ONNXExpectedOutputName, validation.OutputName)
 	require.Equal(t, ONNXExpectedDimensions, validation.Dimensions)
+	require.Equal(t, 1024, validation.ValidatedMaxSequenceLength)
+	require.False(t, validation.ProductionDefault)
 }
 
 func TestValidateONNXArtifactManifestMissingArtifact(t *testing.T) {
@@ -85,6 +87,18 @@ func TestValidateONNXArtifactManifestProductionDefaultRejected(t *testing.T) {
 	require.ErrorIs(t, err, ErrONNXManifestProductionDefault)
 }
 
+func TestValidateONNXArtifactManifestRejectsNegativeValidatedMaxSequenceLength(t *testing.T) {
+	manifestPath, _, _ := writeTestONNXManifest(t, func(m map[string]any) {
+		runtime := m["runtime"].(map[string]any)
+		runtime["validated_max_sequence_length"] = -1
+	})
+
+	_, err := ValidateONNXArtifactManifest(manifestPath)
+
+	require.ErrorIs(t, err, ErrONNXManifestMetadataMismatch)
+	require.Contains(t, err.Error(), "validated_max_sequence_length=-1")
+}
+
 func TestLoadONNXArtifactManifestInvalidJSON(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "manifest.json")
 	require.NoError(t, os.WriteFile(path, []byte("{"), 0o600))
@@ -129,8 +143,9 @@ func writeTestONNXManifest(t *testing.T, mutate func(map[string]any)) (manifestP
 					"type":  "tensor(float)",
 				},
 			},
-			"expected_dimensions": ONNXExpectedDimensions,
-			"expected_normalized": true,
+			"expected_dimensions":           ONNXExpectedDimensions,
+			"expected_normalized":           true,
+			"validated_max_sequence_length": 1024,
 		},
 	}
 	mutate(manifest)

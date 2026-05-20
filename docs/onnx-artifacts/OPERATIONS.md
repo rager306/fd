@@ -73,6 +73,26 @@ Recommended future health detail for opt-in ONNX:
 
 This should expose only metadata, never raw input text or secrets.
 
+## Implemented diagnostics status
+
+Implemented in M026:
+
+- default `/health` response remains compatible (`status` + `time`) for TEI/default runtime;
+- ONNX runtime can attach safe `/health.runtime` metadata after successful startup;
+- ONNX health metadata includes backend, model, artifact_id, dimensions, configured max sequence length, validated max sequence length, artifact verification state, production_default flag, and cache namespace;
+- ONNX health metadata intentionally excludes manifest path, tokenizer path, runtime library path, raw input text, and signed URLs;
+- startup config rejects `ONNX_MAX_SEQUENCE_LENGTH` values above manifest `runtime.validated_max_sequence_length`;
+- startup logs safe ONNX preflight metadata after manifest verification;
+- Redis connection logs the effective cache namespace.
+
+Not yet implemented:
+
+- tokenizer JSON checksum preflight in Go startup;
+- ONNX Runtime shared library sha256 preflight in Go startup;
+- provider availability diagnostics;
+- a richer health endpoint status object for failed preflight, because failed preflight exits before serving HTTP;
+- staging rollout/rollback execution proof.
+
 ## Rollout stages
 
 1. Local artifact verification: `tools/verify_onnx_artifacts.py` strict mode passes.
@@ -99,7 +119,8 @@ Do not delete verified artifacts during rollback unless the artifact itself is s
 
 ## Current open gaps
 
-- Startup preflight is partially implemented through manifest validation and verifier tooling, but operational health details are not yet exposed in the API.
+- Tokenizer JSON checksum preflight is not yet implemented in Go startup.
+- ONNX Runtime shared library sha256/provider diagnostics are not yet implemented in Go startup.
 - Hosted artifact provisioning/cache is not selected.
 - Hosted full ONNX CI is not enabled as a required workflow.
 - Security review for artifact path handling and signed URL handling remains future work.

@@ -1,0 +1,55 @@
+# M026 S02 — ONNX Operational Diagnostics Implementation Outcome
+
+## Verdict
+
+PASS.
+
+M026 implements the first code-level ONNX operational diagnostics gate while preserving TEI/default behavior.
+
+## Implemented
+
+- Default `/health` remains compatible: `status` and `time`, no runtime metadata for TEI/default mode.
+- ONNX `/health` can include safe runtime metadata after successful startup.
+- Safe runtime metadata includes:
+  - backend;
+  - model;
+  - artifact_id;
+  - dimensions;
+  - configured max sequence length;
+  - validated max sequence length;
+  - production_default flag;
+  - artifact_verified flag;
+  - Redis cache namespace.
+- Health metadata intentionally excludes:
+  - manifest path;
+  - tokenizer path;
+  - ONNX Runtime library path;
+  - raw embedding input text;
+  - signed URLs or secret values.
+- `ONNX_MAX_SEQUENCE_LENGTH` now fails startup config when it exceeds manifest `runtime.validated_max_sequence_length`.
+- Startup logs safe ONNX artifact preflight metadata after manifest verification.
+- Redis connection logs the effective cache namespace.
+
+## Verification evidence
+
+- Targeted health/manifest/config tests: pass.
+- Default Go tests: `80 passed in 4 packages`.
+- GolangCI-Lint: `0 issues`.
+- `hf_tokenizers` tests: `17 passed in 1 package`.
+- `onnx hf_tokenizers` smoke tests: `2 passed in 1 package`.
+- Default Docker build: pass.
+- Binary hygiene: pass.
+
+## Remaining gaps
+
+- Tokenizer JSON checksum preflight is not yet implemented in Go startup.
+- ONNX Runtime shared library sha256 and provider diagnostics are not yet implemented in Go startup.
+- Failed preflight exits before HTTP serving, so no failed-health response body is exposed.
+- Hosted artifact provisioning/cache and required hosted ONNX CI remain future gates.
+- Security review and staging rollout/rollback proof remain future gates.
+
+## Production status
+
+ONNX remains opt-in experimental. This diagnostics gate does not authorize production/default promotion.
+
+Raw embedding input text is intentionally excluded from this artifact.

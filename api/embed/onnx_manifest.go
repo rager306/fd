@@ -42,18 +42,21 @@ type ONNXArtifactManifest struct {
 			Shape []interface{} `json:"shape"`
 			Type  string        `json:"type"`
 		} `json:"outputs"`
-		ExpectedDimensions int  `json:"expected_dimensions"`
-		ExpectedNormalized bool `json:"expected_normalized"`
+		ExpectedDimensions         int  `json:"expected_dimensions"`
+		ExpectedNormalized         bool `json:"expected_normalized"`
+		ValidatedMaxSequenceLength int  `json:"validated_max_sequence_length"`
 	} `json:"runtime"`
 }
 
 type ONNXArtifactValidation struct {
-	ArtifactID string
-	Path       string
-	SizeBytes  int64
-	SHA256     string
-	OutputName string
-	Dimensions int
+	ArtifactID                 string
+	Path                       string
+	SizeBytes                  int64
+	SHA256                     string
+	OutputName                 string
+	Dimensions                 int
+	ProductionDefault          bool
+	ValidatedMaxSequenceLength int
 }
 
 func LoadONNXArtifactManifest(path string) (*ONNXArtifactManifest, error) {
@@ -100,6 +103,9 @@ func (m *ONNXArtifactManifest) ValidateArtifact() (*ONNXArtifactValidation, erro
 	if !m.Runtime.ExpectedNormalized {
 		return nil, fmt.Errorf("%w: artifact_id=%q expected_normalized=false", ErrONNXManifestMetadataMismatch, m.ArtifactID)
 	}
+	if m.Runtime.ValidatedMaxSequenceLength < 0 {
+		return nil, fmt.Errorf("%w: artifact_id=%q validated_max_sequence_length=%d", ErrONNXManifestMetadataMismatch, m.ArtifactID, m.Runtime.ValidatedMaxSequenceLength)
+	}
 	if len(m.Runtime.Outputs) != 1 {
 		return nil, fmt.Errorf("%w: artifact_id=%q outputs=%d want 1", ErrONNXManifestMetadataMismatch, m.ArtifactID, len(m.Runtime.Outputs))
 	}
@@ -135,12 +141,14 @@ func (m *ONNXArtifactManifest) ValidateArtifact() (*ONNXArtifactValidation, erro
 	}
 
 	return &ONNXArtifactValidation{
-		ArtifactID: m.ArtifactID,
-		Path:       artifactPath,
-		SizeBytes:  info.Size(),
-		SHA256:     digest,
-		OutputName: output.Name,
-		Dimensions: m.Runtime.ExpectedDimensions,
+		ArtifactID:                 m.ArtifactID,
+		Path:                       artifactPath,
+		SizeBytes:                  info.Size(),
+		SHA256:                     digest,
+		OutputName:                 output.Name,
+		Dimensions:                 m.Runtime.ExpectedDimensions,
+		ProductionDefault:          m.ProductionDefault,
+		ValidatedMaxSequenceLength: m.Runtime.ValidatedMaxSequenceLength,
 	}, nil
 }
 

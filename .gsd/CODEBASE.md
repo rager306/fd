@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-20T11:35:11Z | Files: 102 | Described: 0/102
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T11:35:11Z","fingerprint":"c480283f3819f9885611ccf075da435e2c464ae7","fileCount":102,"truncated":false} -->
+Generated: 2026-05-20T11:56:29Z | Files: 106 | Described: 0/106
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-20T11:56:29Z","fingerprint":"7e7c754514e715d6bf6d59ba0fccc58754b62a22","fileCount":106,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -15,6 +15,7 @@ Generated: 2026-05-20T11:35:11Z | Files: 102 | Described: 0/102
 
 ### .github/workflows/
 - `.github/workflows/go-quality.yml`
+- `.github/workflows/onnx-packaging.yml`
 
 ### api/
 - `api/.dockerignore`
@@ -65,6 +66,8 @@ Generated: 2026-05-20T11:35:11Z | Files: 102 | Described: 0/102
 
 ### docs/onnx-artifacts/
 - `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`
+- `docs/onnx-artifacts/OPERATIONS.md`
+- `docs/onnx-artifacts/PROVISIONING.md`
 - `docs/onnx-artifacts/README.md`
 - `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`
 
@@ -90,4 +93,5 @@ Generated: 2026-05-20T11:35:11Z | Files: 102 | Described: 0/102
 - `tools/evaluate_legal_retrieval.py`
 - `tools/export_user_bge_m3_dense_onnx.py`
 - `tools/profile_legal_divergence.py`
+- `tools/provision_onnx_artifacts.py`
 - `tools/verify_onnx_artifacts.py`

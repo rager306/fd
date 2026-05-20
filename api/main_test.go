@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"fd-api/embed"
 )
 
 func TestGetEnvIntReturnsDefaultWhenUnset(t *testing.T) {
@@ -126,6 +129,54 @@ func TestLoadEmbeddingRuntimeConfigValidatesONNXManifest(t *testing.T) {
 	if config.ONNXMaxSequenceLength != 128 {
 		t.Fatalf("max sequence length = %d, want 128", config.ONNXMaxSequenceLength)
 	}
+	if config.ONNXArtifact.ValidatedMaxSequenceLength != 1024 {
+		t.Fatalf("validated max sequence length = %d, want 1024", config.ONNXArtifact.ValidatedMaxSequenceLength)
+	}
+}
+
+func TestLoadEmbeddingRuntimeConfigRejectsSequenceLengthAboveManifestContract(t *testing.T) {
+	manifestPath, _ := writeMainTestONNXManifest(t, false)
+	t.Setenv("EMBEDDING_BACKEND", "onnx")
+	t.Setenv("ONNX_ARTIFACT_MANIFEST", manifestPath)
+	t.Setenv("ONNX_RUNTIME_LIBRARY", "/tmp/libonnxruntime.so")
+	t.Setenv("ONNX_TOKENIZER_PATH", "/tmp/tokenizer.json")
+	t.Setenv("ONNX_MAX_SEQUENCE_LENGTH", "2048")
+
+	_, err := loadEmbeddingRuntimeConfig()
+	if err == nil {
+		t.Fatal("expected sequence length contract error")
+	}
+	if got := err.Error(); !strings.Contains(got, "ONNX_MAX_SEQUENCE_LENGTH=2048") || !strings.Contains(got, "validated_max_sequence_length=1024") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestEmbeddingRuntimeConfigHealthForONNX(t *testing.T) {
+	config := &embeddingRuntimeConfig{
+		Backend:               embeddingBackendONNX,
+		ONNXMaxSequenceLength: 1024,
+		ONNXArtifact: &embed.ONNXArtifactValidation{
+			ArtifactID:                 "artifact-test",
+			Dimensions:                 1024,
+			ProductionDefault:          false,
+			ValidatedMaxSequenceLength: 1024,
+		},
+	}
+
+	health := config.Health("deepvk/USER-bge-m3", "m026-test")
+	if health == nil {
+		t.Fatal("expected ONNX runtime health")
+	}
+	if health.ArtifactID != "artifact-test" || health.CacheNamespace != "m026-test" || !health.ArtifactVerified {
+		t.Fatalf("unexpected health metadata: %#v", health)
+	}
+}
+
+func TestEmbeddingRuntimeConfigHealthNilForTEI(t *testing.T) {
+	config := &embeddingRuntimeConfig{Backend: embeddingBackendTEI}
+	if health := config.Health("deepvk/USER-bge-m3", "v2"); health != nil {
+		t.Fatalf("TEI health metadata should be nil, got %#v", health)
+	}
 }
 
 func TestLoadEmbeddingRuntimeConfigRejectsInvalidONNXManifest(t *testing.T) {
@@ -175,8 +226,9 @@ func writeMainTestONNXManifest(t *testing.T, corruptDigest bool) (manifestPath s
 					"type":  "tensor(float)",
 				},
 			},
-			"expected_dimensions": 1024,
-			"expected_normalized": true,
+			"expected_dimensions":           1024,
+			"expected_normalized":           true,
+			"validated_max_sequence_length": 1024,
 		},
 	}
 	manifestBytes, err := json.Marshal(manifest)
