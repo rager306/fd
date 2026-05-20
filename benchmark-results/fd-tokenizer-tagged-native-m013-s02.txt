@@ -1,0 +1,28 @@
+# Tagged Native HF Tokenizer Parity — M013 S02
+
+## Effective Configuration
+
+```json
+{
+  "baseline": "benchmark-results/fd-tokenizer-baseline-m012-s01.txt",
+  "go_test_command": "CGO_LDFLAGS=-L../.gsd/runtime/tokenizers/linux-amd64 go test -tags hf_tokenizers ./embed -run TestNativeHFTokenizerMatchesBaseline -count=1 -v",
+  "native_artifact_manifest": "docs/onnx-artifacts/hf-tokenizers-linux-amd64.json",
+  "native_artifact_sha256": "e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50",
+  "raw_probe_texts_logged": false
+}
+```
+
+## Test Output
+
+```text
+=== RUN   TestNativeHFTokenizerMatchesBaseline
+--- PASS: TestNativeHFTokenizerMatchesBaseline (0.11s)
+PASS
+ok  	fd-api/embed	0.118s
+```
+
+## Verdict
+
+PASS
+
+Raw probe texts are intentionally excluded from this artifact.

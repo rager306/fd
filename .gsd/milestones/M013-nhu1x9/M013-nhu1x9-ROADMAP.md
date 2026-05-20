@@ -15,7 +15,7 @@
 - [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: After this, the native HF tokenizer artifact has a checksum/provenance contract and reproducible local setup instructions.
 
-- [ ] **S02: Opt in build tag boundary** `risk:high` `depends:[S01]`
+- [x] **S02: S02** `risk:high` `depends:[]`
   > After this: After this, default builds stay clean and the project has an explicit opt-in tokenizer build path or a packaging blocker.
 
 - [ ] **S03: Parity correct ONNX tokenizer integration** `risk:high` `depends:[S02]`
