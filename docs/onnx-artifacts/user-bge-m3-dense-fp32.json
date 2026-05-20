@@ -118,7 +118,8 @@
       "ONNX_MAX_SEQUENCE_LENGTH": "1024",
       "ONNX_TOKENIZER_PATH": "tei-models/deepvk--USER-bge-m3/tokenizer.json",
       "ONNX_ARTIFACT_MANIFEST": "docs/onnx-artifacts/user-bge-m3-dense-fp32.json",
-      "BENCHMARK_BUILD_TAGS": "hf_tokenizers"
+      "BENCHMARK_BUILD_TAGS": "onnx,hf_tokenizers",
+      "GO_BUILD_TAGS": "onnx hf_tokenizers"
     }
   },
   "validation": {

@@ -1,3 +1,5 @@
+//go:build onnx
+
 package embed
 
 import (
@@ -11,29 +13,12 @@ import (
 
 const defaultONNXMaxSequenceLength = 512
 
-type ONNXEmbedderOptions struct {
-	ManifestPath      string
-	SharedLibraryPath string
-	TokenizerPath     string
-	MaxSequenceLength int
-}
-
 type ONNXEmbedder struct {
 	artifact          *ONNXArtifactValidation
 	tokenizer         onnxTokenizer
 	session           *ort.DynamicAdvancedSession
 	maxSequenceLength int
 	mu                sync.Mutex
-}
-
-type onnxTokenEncoding struct {
-	InputIDs      []int
-	AttentionMask []int
-}
-
-type onnxTokenizer interface {
-	Encode(text string) (onnxTokenEncoding, error)
-	Close()
 }
 
 var onnxRuntimeEnvMu sync.Mutex

@@ -1,4 +1,4 @@
-//go:build hf_tokenizers
+//go:build onnx && hf_tokenizers
 
 package embed
 
