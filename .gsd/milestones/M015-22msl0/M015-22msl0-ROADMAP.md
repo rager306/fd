@@ -21,7 +21,7 @@
 - [x] **S03: S03** `risk:high` `depends:[]`
   > After this: After this, ONNX has a real first-pass Russian/legal retrieval parity result.
 
-- [ ] **S04: Quality verdict and closure** `risk:medium` `depends:[S03]`
+- [x] **S04: S04** `risk:medium` `depends:[]`
   > After this: After this, the project knows whether ONNX can proceed to packaging/tuning or needs quality work.
 
 ## Boundary Map

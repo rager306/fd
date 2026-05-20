@@ -1,0 +1,45 @@
+# M015 Russian Legal Retrieval Quality Gate Summary
+
+## Verdict
+
+FAIL — tagged ONNX does not pass the first Russian/legal quality gate on the provided 44-ФЗ corpus.
+
+## Inputs
+
+- Corpus: `tests/44-FZ-2026-articles.jsonl`
+- Corpus SHA256: `de03cda6b266085a9b1f2376afcb9dffbb00fec922dee1f1553cadcfb6d03869`
+- Documents selected: 256
+- Queries selected: 87 (23 title, 64 self-document)
+- TEI endpoint: `http://localhost:8000`
+- ONNX endpoint: `http://localhost:18000`
+- ONNX cache namespace: `m015-onnx-legal-quality`
+
+## Key Metrics
+
+| Metric | Value | Threshold / Interpretation |
+|---|---:|---|
+| Top-1 agreement | 0.977011 | >= 0.9 |
+| Mean overlap@5 | 0.908046 | >= 0.9 |
+| ONNX recall ratio | 0.991422 | >= 0.98 |
+| Document cosine min | 0.369489 | >= 0.999 |
+| Query cosine min | 0.656612 | >= 0.999 |
+| Document cosine p50 | 0.999992 | Most examples still match closely |
+| Query cosine p50 | 0.999993 | Most examples still match closely |
+
+## Interpretation
+
+Ranking parity is mostly strong, but vector equivalence has severe outliers. The worst document cosine is `0.369489` and the worst query cosine is `0.656612`, far below the strict `0.999` equivalence threshold used for ONNX acceptance.
+
+The worst examples are longer legal clauses/subclauses by ID and hash in the full artifact. This is consistent with a likely long-text/truncation divergence: the current ONNX export/runtime path uses max sequence length 128, while the legal corpus contains many longer fragments.
+
+## Decision Impact
+
+- TEI remains production/default.
+- ONNX packaging/tuning should not be the next priority.
+- Next work should investigate long-text legal quality divergence: chunking policy, max sequence length, TEI tokenization/truncation behavior, and possibly a longer-sequence ONNX export.
+
+## Caveats
+
+- The corpus has no explicit human qrels; this is a TEI-vs-ONNX parity and synthetic known-item gate.
+- Raw legal text is intentionally excluded from this summary and from the full artifact.
+- Full artifact: `benchmark-results/fd-legal-retrieval-m015-s03.txt`.
