@@ -1,0 +1,754 @@
+# M016 S01 Legal Divergence Profile
+
+## Result
+
+```json
+{
+  "cases": [
+    {
+      "article": "15",
+      "artifact_hash_matches": true,
+      "chars": 1643,
+      "id": "44-FZ:a15:p2:c2",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.36948916,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "fa670277ce38a449da912e260c148c9bfcb3fda15a7bec3e0282bf15c83d14e5",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 341,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.375367,
+            "tokens_dropped": 213,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.750733,
+            "tokens_dropped": 85,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 341,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 341,
+        "tokens_without_specials": 339
+      }
+    },
+    {
+      "article": "19",
+      "artifact_hash_matches": true,
+      "chars": 1300,
+      "id": "44-FZ:a19:p4:c2",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.37324017,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "c0ad17c29a41ffee7a35215e95d77246922ca05e1986919141c6449d4fde04c8",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 257,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.498054,
+            "tokens_dropped": 129,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.996109,
+            "tokens_dropped": 1,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 257,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 257,
+        "tokens_without_specials": 255
+      }
+    },
+    {
+      "article": "24.1",
+      "artifact_hash_matches": true,
+      "chars": 2411,
+      "id": "44-FZ:a24.1:p2:c1",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.38915715,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "0f1f6d9f4bb570b8916b31acca5c4225b5cc3a988f116474836891dea1cb6a87",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 443,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.288939,
+            "tokens_dropped": 315,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.577878,
+            "tokens_dropped": 187,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 443,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 443,
+        "tokens_without_specials": 441
+      }
+    },
+    {
+      "article": "14",
+      "artifact_hash_matches": true,
+      "chars": 1101,
+      "id": "44-FZ:a14:p4:c3:sidx1",
+      "invalid": false,
+      "kind": "subclause",
+      "m015_cosine": 0.65661198,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "3661ff74576f026582fd3e4bf5987aeec07d02a191b689b0a67094a281ddd726",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 242,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.528926,
+            "tokens_dropped": 114,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 242,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "512": {
+            "encoded_tokens": 242,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 242,
+        "tokens_without_specials": 240
+      }
+    },
+    {
+      "article": "33",
+      "artifact_hash_matches": true,
+      "chars": 637,
+      "id": "44-FZ:a33:p1:c3",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.70447775,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "e1ff7707c26c7168c53a595ec3a61d51e219245e9f082a929650db0a58f88dc7",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 133,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.962406,
+            "tokens_dropped": 5,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 133,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "512": {
+            "encoded_tokens": 133,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 133,
+        "tokens_without_specials": 131
+      }
+    },
+    {
+      "article": "14",
+      "artifact_hash_matches": true,
+      "chars": 1816,
+      "id": "44-FZ:a14:p5:c3",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.81426832,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "70f53c280701cda40c95f063b7aab3378ea55ec99904b259e3256466ba589330",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 392,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.326531,
+            "tokens_dropped": 264,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.653061,
+            "tokens_dropped": 136,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 392,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 392,
+        "tokens_without_specials": 390
+      }
+    },
+    {
+      "article": "4",
+      "artifact_hash_matches": true,
+      "chars": 705,
+      "id": "44-FZ:a4:p10:c1",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.8244999,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "e3d2bd4e7e41f83e1164ce33a418e2f97c16b56924151ffb0dcf7583ba3f6868",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 135,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.948148,
+            "tokens_dropped": 7,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 135,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "512": {
+            "encoded_tokens": 135,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 135,
+        "tokens_without_specials": 133
+      }
+    },
+    {
+      "article": "14",
+      "artifact_hash_matches": true,
+      "chars": 1837,
+      "id": "44-FZ:a14:p4:c3",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.83398911,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "8847dd081d661f94e81224078e952b11cfef281a38e4f9d36efdc8462cedf334",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 380,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.336842,
+            "tokens_dropped": 252,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.673684,
+            "tokens_dropped": 124,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 380,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 380,
+        "tokens_without_specials": 378
+      }
+    },
+    {
+      "article": "24",
+      "artifact_hash_matches": true,
+      "chars": 3108,
+      "id": "44-FZ:a24:p11:c5",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.85883673,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "3afd0d56f9021bf517addc53440fb8ead72b54dcbc5ec48e75e100d5aaf4e862",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 621,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.206119,
+            "tokens_dropped": 493,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.412238,
+            "tokens_dropped": 365,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 512,
+            "retained_ratio": 0.824477,
+            "tokens_dropped": 109,
+            "truncated": true
+          }
+        },
+        "tokens_with_specials": 621,
+        "tokens_without_specials": 619
+      }
+    },
+    {
+      "article": "24",
+      "artifact_hash_matches": true,
+      "chars": 2398,
+      "id": "44-FZ:a24:p10:c2",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.86114855,
+      "resolved": true,
+      "source_kind": "document",
+      "text_sha256": "092c1b4ecd0301520e83faa4d996e7d3feba631fcf7597105a182490bb89c3e4",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 482,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.26556,
+            "tokens_dropped": 354,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.53112,
+            "tokens_dropped": 226,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 482,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 482,
+        "tokens_without_specials": 480
+      }
+    },
+    {
+      "article": "4",
+      "artifact_hash_matches": true,
+      "chars": 1070,
+      "id": "44-FZ:a4:p14:c4",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.9192897,
+      "resolved": true,
+      "source_kind": "query",
+      "text_sha256": "32359a657b907c75c0819a42a6eb93c2d85f7aadbcbf60ad35c3d2c1912ed9d7",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 226,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.566372,
+            "tokens_dropped": 98,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 226,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "512": {
+            "encoded_tokens": 226,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 226,
+        "tokens_without_specials": 224
+      }
+    },
+    {
+      "article": "3",
+      "artifact_hash_matches": true,
+      "chars": 3376,
+      "id": "44-FZ:a3:p1:c8",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.94922301,
+      "resolved": true,
+      "source_kind": "query",
+      "text_sha256": "19c0d928b2bfbd6e5076da61a0141fba970f60d1f41840ca0e616a32c4063c84",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 697,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.183644,
+            "tokens_dropped": 569,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.367288,
+            "tokens_dropped": 441,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 512,
+            "retained_ratio": 0.734577,
+            "tokens_dropped": 185,
+            "truncated": true
+          }
+        },
+        "tokens_with_specials": 697,
+        "tokens_without_specials": 695
+      }
+    },
+    {
+      "article": "3",
+      "artifact_hash_matches": true,
+      "chars": 1310,
+      "id": "44-FZ:a3:p1:c4",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.94943691,
+      "resolved": true,
+      "source_kind": "query",
+      "text_sha256": "f11a2397cbfe7df51c2262ec221fbf6447db8c7039b09bb662f17f4ff160280a",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 284,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.450704,
+            "tokens_dropped": 156,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.901408,
+            "tokens_dropped": 28,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 284,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 284,
+        "tokens_without_specials": 282
+      }
+    },
+    {
+      "article": "14",
+      "artifact_hash_matches": true,
+      "chars": 767,
+      "id": "44-FZ:a14:p2:c1",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.96290745,
+      "resolved": true,
+      "source_kind": "query",
+      "text_sha256": "f9a4480c430262cd1d2c30f1e634d1e90f3b58967e2393abadc85f8bb4b2a2cc",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 174,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.735632,
+            "tokens_dropped": 46,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 174,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "512": {
+            "encoded_tokens": 174,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 174,
+        "tokens_without_specials": 172
+      }
+    },
+    {
+      "article": "3",
+      "artifact_hash_matches": true,
+      "chars": 1577,
+      "id": "44-FZ:a3:p1:c1",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.96735846,
+      "resolved": true,
+      "source_kind": "query",
+      "text_sha256": "96d52338d7ccc94decaf0b4ac25c7cda4ac5103515eed778dadf2075bb8edb82",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 304,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.421053,
+            "tokens_dropped": 176,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 256,
+            "retained_ratio": 0.842105,
+            "tokens_dropped": 48,
+            "truncated": true
+          },
+          "512": {
+            "encoded_tokens": 304,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 304,
+        "tokens_without_specials": 302
+      }
+    },
+    {
+      "article": "3",
+      "artifact_hash_matches": true,
+      "chars": 885,
+      "id": "44-FZ:a3:p1:c7",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.96795372,
+      "resolved": true,
+      "source_kind": "query",
+      "text_sha256": "8b16027ef0d38d7d52660d0805d0fd19a03f0863c432955d9eb8e4041b109224",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 177,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.723164,
+            "tokens_dropped": 49,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 177,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "512": {
+            "encoded_tokens": 177,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 177,
+        "tokens_without_specials": 175
+      }
+    },
+    {
+      "article": "14",
+      "artifact_hash_matches": true,
+      "chars": 892,
+      "id": "44-FZ:a14:p4:c2",
+      "invalid": false,
+      "kind": "clause",
+      "m015_cosine": 0.98586268,
+      "resolved": true,
+      "source_kind": "query",
+      "text_sha256": "ad4ea443d9d2a301be6772b461e3ed20cedb0f26155b3182ce7b5153ef292a6e",
+      "tokenizer": {
+        "sequence_lengths": {
+          "1024": {
+            "encoded_tokens": 167,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "128": {
+            "encoded_tokens": 128,
+            "retained_ratio": 0.766467,
+            "tokens_dropped": 39,
+            "truncated": true
+          },
+          "256": {
+            "encoded_tokens": 167,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          },
+          "512": {
+            "encoded_tokens": 167,
+            "retained_ratio": 1.0,
+            "tokens_dropped": 0,
+            "truncated": false
+          }
+        },
+        "tokens_with_specials": 167,
+        "tokens_without_specials": 165
+      }
+    }
+  ],
+  "caveat": "Token diagnostics use the local Hugging Face tokenizer. They identify truncation risk but do not prove TEI internal truncation behavior by themselves.",
+  "generated_at": "2026-05-20T05:34:44.793099+00:00",
+  "inputs": {
+    "corpus_path": "tests/44-FZ-2026-articles.jsonl",
+    "corpus_sha256": "de03cda6b266085a9b1f2376afcb9dffbb00fec922dee1f1553cadcfb6d03869",
+    "m015_artifact": "benchmark-results/fd-legal-retrieval-m015-s03.txt",
+    "m015_artifact_sha256": "e373ae1a8092bb6a78bdd70f290baaf6cd860d7feacf6ea089e86f80746e2c17",
+    "sequence_lengths": [
+      128,
+      256,
+      512,
+      1024
+    ],
+    "tokenizer_json_sha256": "068d9f7ed9dd190a00a567e5f7750fdc591b93bc623072ac8050a303c25f5937",
+    "tokenizer_path": "tei-models/deepvk--USER-bge-m3"
+  },
+  "raw_text_logged": false,
+  "script_version": 1,
+  "summary": {
+    "all_hashes_match": true,
+    "cases": 17,
+    "cases_truncated_at_128": 17,
+    "cases_truncated_at_512": 2,
+    "max_tokens_with_specials": 697,
+    "min_m015_cosine": 0.36948916,
+    "requested_limit": 20,
+    "resolved_cases": 17
+  }
+}
+```
+
+Raw legal corpus text is intentionally excluded from this artifact.

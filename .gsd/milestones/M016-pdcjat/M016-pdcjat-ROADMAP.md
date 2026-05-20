@@ -12,7 +12,7 @@
 
 ## Slices
 
-- [ ] **S01: Worst-case divergence profile** `risk:medium` `depends:[]`
+- [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: After this, the M015 failure cases are concrete and diagnosable by ID/hash/length/token counts.
 
 - [ ] **S02: Truncation root-cause diagnostics** `risk:high` `depends:[S01]`
