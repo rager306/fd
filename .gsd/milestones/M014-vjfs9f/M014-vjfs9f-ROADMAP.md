@@ -18,7 +18,7 @@
 - [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: After this, there is a fresh TEI default benchmark artifact to compare against tagged ONNX.
 
-- [ ] **S03: Tagged ONNX benchmark** `risk:high` `depends:[S02]`
+- [x] **S03: S03** `risk:high` `depends:[]`
   > After this: After this, tagged ONNX performance evidence exists under comparable benchmark conditions.
 
 - [ ] **S04: Benchmark synthesis and decision** `risk:medium` `depends:[S03]`

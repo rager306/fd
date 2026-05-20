@@ -24,7 +24,8 @@ BUILD_TAGS = os.getenv("BENCHMARK_BUILD_TAGS", "")
 ONNX_ARTIFACT_MANIFEST = os.getenv("BENCHMARK_ONNX_ARTIFACT_MANIFEST", "")
 NATIVE_TOKENIZER_MANIFEST = os.getenv("BENCHMARK_NATIVE_TOKENIZER_MANIFEST", "")
 ONNX_RUNTIME_LIBRARY = os.getenv("BENCHMARK_ONNX_RUNTIME_LIBRARY", "")
-SNAPSHOT_VERSION = 2
+API_RESTART_COMMAND = os.getenv("BENCHMARK_API_RESTART_COMMAND", "docker compose restart api")
+SNAPSHOT_VERSION = 3
 R = redis.Redis(host=os.getenv("BENCHMARK_REDIS_HOST", "localhost"), port=int(os.getenv("BENCHMARK_REDIS_PORT", "6379")), decode_responses=True)
 
 SAFE_ENV_KEYS = [
@@ -39,6 +40,7 @@ SAFE_ENV_KEYS = [
     "BENCHMARK_ONNX_ARTIFACT_MANIFEST",
     "BENCHMARK_NATIVE_TOKENIZER_MANIFEST",
     "BENCHMARK_ONNX_RUNTIME_LIBRARY",
+    "BENCHMARK_API_RESTART_COMMAND",
     "PORT",
     "MODEL_ID",
     "LOG_LEVEL",
@@ -66,7 +68,10 @@ SECRET_KEY_PARTS = ("SECRET", "TOKEN", "PASSWORD", "PASS", "KEY", "CREDENTIAL", 
 
 def is_secret_like(key: str) -> bool:
     upper_key = key.upper()
-    return any(part in upper_key for part in SECRET_KEY_PARTS)
+    normalized_parts = [part for part in upper_key.replace("-", "_").split("_") if part]
+    if "TOKENIZER" in normalized_parts:
+        normalized_parts = [part for part in normalized_parts if part != "TOKENIZER"]
+    return any(part in normalized_parts for part in SECRET_KEY_PARTS)
 
 
 def run_metadata_command(args: list[str], timeout=10):
@@ -255,6 +260,7 @@ def effective_config_snapshot():
             "model": MODEL,
             "dimensions": DIMENSIONS,
             "input_texts_logged": False,
+            "api_restart_command_configured": bool(API_RESTART_COMMAND),
         },
         "git": collect_git_metadata(),
         "docker_compose": collect_compose_metadata(),
@@ -387,23 +393,24 @@ def wait_for_api(timeout=60):
 
 
 def restart_api_for_l2_check():
+    if not API_RESTART_COMMAND:
+        return False, "BENCHMARK_API_RESTART_COMMAND is empty"
     try:
         subprocess.run(
-            ["docker", "compose", "restart", "api"],
+            API_RESTART_COMMAND,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             timeout=120,
+            shell=True,
         )
-    except FileNotFoundError:
-        return False, "docker command not found"
     except subprocess.TimeoutExpired:
-        return False, "docker compose restart api timed out"
+        return False, "API restart command timed out"
     except subprocess.CalledProcessError as err:
         output = (err.stdout or "").strip().splitlines()
         detail = output[-1] if output else str(err)
-        return False, f"docker compose restart api failed: {detail}"
+        return False, f"API restart command failed: {detail}"
     return wait_for_api(timeout=60)
 
 
