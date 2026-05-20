@@ -16,7 +16,7 @@
 - [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: After this, the project has a sanitized Hugging Face tokenizer baseline for fixed Russian/legal probes.
 
-- [ ] **S02: Go tokenizer candidate comparison** `risk:high` `depends:[S01]`
+- [x] **S02: S02** `risk:high` `depends:[]`
   > After this: After this, current and candidate Go tokenizers are compared against the HF baseline with exact mismatch evidence.
 
 - [ ] **S03: Tokenizer parity implementation or blocker** `risk:high` `depends:[S02]`
