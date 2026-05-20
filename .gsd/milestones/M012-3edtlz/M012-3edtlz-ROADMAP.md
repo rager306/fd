@@ -22,8 +22,8 @@
 - [x] **S03: S03** `risk:high` `depends:[]`
   > After this: After this, Go tokenizer parity either passes through a tested HF Rust tokenizers binding or is blocked with concrete linking/correctness evidence.
 
-- [ ] **S04: Final parity decision and ONNX gate** `risk:medium` `depends:[S03]`
-  > After this: After this, the project either has a valid post-parity ONNX cosine comparison or a final recommendation to defer ONNX benchmarking.
+- [x] **S04: S04** `risk:medium` `depends:[]`
+  > After this: After this, M012 closes with a decision: tokenizer parity is solved in isolation, but ONNX runtime integration is gated by native packaging/build tags before performance benchmarking.
 
 ## Boundary Map
 
