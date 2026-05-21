@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -101,6 +102,9 @@ func (m *ONNXArtifactManifest) ValidateArtifact() (*ONNXArtifactValidation, erro
 	if m.Artifact.LocalPath == "" {
 		return nil, fmt.Errorf("%w: artifact_id=%q missing artifact.local_path", ErrONNXManifestMetadataMismatch, m.ArtifactID)
 	}
+	if err := validateONNXArtifactLocalPath(m.Artifact.LocalPath); err != nil {
+		return nil, fmt.Errorf("%w: artifact_id=%q artifact.local_path=%q: %w", ErrONNXManifestMetadataMismatch, m.ArtifactID, safePathDisplay(m.Artifact.LocalPath), err)
+	}
 	if m.Artifact.SizeBytes <= 0 {
 		return nil, fmt.Errorf("%w: artifact_id=%q invalid artifact.size_bytes=%d", ErrONNXManifestMetadataMismatch, m.ArtifactID, m.Artifact.SizeBytes)
 	}
@@ -131,18 +135,19 @@ func (m *ONNXArtifactManifest) ValidateArtifact() (*ONNXArtifactValidation, erro
 	}
 
 	artifactPath := resolveONNXArtifactPath(m.manifestDir, m.Artifact.LocalPath)
+	artifactDisplay := safePathDisplay(m.Artifact.LocalPath)
 	info, err := os.Stat(artifactPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return nil, fmt.Errorf("%w: artifact_id=%q path=%q", ErrONNXManifestMissingArtifact, m.ArtifactID, m.Artifact.LocalPath)
+			return nil, fmt.Errorf("%w: artifact_id=%q path=%q", ErrONNXManifestMissingArtifact, m.ArtifactID, artifactDisplay)
 		}
-		return nil, fmt.Errorf("stat onnx artifact %q: %w", artifactPath, err)
+		return nil, fmt.Errorf("stat onnx artifact %q: %w", artifactDisplay, err)
 	}
 	if info.IsDir() {
-		return nil, fmt.Errorf("%w: artifact_id=%q path=%q is directory", ErrONNXManifestMissingArtifact, m.ArtifactID, artifactPath)
+		return nil, fmt.Errorf("%w: artifact_id=%q path=%q is directory", ErrONNXManifestMissingArtifact, m.ArtifactID, artifactDisplay)
 	}
 	if info.Size() != m.Artifact.SizeBytes {
-		return nil, fmt.Errorf("%w: artifact_id=%q path=%q size=%d want %d", ErrONNXManifestMetadataMismatch, m.ArtifactID, artifactPath, info.Size(), m.Artifact.SizeBytes)
+		return nil, fmt.Errorf("%w: artifact_id=%q path=%q size=%d want %d", ErrONNXManifestMetadataMismatch, m.ArtifactID, artifactDisplay, info.Size(), m.Artifact.SizeBytes)
 	}
 
 	digest, err := sha256File(artifactPath)
@@ -150,7 +155,7 @@ func (m *ONNXArtifactManifest) ValidateArtifact() (*ONNXArtifactValidation, erro
 		return nil, err
 	}
 	if digest != m.Artifact.SHA256 {
-		return nil, fmt.Errorf("%w: artifact_id=%q path=%q expected=%s actual=%s", ErrONNXManifestChecksumMismatch, m.ArtifactID, artifactPath, m.Artifact.SHA256, digest)
+		return nil, fmt.Errorf("%w: artifact_id=%q path=%q expected=%s actual=%s", ErrONNXManifestChecksumMismatch, m.ArtifactID, artifactDisplay, m.Artifact.SHA256, digest)
 	}
 
 	return &ONNXArtifactValidation{
@@ -168,6 +173,40 @@ func (m *ONNXArtifactManifest) ValidateArtifact() (*ONNXArtifactValidation, erro
 }
 
 const sha256HexLength = 64
+
+var allowedONNXArtifactPathPrefixes = []string{
+	".gsd/runtime/onnx/",
+	".gsd/runtime/tokenizers/",
+	".gsd/runtime/onnxruntime/",
+	"tei-models/",
+}
+
+func validateONNXArtifactLocalPath(path string) error {
+	if filepath.IsAbs(path) {
+		return errors.New("absolute paths are not allowed")
+	}
+	cleaned := filepath.ToSlash(filepath.Clean(path))
+	if cleaned == "." || cleaned == ".." || cleaned == "" || strings.HasPrefix(cleaned, "../") {
+		return errors.New("path must be repo-relative and must not traverse outside the repository")
+	}
+	for _, prefix := range allowedONNXArtifactPathPrefixes {
+		if strings.TrimSuffix(prefix, "/") == cleaned || strings.HasPrefix(cleaned, prefix) {
+			return nil
+		}
+	}
+	return fmt.Errorf("path must be under one of the approved artifact roots: %v", allowedONNXArtifactPathPrefixes)
+}
+
+func safePathDisplay(path string) string {
+	if path == "" {
+		return ""
+	}
+	cleaned := filepath.ToSlash(filepath.Clean(path))
+	if filepath.IsAbs(path) {
+		return ".../" + filepath.Base(path)
+	}
+	return cleaned
+}
 
 func resolveONNXArtifactPath(manifestDir, artifactPath string) string {
 	if filepath.IsAbs(artifactPath) {

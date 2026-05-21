@@ -48,8 +48,25 @@ Archive rules:
 
 Remaining security work:
 
-- LOW findings from M028 remain open: default log/path output sanitization and manifest artifact path root policy.
+- M028 LOW findings are remediated in M030 for default tool/startup behavior: manifest artifact paths are constrained to approved repo-relative roots, and default diagnostics prefer repo-relative or basename-safe path display over absolute host paths.
 - Hosted ONNX packaging still needs immutable artifact sources and a real workflow run before it is rollout evidence.
+
+## Artifact path policy
+
+M030 constrains manifest and tooling artifact paths to approved repo-relative roots. Approved roots are:
+
+- `.gsd/runtime/onnx` for ONNX model artifacts;
+- `.gsd/runtime/tokenizers` for native tokenizer artifacts;
+- `.gsd/runtime/onnxruntime` for runtime shared libraries provisioned by tooling;
+- `tei-models` for tokenizer JSON/model cache inputs.
+
+Path rules:
+
+- manifest `artifact.local_path` values must be repo-relative;
+- absolute paths and `..` traversal are rejected;
+- paths outside approved roots are rejected;
+- default diagnostics should use repo-relative paths or basename-safe placeholders such as `.../artifact.onnx` for absolute local inputs;
+- build-script missing-artifact messages name the relevant env var instead of printing its full configured value.
 
 ## Recommended cache layout
 

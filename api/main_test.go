@@ -288,8 +288,12 @@ func writeMainTestONNXManifest(t *testing.T, corruptDigest bool) (manifestPath s
 	t.Helper()
 
 	dir := t.TempDir()
-	artifactPath = filepath.Join(dir, "model.onnx")
+	artifactRelPath := filepath.Join(".gsd", "runtime", "onnx", "m010-s03", "model.onnx")
+	artifactPath = filepath.Join(dir, artifactRelPath)
 	artifactBytes := []byte("fake onnx bytes for main config test")
+	if err := os.MkdirAll(filepath.Dir(artifactPath), 0o700); err != nil {
+		t.Fatalf("create artifact dir: %v", err)
+	}
 	if err := os.WriteFile(artifactPath, artifactBytes, 0o600); err != nil {
 		t.Fatalf("write artifact: %v", err)
 	}
@@ -312,7 +316,7 @@ func writeMainTestONNXManifest(t *testing.T, corruptDigest bool) (manifestPath s
 		"status":             "prototype_only",
 		"production_default": false,
 		"artifact": map[string]any{
-			"local_path":  artifactPath,
+			"local_path":  artifactRelPath,
 			"size_bytes":  len(artifactBytes),
 			"sha256":      digestHex,
 			"git_tracked": false,

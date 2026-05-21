@@ -11,12 +11,19 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 from typing import Any
 
-SCRIPT_VERSION = 1
+SCRIPT_VERSION = 2
+APPROVED_ARTIFACT_ROOTS = (
+    Path(".gsd/runtime/onnx"),
+    Path(".gsd/runtime/tokenizers"),
+    Path(".gsd/runtime/onnxruntime"),
+    Path("tei-models"),
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -74,6 +81,31 @@ def require_bool_false(data: dict[str, Any], path: str) -> None:
         raise RuntimeError(f"manifest field {path} must be false, got {current!r}")
 
 
+def safe_path_display(path: str | Path, repo_root: Path | None = None) -> str:
+    candidate = Path(path)
+    if repo_root is not None:
+        try:
+            return candidate.resolve().relative_to(repo_root.resolve()).as_posix()
+        except (OSError, ValueError):
+            pass
+    if candidate.is_absolute():
+        return f".../{candidate.name}" if candidate.name else "..."
+    return candidate.as_posix()
+
+
+def repo_relative_artifact_path(value: str | Path) -> Path:
+    path = Path(value)
+    if path.is_absolute():
+        raise RuntimeError(f"artifact path must be repo-relative: {safe_path_display(path)}")
+    normalized = Path(os.path.normpath(path.as_posix()))
+    if normalized == Path(".") or str(normalized).startswith(".."):
+        raise RuntimeError(f"artifact path must not traverse outside the repository: {safe_path_display(path)}")
+    if not any(normalized == root or root in normalized.parents for root in APPROVED_ARTIFACT_ROOTS):
+        roots = ", ".join(root.as_posix() for root in APPROVED_ARTIFACT_ROOTS)
+        raise RuntimeError(f"artifact path must be under an approved root ({roots}): {safe_path_display(path)}")
+    return normalized
+
+
 def artifact_local_path(manifest: dict[str, Any], manifest_path: Path, repo_root: Path) -> Path:
     artifact = manifest.get("artifact")
     if not isinstance(artifact, dict):
@@ -81,10 +113,8 @@ def artifact_local_path(manifest: dict[str, Any], manifest_path: Path, repo_root
     local_path = artifact.get("local_path")
     if not isinstance(local_path, str) or not local_path:
         raise RuntimeError(f"manifest missing artifact.local_path: {manifest_path}")
-    path = Path(local_path)
-    if not path.is_absolute():
-        path = repo_root / path
-    return path
+    path = repo_relative_artifact_path(local_path)
+    return repo_root / path
 
 
 def expected_artifact(manifest: dict[str, Any], manifest_path: Path) -> tuple[str, int | None, str]:
@@ -109,7 +139,7 @@ def verify_one(label: str, manifest_path: Path, repo_root: Path, tracked: set[st
     require_bool_false(manifest, "artifact.git_tracked")
     expected_sha, expected_size, artifact_id = expected_artifact(manifest, manifest_path)
     artifact_path = artifact_local_path(manifest, manifest_path, repo_root)
-    rel = artifact_path.relative_to(repo_root).as_posix() if artifact_path.is_relative_to(repo_root) else str(artifact_path)
+    rel = safe_path_display(artifact_path, repo_root)
 
     if rel in tracked:
         raise RuntimeError(f"{label} artifact is tracked by git but must remain external: {rel}")
@@ -160,7 +190,7 @@ def main() -> int:
         json.dumps(
             {
                 "script_version": SCRIPT_VERSION,
-                "repo_root": str(repo_root),
+                "repo_root": ".",
                 "allow_missing": args.allow_missing,
                 "results": results,
                 "verified_all_present": all(item.get("verified") for item in results),

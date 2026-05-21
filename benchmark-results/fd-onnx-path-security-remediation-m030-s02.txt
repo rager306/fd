@@ -1,0 +1,64 @@
+# M030 S02 — ONNX Path Security Remediation Outcome
+
+## Verdict
+
+PASS.
+
+M030 remediates the remaining M028 LOW findings for default ONNX artifact path policy and path disclosure surfaces. TEI remains the default runtime and ONNX remains opt-in experimental.
+
+## Remediated findings
+
+### M028 LOW-3
+
+Startup/verifier/build errors could disclose local filesystem paths in shared logs.
+
+M030 remediation:
+
+- Go ONNX manifest validation uses manifest `artifact.local_path` / safe display in user-facing validation errors where possible instead of resolved absolute host paths.
+- Python provisioning/verifier output uses repo-relative or basename-safe path display by default.
+- Provisioning and verifier JSON output reports `repo_root` as `.` instead of the absolute host path.
+- `tools/build_onnx_image.sh` missing-artifact messages name `TOKENIZER_JSON` / `ONNX_RUNTIME_LIBRARY` instead of printing the configured absolute value.
+
+### M028 LOW-4
+
+Manifest path resolution accepted absolute/repo-external paths for local tools.
+
+M030 remediation:
+
+- Go ONNX manifest `artifact.local_path` must be repo-relative, must not traverse outside the repo, and must live under an approved artifact root.
+- Python provisioning and verifier enforce the same approved root policy for manifest artifact paths.
+- Approved roots:
+  - `.gsd/runtime/onnx`
+  - `.gsd/runtime/tokenizers`
+  - `.gsd/runtime/onnxruntime`
+  - `tei-models`
+- Existing local ONNX artifact layout remains supported.
+
+## Verification evidence
+
+- Go manifest path-policy tests: pass.
+- Python path-policy probes: pass.
+  - reject absolute manifest paths;
+  - reject traversal paths;
+  - reject unapproved roots;
+  - allow approved roots;
+  - safe display for absolute paths.
+- Artifact tool guardrails: pass.
+- Default Go tests: `87 passed in 4 packages`.
+- GolangCI-Lint: `0 issues`.
+- `hf_tokenizers` tests: `20 passed in 1 package`.
+- `onnx hf_tokenizers` smoke tests: `2 passed in 1 package`.
+- actionlint: pass.
+- Default Docker build: pass.
+- Binary hygiene: pass.
+- Runtime cleanup: pass.
+
+## Remaining rollout blockers
+
+- Immutable external ONNX model source is still missing.
+- Native tokenizer artifact source still needs pin/mirror instead of `latest` before production reliance.
+- ONNX Runtime source/sha contract is still not fully represented as a tracked manifest/source.
+- Hosted ONNX workflow still needs an explicit push, safe artifact sources, manual run, and monitoring before it becomes rollout evidence.
+- ONNX production/default promotion remains blocked.
+
+Raw embedding input text, signed artifact URLs, and secret values are intentionally excluded from this artifact.

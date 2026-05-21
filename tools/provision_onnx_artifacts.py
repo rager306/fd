@@ -25,9 +25,15 @@ from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, build_opener
 
-SCRIPT_VERSION = 2
+SCRIPT_VERSION = 3
 DEFAULT_MAX_DOWNLOAD_BYTES = 2 * 1024 * 1024 * 1024
 DEFAULT_MAX_ARCHIVE_MEMBER_BYTES = 256 * 1024 * 1024
+APPROVED_ARTIFACT_ROOTS = (
+    Path(".gsd/runtime/onnx"),
+    Path(".gsd/runtime/tokenizers"),
+    Path(".gsd/runtime/onnxruntime"),
+    Path("tei-models"),
+)
 
 
 class NoRedirectHandler(HTTPRedirectHandler):
@@ -96,9 +102,34 @@ def load_manifest(path: Path) -> dict[str, Any]:
     return data
 
 
-def repo_path(repo_root: Path, value: str | Path) -> Path:
+def repo_path(repo_root: Path, value: str | Path, *, require_approved_root: bool = False) -> Path:
+    rel = repo_relative_artifact_path(value) if require_approved_root else Path(value)
+    return rel if rel.is_absolute() else repo_root / rel
+
+
+def safe_path_display(path: str | Path, repo_root: Path | None = None) -> str:
+    candidate = Path(path)
+    if repo_root is not None:
+        try:
+            return candidate.resolve().relative_to(repo_root.resolve()).as_posix()
+        except (OSError, ValueError):
+            pass
+    if candidate.is_absolute():
+        return f".../{candidate.name}" if candidate.name else "..."
+    return candidate.as_posix()
+
+
+def repo_relative_artifact_path(value: str | Path) -> Path:
     path = Path(value)
-    return path if path.is_absolute() else repo_root / path
+    if path.is_absolute():
+        raise RuntimeError(f"artifact path must be repo-relative: {safe_path_display(path)}")
+    normalized = Path(os.path.normpath(path.as_posix()))
+    if normalized == Path(".") or str(normalized).startswith(".."):
+        raise RuntimeError(f"artifact path must not traverse outside the repository: {safe_path_display(path)}")
+    if not any(normalized == root or root in normalized.parents for root in APPROVED_ARTIFACT_ROOTS):
+        roots = ", ".join(root.as_posix() for root in APPROVED_ARTIFACT_ROOTS)
+        raise RuntimeError(f"artifact path must be under an approved root ({roots}): {safe_path_display(path)}")
+    return normalized
 
 
 def sha256_file(path: Path) -> str:
@@ -121,11 +152,12 @@ def artifact_expectation(manifest: dict[str, Any], manifest_path: Path, repo_roo
         raise RuntimeError(f"manifest missing artifact_id: {manifest_path}")
     if not isinstance(local_path, str) or not local_path:
         raise RuntimeError(f"manifest missing artifact.local_path: {manifest_path}")
+    local_artifact_path = repo_relative_artifact_path(local_path)
     if not isinstance(sha, str) or len(sha) != 64:
         raise RuntimeError(f"manifest artifact.sha256 must be a 64-character hex string: {manifest_path}")
     if size is not None and (not isinstance(size, int) or size <= 0):
         raise RuntimeError(f"manifest artifact.size_bytes must be a positive integer: {manifest_path}")
-    return artifact_id, repo_path(repo_root, local_path), size, sha
+    return artifact_id, repo_path(repo_root, local_artifact_path, require_approved_root=True), size, sha
 
 
 def tokenizer_json_expectation(onnx_manifest: dict[str, Any]) -> tuple[int | None, str | None]:
@@ -146,7 +178,7 @@ def source_display(source: str | None) -> str | None:
         host = parsed.netloc
         name = Path(parsed.path).name
         return f"{parsed.scheme}://{host}/.../{name}" if name else f"{parsed.scheme}://{host}/..."
-    return source
+    return safe_path_display(source)
 
 
 def is_url(source: str) -> bool:
@@ -244,21 +276,22 @@ def materialize_source(
 
 
 def verify_destination(label: str, destination: Path, expected_size: int | None, expected_sha: str | None) -> dict[str, Any]:
+    destination_display = safe_path_display(destination)
     if not destination.exists() or not destination.is_file():
-        raise RuntimeError(f"{label} destination missing after provisioning: {destination}")
+        raise RuntimeError(f"{label} destination missing after provisioning: {destination_display}")
     actual_size = destination.stat().st_size
     if expected_size is not None and actual_size != expected_size:
-        raise RuntimeError(f"{label} size mismatch: expected {expected_size}, got {actual_size}")
+        raise RuntimeError(f"{label} size mismatch for {destination_display}: expected {expected_size}, got {actual_size}")
     actual_sha = sha256_file(destination)
     if expected_sha and actual_sha != expected_sha:
-        raise RuntimeError(f"{label} sha256 mismatch: expected {expected_sha}, got {actual_sha}")
+        raise RuntimeError(f"{label} sha256 mismatch for {destination_display}: expected {expected_sha}, got {actual_sha}")
     return {"present": True, "verified": bool(expected_sha), "size_bytes": actual_size, "sha256": actual_sha}
 
 
 def plan_item(label: str, destination: Path, source: str | None, required: bool, expected_sha: str | None) -> dict[str, Any]:
     return {
         "label": label,
-        "destination": str(destination),
+        "destination": safe_path_display(destination),
         "source_configured": bool(source),
         "source": source_display(source),
         "required": required,
@@ -275,8 +308,8 @@ def main() -> int:
     onnx_id, onnx_dest, onnx_size, onnx_sha = artifact_expectation(onnx_manifest, args.onnx_manifest, repo_root)
     native_id, native_dest, native_size, native_sha = artifact_expectation(native_manifest, args.native_tokenizer_manifest, repo_root)
     tokenizer_size, tokenizer_sha = tokenizer_json_expectation(onnx_manifest)
-    tokenizer_dest = repo_path(repo_root, args.tokenizer_json_dest)
-    ort_dest = repo_path(repo_root, args.onnx_runtime_dest)
+    tokenizer_dest = repo_path(repo_root, args.tokenizer_json_dest, require_approved_root=True)
+    ort_dest = repo_path(repo_root, args.onnx_runtime_dest, require_approved_root=True)
 
     plan = [
         plan_item("onnx", onnx_dest, args.onnx_source, True, onnx_sha),
@@ -286,7 +319,7 @@ def main() -> int:
     ]
 
     if args.dry_run:
-        print(json.dumps({"script_version": SCRIPT_VERSION, "dry_run": True, "repo_root": str(repo_root), "plan": plan}, indent=2, sort_keys=True))
+        print(json.dumps({"script_version": SCRIPT_VERSION, "dry_run": True, "repo_root": ".", "plan": plan}, indent=2, sort_keys=True))
         return 0
 
     missing_required = [item["label"] for item in plan if item["required"] and not item["source_configured"]]
@@ -313,7 +346,7 @@ def main() -> int:
         materialize_source(args.onnx_runtime_source, ort_dest, allowed_hosts=allowed_hosts, allow_private_hosts=args.allow_private_artifact_hosts, max_download_bytes=args.max_download_bytes)
         results.append({"label": "onnx_runtime", **verify_destination("onnx_runtime", ort_dest, None, args.onnx_runtime_sha256)})
 
-    print(json.dumps({"script_version": SCRIPT_VERSION, "dry_run": False, "repo_root": str(repo_root), "results": results}, indent=2, sort_keys=True))
+    print(json.dumps({"script_version": SCRIPT_VERSION, "dry_run": False, "repo_root": ".", "results": results}, indent=2, sort_keys=True))
     return 0
 
 

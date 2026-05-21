@@ -17,11 +17,11 @@ python3 tools/verify_onnx_artifacts.py \
 python3 -m json.tool /tmp/fd-onnx-artifacts-verify.json >/dev/null
 
 if [[ ! -f "$TOKENIZER_JSON" ]]; then
-  echo "missing tokenizer JSON: $TOKENIZER_JSON" >&2
+  echo "missing tokenizer JSON configured by TOKENIZER_JSON" >&2
   exit 1
 fi
 if [[ ! -f "$ONNX_RUNTIME_LIBRARY" ]]; then
-  echo "missing ONNX Runtime shared library: $ONNX_RUNTIME_LIBRARY" >&2
+  echo "missing ONNX Runtime shared library configured by ONNX_RUNTIME_LIBRARY" >&2
   exit 1
 fi
 

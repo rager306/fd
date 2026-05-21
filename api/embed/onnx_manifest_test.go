@@ -34,7 +34,7 @@ func TestValidateONNXArtifactManifestValid(t *testing.T) {
 func TestValidateONNXArtifactManifestMissingArtifact(t *testing.T) {
 	manifestPath, _, _ := writeTestONNXManifest(t, func(m map[string]any) {
 		artifact := m["artifact"].(map[string]any)
-		artifact["local_path"] = filepath.Join(t.TempDir(), "missing.onnx")
+		artifact["local_path"] = ".gsd/runtime/onnx/m010-s03/missing.onnx"
 	})
 
 	_, err := ValidateONNXArtifactManifest(manifestPath)
@@ -102,6 +102,30 @@ func TestValidateONNXArtifactManifestRejectsNegativeValidatedMaxSequenceLength(t
 	require.Contains(t, err.Error(), "validated_max_sequence_length=-1")
 }
 
+func TestValidateONNXArtifactManifestRejectsRepoExternalPath(t *testing.T) {
+	manifestPath, _, _ := writeTestONNXManifest(t, func(m map[string]any) {
+		artifact := m["artifact"].(map[string]any)
+		artifact["local_path"] = "../outside/model.onnx"
+	})
+
+	_, err := ValidateONNXArtifactManifest(manifestPath)
+
+	require.ErrorIs(t, err, ErrONNXManifestMetadataMismatch)
+	require.Contains(t, err.Error(), "repo-relative")
+}
+
+func TestValidateONNXArtifactManifestRejectsUnapprovedRoot(t *testing.T) {
+	manifestPath, _, _ := writeTestONNXManifest(t, func(m map[string]any) {
+		artifact := m["artifact"].(map[string]any)
+		artifact["local_path"] = "tmp/model.onnx"
+	})
+
+	_, err := ValidateONNXArtifactManifest(manifestPath)
+
+	require.ErrorIs(t, err, ErrONNXManifestMetadataMismatch)
+	require.Contains(t, err.Error(), "approved artifact roots")
+}
+
 func TestValidateONNXArtifactManifestRejectsInvalidTokenizerJSONSHA(t *testing.T) {
 	manifestPath, _, _ := writeTestONNXManifest(t, func(m map[string]any) {
 		model := m["model"].(map[string]any)
@@ -130,8 +154,10 @@ func writeTestONNXManifest(t *testing.T, mutate func(map[string]any)) (manifestP
 	t.Helper()
 
 	dir := t.TempDir()
-	artifactPath = filepath.Join(dir, "user-bge-m3-dense.onnx")
+	artifactRelPath := filepath.Join(".gsd", "runtime", "onnx", "m010-s03", "user-bge-m3-dense.onnx")
+	artifactPath = filepath.Join(dir, artifactRelPath)
 	artifactBytes := testONNXArtifactBytes()
+	require.NoError(t, os.MkdirAll(filepath.Dir(artifactPath), 0o700))
 	require.NoError(t, os.WriteFile(artifactPath, artifactBytes, 0o600))
 	tokenizerDigest := sha256.Sum256(testTokenizerJSONBytes())
 	rawDigest := sha256.Sum256(artifactBytes)
@@ -155,7 +181,7 @@ func writeTestONNXManifest(t *testing.T, mutate func(map[string]any)) (manifestP
 		"artifact": map[string]any{
 			"format":      "onnx",
 			"dtype":       "fp32",
-			"local_path":  artifactPath,
+			"local_path":  artifactRelPath,
 			"size_bytes":  len(artifactBytes),
 			"sha256":      digest,
 			"git_tracked": false,
