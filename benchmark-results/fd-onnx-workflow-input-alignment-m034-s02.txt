@@ -1,0 +1,52 @@
+# fd ONNX workflow input alignment — M034 S02
+
+## Status
+
+M034 aligns the manual ONNX packaging workflow input contract with M033 provisioning behavior.
+
+TEI remains production/default. ONNX remains explicit opt-in and experimental.
+
+## Workflow change
+
+`.github/workflows/onnx-packaging.yml` no longer hard-fails when `onnx_runtime_source_url` is supplied without `onnx_runtime_sha256`.
+
+Instead:
+
+- `onnx_runtime_sha256` is documented as an optional override;
+- when omitted, the workflow logs that provisioning will use `source_contract.onnx_runtime.library_sha256`;
+- the provisioning step passes `--onnx-runtime-sha256` only when a non-empty override is supplied.
+
+This matches `tools/provision_onnx_artifacts.py`, which now reads ONNX Runtime library sha from `docs/onnx-artifacts/user-bge-m3-dense-fp32.json` when no CLI override is provided.
+
+## Manual workflow input contract
+
+| Input | Required | Status |
+|---|---:|---|
+| `onnx_source_url` | yes | Still blocked: exact ONNX binary needs immutable non-secret source. |
+| `native_tokenizer_source_url` | yes | Pinned candidate exists: `daulet/tokenizers` `v1.27.0`. |
+| `tokenizer_json_source_url` | no | Pinned candidate exists at the `deepvk/USER-bge-m3` revision. |
+| `onnx_runtime_source_url` | no | Pinned wheel candidate exists and provisioning can extract member. |
+| `onnx_runtime_sha256` | no | Optional override; manifest sha is used when omitted. |
+| `image_tag` | no | Local CI image tag, not a deployment target. |
+
+## Verification evidence
+
+- actionlint: pass
+- workflow text checks: pass
+- provisioning dry-run exposes manifest-derived ONNX Runtime sha: pass
+- no workflow dispatch was performed
+
+## Remaining blockers
+
+- Exact ONNX model binary immutable source is still missing.
+- Hosted workflow proof has not been pushed, dispatched, or monitored.
+- Successful future workflow image build would still require packaged legal quality and packaged performance gates before any rollout claim.
+- ONNX production/default promotion remains blocked.
+
+## Non-actions
+
+- No push.
+- No workflow dispatch.
+- No artifact upload.
+- No production/default ONNX promotion.
+- No raw legal text, raw embedding input text, secrets, or signed artifact URLs recorded.

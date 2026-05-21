@@ -165,6 +165,28 @@ For non-zip runtime sources, the helper preserves direct-file fallback and copie
 
 This support does not run hosted CI and does not imply ONNX production readiness. It only makes the selected ONNX Runtime source candidate provisionable once the remaining exact ONNX model source blocker is resolved.
 
+## Manual hosted workflow input contract
+
+`.github/workflows/onnx-packaging.yml` is a manual `workflow_dispatch` skeleton for future hosted proof. It must not be treated as rollout evidence until it is pushed, dispatched with safe immutable sources, and monitored successfully.
+
+Workflow inputs:
+
+| Input | Required | Policy |
+|---|---:|---|
+| `onnx_source_url` | yes | Non-secret immutable source for the exact `user-bge-m3-dense.onnx` binary. This remains blocked until the exact binary is mirrored/uploaded or a reproducible-export workflow replaces this path. |
+| `native_tokenizer_source_url` | yes | Non-secret pinned source for `libtokenizers.a` or archive containing it; current candidate is `daulet/tokenizers` `v1.27.0`. |
+| `tokenizer_json_source_url` | no | Non-secret pinned tokenizer JSON source; current candidate is the pinned Hugging Face revision URL. |
+| `onnx_runtime_source_url` | no | Non-secret pinned ONNX Runtime `.whl`/`.zip` or direct `.so` source. `.whl`/`.zip` inputs use manifest `source_contract.onnx_runtime.library_member`. |
+| `onnx_runtime_sha256` | no | Optional override. If omitted while `onnx_runtime_source_url` is provided, provisioning uses manifest `source_contract.onnx_runtime.library_sha256`. |
+| `image_tag` | no | Local CI image tag only; not a deployment target. |
+
+Safety rules:
+
+- do not pass signed or secret-bearing URLs as plain workflow inputs;
+- prefer immutable non-secret URLs, release assets, object keys, or masked secret indirection in a future hardened workflow;
+- workflow dispatch requires explicit user approval because it is an external GitHub action;
+- successful image build is still not production readiness: packaged legal quality, packaged performance, rollout, and rollback gates remain required.
+
 ## Failure and diagnostics contract
 
 Provisioning failures must name:

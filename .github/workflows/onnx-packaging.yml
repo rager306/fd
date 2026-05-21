@@ -20,7 +20,7 @@ on:
         required: false
         type: string
       onnx_runtime_sha256:
-        description: "Required when onnx_runtime_source_url is provided"
+        description: "Optional override for ONNX Runtime library sha256; omitted value uses manifest source_contract.onnx_runtime.library_sha256"
         required: false
         type: string
       image_tag:
@@ -65,8 +65,7 @@ jobs:
             exit 1
           fi
           if [ -n "$ONNX_RUNTIME_SOURCE_URL" ] && [ -z "$ONNX_RUNTIME_SHA256" ]; then
-            echo "onnx_runtime_sha256 is required when onnx_runtime_source_url is provided."
-            exit 1
+            echo "onnx_runtime_sha256 not provided; provisioning will use manifest source_contract.onnx_runtime.library_sha256."
           fi
 
       - name: Provision ONNX artifacts
@@ -87,7 +86,10 @@ jobs:
             args+=(--tokenizer-json-source "$TOKENIZER_JSON_SOURCE_URL")
           fi
           if [ -n "$ONNX_RUNTIME_SOURCE_URL" ]; then
-            args+=(--onnx-runtime-source "$ONNX_RUNTIME_SOURCE_URL" --onnx-runtime-sha256 "$ONNX_RUNTIME_SHA256")
+            args+=(--onnx-runtime-source "$ONNX_RUNTIME_SOURCE_URL")
+            if [ -n "$ONNX_RUNTIME_SHA256" ]; then
+              args+=(--onnx-runtime-sha256 "$ONNX_RUNTIME_SHA256")
+            fi
           fi
           python3 tools/provision_onnx_artifacts.py "${args[@]}"
 

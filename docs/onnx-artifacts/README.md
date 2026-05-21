@@ -93,6 +93,8 @@ Only after those artifacts are provisioned and verified should CI run `IMAGE_TAG
 
 A manual workflow skeleton exists at `.github/workflows/onnx-packaging.yml`. It is intentionally `workflow_dispatch` only and requires explicit artifact source inputs before it can provision artifacts, run tagged tests, and build the ONNX image. Do not use signed or secret-bearing URLs as plain workflow inputs; use masked secrets or a non-secret immutable artifact URL/cache key.
 
+Manual workflow input policy is defined in `docs/onnx-artifacts/PROVISIONING.md`. In short: `onnx_source_url` and `native_tokenizer_source_url` are required; `tokenizer_json_source_url`, `onnx_runtime_source_url`, and `onnx_runtime_sha256` are optional. When `onnx_runtime_source_url` is supplied without `onnx_runtime_sha256`, provisioning uses `source_contract.onnx_runtime.library_sha256` from `user-bge-m3-dense-fp32.json`. The exact ONNX model binary source remains the blocking required input.
+
 ## Future Docker/CI gate
 
 A future packaging milestone should define how CI or Docker builds obtain these artifacts without committing binaries. That gate should verify:
