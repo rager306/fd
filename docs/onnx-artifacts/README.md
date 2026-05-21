@@ -95,6 +95,8 @@ A manual workflow skeleton exists at `.github/workflows/onnx-packaging.yml`. It 
 
 Manual workflow input policy is defined in `docs/onnx-artifacts/PROVISIONING.md`. In short: `onnx_source_url` and `native_tokenizer_source_url` are required; `tokenizer_json_source_url`, `onnx_runtime_source_url`, and `onnx_runtime_sha256` are optional. When `onnx_runtime_source_url` is supplied without `onnx_runtime_sha256`, provisioning uses `source_contract.onnx_runtime.library_sha256` from `user-bge-m3-dense-fp32.json`. The exact ONNX model binary source remains the blocking required input.
 
+M035 defines a planned exact-binary hosting contract for that blocker: the current `.onnx` must be mirrored/uploaded as the exact `1432482908` byte binary with sha256 `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`. The recommended object key and release filename are documented, but they are not real sources until the artifact is actually uploaded/mirrored and reverified. Do not use local developer paths, mutable `latest` URLs, or signed/plain-secret URLs as hosted proof.
+
 ## Future Docker/CI gate
 
 A future packaging milestone should define how CI or Docker builds obtain these artifacts without committing binaries. That gate should verify:

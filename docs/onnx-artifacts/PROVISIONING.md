@@ -81,6 +81,51 @@ M031 selected pinned source candidates for every supporting artifact except the 
 
 `immutable_selected` here means a non-secret, pinned, checksum-matched source candidate has been selected. It does not mean hosted CI has run or that ONNX is production-ready.
 
+## Exact ONNX binary hosting contract
+
+M035 defines the planned hosting contract for the exact local ONNX model binary. This is **not** an uploaded source and must not be used as `onnx_source_url` until the binary is actually mirrored/uploaded and verified.
+
+Required exact binary:
+
+- local path: `.gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx`
+- size: `1432482908`
+- sha256: `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`
+
+Recommended immutable object key template:
+
+```text
+fd/onnx/deepvk-USER-bge-m3/0cc6cfe48e260fb0474c753087a69369e88709ae/fp32-dense/sha256-28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4/user-bge-m3-dense.onnx
+```
+
+Recommended release filename:
+
+```text
+user-bge-m3-dense.sha256-28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4.onnx
+```
+
+Allowed future source forms:
+
+- non-secret immutable `https` URL for the exact binary, verified by size and sha256;
+- immutable release asset with pinned tag, never `latest`;
+- object storage key or CI cache key containing the sha256 in the key or immutable metadata, resolved by a future hardened workflow without printing secrets.
+
+Forbidden source forms:
+
+- signed or secret-bearing URL passed as a plain `workflow_dispatch` input;
+- mutable `latest` URL, branch artifact URL, or unpinned cache key;
+- source whose downloaded size or sha256 differs from this manifest;
+- local developer path used as hosted CI evidence.
+
+Pre-dispatch checklist:
+
+1. Upload or mirror the exact local binary to the chosen immutable source.
+2. Verify remote download size equals `1432482908`.
+3. Verify remote download sha256 equals `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`.
+4. Record the resolved non-secret source reference or masked-secret indirection before dispatch.
+5. Get explicit user approval before push or `workflow_dispatch`.
+
+Until this checklist is complete, `onnx_source_url` remains blocked and hosted ONNX packaging proof remains unavailable.
+
 ## Recommended cache layout
 
 Local and CI caches should use ignored paths:

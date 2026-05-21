@@ -1,0 +1,70 @@
+# fd ONNX exact binary hosting contract — M035 S01
+
+## Status
+
+Decision: D033 records this as a planned exact-binary hosting contract, not an available source.
+
+M035 defines the planned hosting contract for the current local ONNX model binary. It does not upload, mirror, publish, push, or dispatch anything.
+
+TEI remains production/default. ONNX remains explicit opt-in and experimental.
+
+## Exact binary identity
+
+- artifact: `user-bge-m3-dense.onnx`
+- local ignored path: `.gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx`
+- required size: `1432482908`
+- required sha256: `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`
+- model revision: `0cc6cfe48e260fb0474c753087a69369e88709ae`
+- manifest: `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`
+
+## Planned immutable location contract
+
+Recommended object key template:
+
+```text
+fd/onnx/deepvk-USER-bge-m3/0cc6cfe48e260fb0474c753087a69369e88709ae/fp32-dense/sha256-28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4/user-bge-m3-dense.onnx
+```
+
+Recommended release filename:
+
+```text
+user-bge-m3-dense.sha256-28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4.onnx
+```
+
+This is a planned key/name contract only. It is not an available artifact source and must not be used as `onnx_source_url` until the exact binary is actually mirrored/uploaded and verified.
+
+## Allowed future source forms
+
+- Non-secret immutable `https` URL for the exact binary, verified by size and sha256.
+- Immutable release asset with pinned tag, never `latest`.
+- Object storage key or CI cache key containing sha256 in the key or immutable metadata, resolved by a future hardened workflow without printing secrets.
+
+## Forbidden source forms
+
+- Signed or secret-bearing URL passed as plain `workflow_dispatch` input.
+- Mutable `latest` URL, branch artifact URL, or unpinned cache key.
+- Source whose downloaded size or sha256 differs from the manifest.
+- Local developer path used as hosted CI evidence.
+
+## Pre-dispatch checklist
+
+1. Upload or mirror the exact local binary to the chosen immutable source.
+2. Verify remote download size equals `1432482908`.
+3. Verify remote download sha256 equals `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`.
+4. Record the resolved non-secret source reference or masked-secret indirection.
+5. Obtain explicit user approval before push or `workflow_dispatch`.
+
+## Remaining blockers
+
+- No ONNX binary source URL/key is currently available.
+- Hosted ONNX packaging workflow has not been pushed or dispatched.
+- Packaged legal quality and packaged performance gates must be rerun after hosted packaging proof.
+- ONNX production/default promotion remains blocked.
+
+## Non-actions
+
+- No artifact upload.
+- No GitHub push.
+- No workflow dispatch.
+- No production/default ONNX promotion.
+- No raw legal text, raw embedding input text, secrets, or signed artifact URLs recorded.

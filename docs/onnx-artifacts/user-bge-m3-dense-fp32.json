@@ -183,7 +183,31 @@
       "reason": "Exact exported ONNX binary exists only as a local ignored artifact; no non-secret immutable external URL, release asset, object key, or CI cache key is recorded.",
       "required_size_bytes": 1432482908,
       "required_sha256": "28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4",
-      "required_next_action": "Choose one next gate: mirror/upload the exact ONNX binary to an immutable non-secret source and verify size/sha, or build a separate reproducible-export workflow that regenerates the artifact and reruns legal/performance/package gates."
+      "required_next_action": "Choose one next gate: mirror/upload the exact ONNX binary to an immutable non-secret source and verify size/sha, or build a separate reproducible-export workflow that regenerates the artifact and reruns legal/performance/package gates.",
+      "hosting_contract": {
+        "contract_status": "planned_not_uploaded",
+        "must_not_be_treated_as_source": true,
+        "recommended_object_key": "fd/onnx/deepvk-USER-bge-m3/0cc6cfe48e260fb0474c753087a69369e88709ae/fp32-dense/sha256-28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4/user-bge-m3-dense.onnx",
+        "recommended_filename": "user-bge-m3-dense.sha256-28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4.onnx",
+        "allowed_source_forms": [
+          "non-secret immutable https URL for the exact binary, with sha256 and size verified by provisioning",
+          "immutable release asset whose tag is not latest and whose asset checksum matches this manifest",
+          "object storage key or CI cache key containing the sha256 in the key or immutable metadata, resolved by a future hardened workflow without printing secrets"
+        ],
+        "forbidden_source_forms": [
+          "signed or secret-bearing URL passed as a plain workflow_dispatch input",
+          "mutable latest URL or branch artifact URL",
+          "source whose downloaded size or sha256 differs from required_size_bytes and required_sha256",
+          "local developer path used as hosted CI evidence"
+        ],
+        "pre_dispatch_requirements": [
+          "upload or mirror the exact local binary to the chosen immutable source",
+          "verify remote download size equals required_size_bytes",
+          "verify remote download sha256 equals required_sha256",
+          "record the resolved non-secret source reference or masked-secret indirection before dispatch",
+          "obtain explicit user approval before push or workflow dispatch"
+        ]
+      }
     },
     "tokenizer_json": {
       "source_status": "immutable_selected",
