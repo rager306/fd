@@ -1,0 +1,49 @@
+# fd ONNX Go target-runtime smoke — M038 S01
+
+## Result
+
+```json
+{
+  "generated_at": "2026-05-21T10:35:33.852470+00:00",
+  "verdict": "pass",
+  "api_url": "http://localhost:18000",
+  "model": "deepvk/USER-bge-m3",
+  "cache_namespace": "m038-go-onnx-smoke",
+  "probe_sha256": "5ca15e9ab40525dd4fe511267041635059f2ba890e404a3553fd3cb9a1405a86",
+  "raw_probe_text_logged": false,
+  "health_status": "ok",
+  "runtime": {
+    "backend": "onnx",
+    "artifact_id": "user-bge-m3-dense-fp32",
+    "artifact_verified": true,
+    "tokenizer_verified": true,
+    "runtime_library_verified": false,
+    "provider": "CPUExecutionProvider",
+    "dimensions": 1024,
+    "validated_max_sequence_length": 1024,
+    "cache_namespace": "m038-go-onnx-smoke"
+  },
+  "embedding": {
+    "object": "list",
+    "dimensions_field": 1024,
+    "embedding_length": 1024,
+    "l2_norm": 0.99999983
+  },
+  "required_checks": {
+    "health_ok": true,
+    "backend_onnx": true,
+    "artifact_verified": true,
+    "tokenizer_verified": true,
+    "dimensions_1024": true,
+    "norm_close_to_1": true,
+    "namespace_isolated": true
+  }
+}
+```
+
+## Notes
+
+- This proof uses the actual Go fd API built with `onnx hf_tokenizers`.
+- The Python script is only a driver for HTTP requests to the Go runtime.
+- Raw probe text is not recorded; only sha256 is stored.
+- TEI remains production/default and ONNX remains opt-in experimental.

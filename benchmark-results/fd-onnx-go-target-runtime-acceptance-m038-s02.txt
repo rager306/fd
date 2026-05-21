@@ -1,0 +1,49 @@
+# fd ONNX Go target-runtime acceptance — M038 S02
+
+## Status
+
+M038 executes target-runtime validation through the actual Go fd API for the current local ONNX artifact.
+
+TEI remains production/default. ONNX remains explicit opt-in and experimental.
+
+## Evidence artifacts
+
+- Go runtime smoke: `benchmark-results/fd-onnx-go-runtime-smoke-m038-s01.txt`
+- Go endpoint legal gate: `benchmark-results/fd-legal-retrieval-m038-go-onnx-target-runtime.txt`
+- Go endpoint performance benchmark: `benchmark-results/fd-benchmark-m038-go-onnx-target-runtime.txt`
+
+## Target-runtime coverage matrix
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Local artifact prerequisites | PASS | ONNX artifact, tokenizer JSON, native tokenizer library, and ONNX Runtime library existed and matched expected checksums. |
+| Go live ONNX embedder | PASS | `TestONNXEmbedderLiveLocalArtifact` passed with `onnx hf_tokenizers` tags after using package-relative manifest/tokenizer paths. |
+| Go ONNX API smoke | PASS | `/health` reported ONNX backend and verification metadata; `/v1/embeddings` returned 1024-dimensional normalized output. |
+| Redis namespace isolation | PASS | Smoke namespace `m038-go-onnx-smoke`, legal namespace `m038-go-onnx-legal`, benchmark namespace `m038-go-onnx-benchmark`. |
+| Legal retrieval via actual Go endpoints | PASS | TEI Go API `localhost:8000` vs Go ONNX API `localhost:18000`; min cosine `0.99989883`, top1 agreement `1.0`, mean overlap@5 `0.997701`, ONNX recall ratio `1.0`. |
+| Performance via actual Go ONNX endpoint | PASS | best cold latency `18.4ms`, warm latency mean `2.21ms`, max throughput `~895 req/s`, Batch L1 p95 `8.82ms`, chunk reuse warm p95 `7.90ms`. |
+| Redis L2 restart subcheck | SKIPPED | `BENCHMARK_API_RESTART_COMMAND` was intentionally empty because the Go ONNX API was managed by bg_shell. |
+| Packaged Docker Go ONNX legal/performance | NOT RUN | M038 validates local Go target-runtime endpoint; packaged M023/M024 evidence exists for earlier image, but not rerun here. |
+| Hosted workflow proof | NOT RUN | No push or workflow dispatch occurred. |
+
+## Artifact identity
+
+- manifest: `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`
+- ONNX artifact sha256: `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`
+- runtime: Go fd API with `onnx hf_tokenizers`
+- `ONNX_MAX_SEQUENCE_LENGTH`: `1024`
+
+## Interpretation
+
+M038 proves the current local ONNX artifact can pass local Go target-runtime smoke, legal retrieval parity, and performance benchmark gates through actual Go API endpoints.
+
+This does not resolve hosted source or production rollout blockers. Packaged Docker reruns and hosted workflow proof remain separate gates before any production/default promotion.
+
+## Non-actions
+
+- No ONNX artifact was regenerated.
+- No artifact was uploaded or mirrored.
+- No GitHub push occurred.
+- No workflow dispatch occurred.
+- No production/default ONNX promotion occurred.
+- No raw legal text, raw embedding input text, secrets, or signed artifact URLs recorded.
