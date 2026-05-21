@@ -170,6 +170,40 @@ Current blocker:
 - The ONNX model artifact has only a local ignored path. Hosted CI/full deployment cannot be truthful until this exact binary has an immutable external source, or until a separate reproducible-export workflow is created and revalidates quality/performance from the regenerated artifact.
 - Pinned source candidates exist for native tokenizer, tokenizer JSON, and ONNX Runtime, but they still require a real hosted workflow run before they are rollout evidence.
 
+## Target runtime validation contract
+
+M037 closes an important proof gap: Python export, provisioning, artifact, and metadata checks are setup/provenance evidence only. They do **not** prove production runtime behavior.
+
+Current production/default runtime remains the Go fd API using TEI. The current opt-in ONNX target runtime is the Go fd API built with `onnx` and `hf_tokenizers` tags. Any future Rust backend or other runtime must pass equivalent target-runtime gates before adoption; Go evidence cannot be reused as Rust runtime proof.
+
+Required Go target-runtime gates for any newly sourced or regenerated ONNX artifact:
+
+1. Tagged Go ONNX embedder loads the candidate artifact with `onnx` and `hf_tokenizers` build tags.
+2. Native HF tokenizer path is used and token IDs/attention masks match the Hugging Face baseline.
+3. Go `/v1/embeddings` API returns 1024-dimensional normalized embeddings for the candidate artifact.
+4. Go runtime health metadata reports artifact/tokenizer/runtime verification without exposing raw paths, secrets, or input text.
+5. Fixed-probe TEI-vs-Go-ONNX vector comparison meets documented thresholds without raw text logging.
+6. Russian/legal retrieval evaluator runs against actual Go TEI and Go ONNX API endpoints with isolated Redis namespaces.
+7. Local performance benchmark runs against the actual Go ONNX API endpoint with sanitized effective configuration snapshot.
+8. Opt-in ONNX Docker image is built from the candidate artifact and runs the Go API.
+9. Packaged Docker Go ONNX API passes legal quality and performance gates before rollout evidence is claimed.
+
+Future Rust/runtime rule:
+
+- Rust must independently verify tokenizer parity, artifact load, embedding dimensions, normalization, health metadata, legal quality, performance, and packaged behavior.
+- Rust cannot inherit Go target-runtime acceptance evidence except as a comparison baseline.
+
+Cache isolation requirement:
+
+- Every target-runtime comparison must isolate Redis namespaces, for example via `EMBEDDING_CACHE_VERSION`, or deliberately flush with the side effect recorded.
+
+Promotion blockers:
+
+- Python-only checks are insufficient for production/default promotion.
+- Metadata-only regenerated export proof is insufficient without target runtime gates.
+- Unpackaged local Go smoke tests are insufficient without packaged legal/performance gates.
+- Future Rust implementation requires its own equivalent gates.
+
 ## Reproducible-export workflow contract
 
 M036 defines the no-upload alternative to exact-binary hosting: regenerate an ONNX artifact from pinned model files and a pinned toolchain, then rerun quality, performance, packaging, and hosted proof gates. This is a planned contract only. It is not current reproducibility proof.

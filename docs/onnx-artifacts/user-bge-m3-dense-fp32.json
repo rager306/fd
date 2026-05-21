@@ -327,6 +327,35 @@
         "do not treat planned workflow contract as hosted CI evidence",
         "do not promote ONNX to production/default from regenerated metadata alone"
       ]
+    },
+    "target_runtime_validation": {
+      "contract_status": "required_before_promotion",
+      "python_helper_boundary": "Python export, provisioning, artifact, and metadata verifiers are setup/provenance checks only; they do not prove production runtime behavior.",
+      "current_production_runtime": "go_fd_api_with_tei_default",
+      "current_target_runtime_for_onnx": "go_fd_api_built_with_onnx_hf_tokenizers_tags",
+      "future_runtime_rule": "Any future Rust backend or other runtime must pass equivalent target-runtime gates before adoption; Go evidence cannot be reused as Rust runtime proof.",
+      "required_go_runtime_gates": [
+        "tagged Go ONNX embedder loads the candidate artifact with onnx and hf_tokenizers build tags",
+        "native HF tokenizer path is used and token IDs/attention masks match the Hugging Face baseline",
+        "Go /v1/embeddings API returns 1024-dimensional normalized embeddings for the candidate artifact",
+        "Go runtime health metadata reports artifact/tokenizer/runtime verification without exposing raw paths, secrets, or input text",
+        "fixed-probe TEI-vs-Go-ONNX vector comparison meets documented thresholds without raw text logging",
+        "Russian/legal retrieval evaluator runs against actual Go TEI and Go ONNX API endpoints with isolated Redis namespaces",
+        "local performance benchmark runs against the actual Go ONNX API endpoint with sanitized effective configuration snapshot",
+        "opt-in ONNX Docker image is built from the candidate artifact and runs the Go API",
+        "packaged Docker Go ONNX API passes legal quality and performance gates before rollout evidence is claimed"
+      ],
+      "required_future_rust_gates": [
+        "Rust runtime must independently verify tokenizer parity, artifact load, embedding dimensions, normalization, health metadata, legal quality, performance, and packaged behavior",
+        "Rust runtime cannot inherit Go target-runtime acceptance evidence except as a comparison baseline"
+      ],
+      "cache_isolation_requirement": "Every target-runtime comparison must isolate Redis namespaces, for example via EMBEDDING_CACHE_VERSION, or deliberately flush with the side effect recorded.",
+      "promotion_blockers": [
+        "Python-only checks are insufficient for production/default promotion",
+        "metadata-only regenerated export proof is insufficient without target runtime gates",
+        "unpackaged local Go smoke tests are insufficient without packaged legal/performance gates",
+        "future Rust implementation requires its own equivalent gates"
+      ]
     }
   }
 }

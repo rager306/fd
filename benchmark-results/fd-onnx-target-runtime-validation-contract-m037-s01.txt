@@ -1,0 +1,71 @@
+# fd ONNX target runtime validation contract — M037 S01
+
+## Status
+
+Decision: D035 records this boundary collaboratively: Python helper evidence is setup/provenance only; target runtime acceptance is required before promotion.
+
+M037 records the production-runtime proof boundary raised by the user: Python helper checks are not sufficient production runtime validation.
+
+TEI remains production/default. ONNX remains explicit opt-in and experimental.
+
+## Boundary
+
+Python checks are still useful for:
+
+- export metadata and provenance;
+- artifact provisioning and checksum verification;
+- manifest shape and contract validation;
+- driving comparisons or benchmarks when pointed at real API endpoints.
+
+Python checks do not prove the production runtime by themselves.
+
+The current production runtime is the Go fd API using TEI. The current opt-in ONNX target runtime is the Go fd API built with `onnx` and `hf_tokenizers` tags.
+
+## Required Go target-runtime gates
+
+Any newly sourced or regenerated ONNX artifact must pass these before promotion:
+
+1. Tagged Go ONNX embedder loads the candidate artifact with `onnx` and `hf_tokenizers` build tags.
+2. Native HF tokenizer path is used and token IDs/attention masks match the Hugging Face baseline.
+3. Go `/v1/embeddings` API returns 1024-dimensional normalized embeddings for the candidate artifact.
+4. Go runtime health metadata reports artifact/tokenizer/runtime verification without exposing raw paths, secrets, or input text.
+5. Fixed-probe TEI-vs-Go-ONNX vector comparison meets documented thresholds without raw text logging.
+6. Russian/legal retrieval evaluator runs against actual Go TEI and Go ONNX API endpoints with isolated Redis namespaces.
+7. Local performance benchmark runs against the actual Go ONNX API endpoint with sanitized effective configuration snapshot.
+8. Opt-in ONNX Docker image is built from the candidate artifact and runs the Go API.
+9. Packaged Docker Go ONNX API passes legal quality and performance gates before rollout evidence is claimed.
+
+## Future Rust or other runtime rule
+
+If a Rust backend or any other runtime is introduced, it must independently pass equivalent gates:
+
+- tokenizer parity;
+- artifact load;
+- embedding dimensions;
+- normalization;
+- health metadata;
+- legal quality;
+- performance;
+- packaged behavior.
+
+Go evidence can be used as a comparison baseline only. It is not Rust runtime proof.
+
+## Cache isolation
+
+Every target-runtime comparison must isolate Redis namespaces, for example via `EMBEDDING_CACHE_VERSION`, or deliberately flush with that side effect recorded. Otherwise ONNX can return cached TEI vectors and falsely appear equivalent.
+
+## Promotion blockers
+
+- Python-only checks are insufficient for production/default promotion.
+- Metadata-only regenerated export proof is insufficient without target-runtime gates.
+- Unpackaged local Go smoke tests are insufficient without packaged legal/performance gates.
+- Future Rust implementation requires its own equivalent gates.
+
+## Non-actions
+
+- No new ONNX artifact was generated.
+- No Go or Rust production switch occurred.
+- No artifact upload occurred.
+- No GitHub push occurred.
+- No workflow dispatch occurred.
+- No raw legal text, raw embedding input text, secrets, or signed artifact URLs recorded.

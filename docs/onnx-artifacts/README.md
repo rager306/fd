@@ -99,6 +99,8 @@ M035 defines a planned exact-binary hosting contract for that blocker: the curre
 
 M036 defines the no-upload alternative: a planned reproducible-export workflow contract. That path would regenerate ONNX from pinned `deepvk/USER-bge-m3` source files and pinned toolchain versions, then rerun fixed-probe comparison, Russian/legal quality, local performance, opt-in Docker packaging, packaged legal/performance, and hosted proof gates. This is currently `planned_not_proven`; `tools/verify_onnx_export_contract.py` still verifies only the existing ignored artifact contract and must not be treated as regenerated-export proof.
 
+M037 defines the target-runtime validation boundary. Python export/provisioning/verifier checks are not production runtime acceptance. Any newly sourced or regenerated ONNX artifact must pass the Go fd API target-runtime gates before promotion: tagged `onnx hf_tokenizers` load/tokenizer checks, `/v1/embeddings` 1024-dimensional normalized output, safe health metadata, fixed-probe comparison, Russian/legal retrieval through actual Go endpoints with isolated Redis namespaces, local performance through the Go API, opt-in Docker build, and packaged legal/performance gates. Any future Rust backend must pass its own equivalent gates; Go evidence is only a baseline, not Rust proof.
+
 ## Future Docker/CI gate
 
 A future packaging milestone should define how CI or Docker builds obtain these artifacts without committing binaries. That gate should verify:
