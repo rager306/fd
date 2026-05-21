@@ -148,6 +148,23 @@ It does not regenerate the ONNX binary. It must not be treated as byte-for-byte 
 1. exact-binary hosting: mirror/upload the existing `.onnx` binary to a non-secret immutable source and verify size/sha256; or
 2. reproducible-export workflow: regenerate the ONNX binary from pinned source/toolchain and rerun legal quality, performance, packaging, and hosted proof gates.
 
+## ONNX Runtime wheel extraction
+
+M033 makes the M031 ONNX Runtime wheel source candidate actionable in `tools/provision_onnx_artifacts.py`.
+
+When `--onnx-runtime-source` points to a `.whl` or `.zip` file and `docs/onnx-artifacts/user-bge-m3-dense-fp32.json` contains `source_contract.onnx_runtime.library_member`, the provisioning helper:
+
+1. downloads or reads the explicit source under the existing remote source safety policy;
+2. opens the zip/wheel without `extractall`;
+3. reads only the configured `library_member`;
+4. enforces the configured `library_size_bytes` when present;
+5. writes the member to `.gsd/runtime/onnxruntime/libonnxruntime.so.1.26.0` by default;
+6. verifies the destination against `library_sha256` or `--onnx-runtime-sha256`.
+
+For non-zip runtime sources, the helper preserves direct-file fallback and copies the supplied shared library directly before checksum verification.
+
+This support does not run hosted CI and does not imply ONNX production readiness. It only makes the selected ONNX Runtime source candidate provisionable once the remaining exact ONNX model source blocker is resolved.
+
 ## Failure and diagnostics contract
 
 Provisioning failures must name:

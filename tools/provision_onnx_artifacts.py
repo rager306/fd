@@ -17,10 +17,12 @@ import os
 from pathlib import Path
 import shutil
 import socket
+import stat
 import sys
 import tarfile
 import tempfile
 from typing import Any
+import zipfile
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, build_opener
@@ -170,6 +172,28 @@ def tokenizer_json_expectation(onnx_manifest: dict[str, Any]) -> tuple[int | Non
     return (size if isinstance(size, int) else None), (sha if isinstance(sha, str) else None)
 
 
+def onnx_runtime_expectation(onnx_manifest: dict[str, Any]) -> tuple[str | None, int | None, str | None]:
+    source_contract = onnx_manifest.get("source_contract")
+    if not isinstance(source_contract, dict):
+        return None, None, None
+    runtime = source_contract.get("onnx_runtime")
+    if not isinstance(runtime, dict):
+        return None, None, None
+    member = runtime.get("library_member")
+    size = runtime.get("library_size_bytes")
+    sha = runtime.get("library_sha256")
+    return (
+        member if isinstance(member, str) and member else None,
+        size if isinstance(size, int) and size > 0 else None,
+        sha if isinstance(sha, str) and len(sha) == 64 else None,
+    )
+
+
+def source_looks_like_zip(source: str) -> bool:
+    suffix = Path(urlparse(source).path if is_url(source) else source).suffix.lower()
+    return suffix in {".zip", ".whl"}
+
+
 def source_display(source: str | None) -> str | None:
     if not source:
         return None
@@ -247,6 +271,7 @@ def materialize_source(
     destination: Path,
     *,
     archive_member: str | None = None,
+    zip_member: str | None = None,
     expected_size: int | None = None,
     max_archive_member_bytes: int = DEFAULT_MAX_ARCHIVE_MEMBER_BYTES,
     allowed_hosts: set[str] | None = None,
@@ -271,6 +296,21 @@ def materialize_source(
                     raise RuntimeError(f"archive member is not readable: {archive_member}")
                 with destination.open("wb") as handle:
                     copy_bounded(extracted, handle, max_member_bytes, f"archive member {archive_member}")
+        elif zip_member:
+            with zipfile.ZipFile(fetched) as archive:
+                try:
+                    member = archive.getinfo(zip_member)
+                except KeyError as exc:
+                    raise RuntimeError(f"zip archive does not contain {zip_member}: {source_display(source)}") from exc
+                mode = member.external_attr >> 16
+                file_type = stat.S_IFMT(mode)
+                if member.is_dir() or file_type == stat.S_IFLNK or (file_type and file_type != stat.S_IFREG):
+                    raise RuntimeError(f"zip member is not a regular file: {zip_member}")
+                max_member_bytes = expected_size if expected_size is not None else max_archive_member_bytes
+                if member.file_size > max_member_bytes:
+                    raise RuntimeError(f"zip member {zip_member} size {member.file_size} exceeds maximum allowed size {max_member_bytes}")
+                with archive.open(member) as extracted, destination.open("wb") as handle:
+                    copy_bounded(extracted, handle, max_member_bytes, f"zip member {zip_member}")
         else:
             shutil.copy2(fetched, destination)
 
@@ -308,6 +348,8 @@ def main() -> int:
     onnx_id, onnx_dest, onnx_size, onnx_sha = artifact_expectation(onnx_manifest, args.onnx_manifest, repo_root)
     native_id, native_dest, native_size, native_sha = artifact_expectation(native_manifest, args.native_tokenizer_manifest, repo_root)
     tokenizer_size, tokenizer_sha = tokenizer_json_expectation(onnx_manifest)
+    runtime_member, runtime_size, runtime_sha = onnx_runtime_expectation(onnx_manifest)
+    runtime_sha = args.onnx_runtime_sha256 or runtime_sha
     tokenizer_dest = repo_path(repo_root, args.tokenizer_json_dest, require_approved_root=True)
     ort_dest = repo_path(repo_root, args.onnx_runtime_dest, require_approved_root=True)
 
@@ -315,7 +357,7 @@ def main() -> int:
         plan_item("onnx", onnx_dest, args.onnx_source, True, onnx_sha),
         plan_item("native_tokenizer", native_dest, args.native_tokenizer_source, True, native_sha),
         plan_item("tokenizer_json", tokenizer_dest, args.tokenizer_json_source, False, tokenizer_sha),
-        plan_item("onnx_runtime", ort_dest, args.onnx_runtime_source, False, args.onnx_runtime_sha256),
+        plan_item("onnx_runtime", ort_dest, args.onnx_runtime_source, False, runtime_sha),
     ]
 
     if args.dry_run:
@@ -325,8 +367,8 @@ def main() -> int:
     missing_required = [item["label"] for item in plan if item["required"] and not item["source_configured"]]
     if missing_required:
         raise RuntimeError("missing required artifact sources: " + ", ".join(missing_required))
-    if args.onnx_runtime_source and not args.onnx_runtime_sha256:
-        raise RuntimeError("--onnx-runtime-sha256 is required when --onnx-runtime-source is provided")
+    if args.onnx_runtime_source and not runtime_sha:
+        raise RuntimeError("--onnx-runtime-sha256 or manifest source_contract.onnx_runtime.library_sha256 is required when --onnx-runtime-source is provided")
     allowed_hosts = {host.lower() for host in args.allowed_artifact_host}
     if args.max_download_bytes <= 0:
         raise RuntimeError("--max-download-bytes must be a positive integer")
@@ -343,8 +385,9 @@ def main() -> int:
         materialize_source(args.tokenizer_json_source, tokenizer_dest, expected_size=tokenizer_size, allowed_hosts=allowed_hosts, allow_private_hosts=args.allow_private_artifact_hosts, max_download_bytes=args.max_download_bytes)
         results.append({"label": "tokenizer_json", **verify_destination("tokenizer_json", tokenizer_dest, tokenizer_size, tokenizer_sha)})
     if args.onnx_runtime_source:
-        materialize_source(args.onnx_runtime_source, ort_dest, allowed_hosts=allowed_hosts, allow_private_hosts=args.allow_private_artifact_hosts, max_download_bytes=args.max_download_bytes)
-        results.append({"label": "onnx_runtime", **verify_destination("onnx_runtime", ort_dest, None, args.onnx_runtime_sha256)})
+        runtime_zip_member = runtime_member if source_looks_like_zip(args.onnx_runtime_source) else None
+        materialize_source(args.onnx_runtime_source, ort_dest, zip_member=runtime_zip_member, expected_size=runtime_size if runtime_zip_member else None, allowed_hosts=allowed_hosts, allow_private_hosts=args.allow_private_artifact_hosts, max_download_bytes=args.max_download_bytes, max_archive_member_bytes=args.max_archive_member_bytes)
+        results.append({"label": "onnx_runtime", **verify_destination("onnx_runtime", ort_dest, runtime_size if runtime_zip_member else None, runtime_sha)})
 
     print(json.dumps({"script_version": SCRIPT_VERSION, "dry_run": False, "repo_root": ".", "results": results}, indent=2, sort_keys=True))
     return 0

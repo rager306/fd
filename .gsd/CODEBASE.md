@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-21T06:51:09Z | Files: 112 | Described: 0/112
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-21T06:51:09Z","fingerprint":"3be4e94e9797c6893eb46311f7d5d8b8b5b5b8a1","fileCount":112,"truncated":false} -->
+Generated: 2026-05-21T07:07:52Z | Files: 114 | Described: 0/114
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-21T07:07:52Z","fingerprint":"6f35c81defeedfe499d0ca62fbab67d1d77581b7","fileCount":114,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -63,7 +63,7 @@ Generated: 2026-05-21T06:51:09Z | Files: 112 | Described: 0/112
 - `api/handlers/health.go`
 
 ### benchmark-results/
-- *(45 files: 45 .txt)*
+- *(46 files: 46 .txt)*
 
 ### docs/onnx-artifacts/
 - `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`
@@ -96,3 +96,4 @@ Generated: 2026-05-21T06:51:09Z | Files: 112 | Described: 0/112
 - `tools/profile_legal_divergence.py`
 - `tools/provision_onnx_artifacts.py`
 - `tools/verify_onnx_artifacts.py`
+- `tools/verify_onnx_export_contract.py`

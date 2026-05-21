@@ -1,0 +1,63 @@
+# fd ONNX Runtime wheel provisioning outcome — M033 S02
+
+## Status
+
+M033 makes the selected ONNX Runtime wheel source candidate actionable in local/CI provisioning tooling.
+
+TEI remains production/default. ONNX remains explicit opt-in and experimental.
+
+## Change
+
+`tools/provision_onnx_artifacts.py` now reads `source_contract.onnx_runtime` from `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`:
+
+- `library_member`
+- `library_size_bytes`
+- `library_sha256`
+
+When `--onnx-runtime-source` points to `.whl` or `.zip`, the helper opens the archive, extracts only the configured member, bounds the copy by expected size, writes the runtime destination, and verifies sha256.
+
+For non-zip runtime sources, direct shared-library copy remains supported.
+
+## Verified behavior
+
+Synthetic positive probe:
+
+- fake wheel source contained `onnxruntime/capi/libonnxruntime.so.1.26.0`;
+- provisioning extracted the configured member;
+- destination sha matched expected runtime sha.
+
+Synthetic negative/fallback probes:
+
+| Probe | Result |
+|---|---|
+| Missing wheel member | PASS — failed as expected |
+| Oversized wheel member | PASS — failed as expected |
+| Runtime checksum mismatch | PASS — failed as expected |
+| Direct `.so` source fallback | PASS — copied and verified |
+
+Evidence:
+
+- positive probe: `.gsd/exec/742c29f3-9c8d-4033-aff7-faaee7d415d6.stdout`
+- negative/fallback probes: `.gsd/exec/95eaefb4-9f1f-494d-b22a-d179785ea722.stdout`
+
+## Compatibility evidence
+
+- Python compile passed for provisioning/verifier scripts.
+- Existing provisioning dry-run still reports missing required ONNX/native sources and optional tokenizer/runtime sources.
+- Local artifact verifier still validates local ONNX/native artifacts.
+- Export contract verifier still passes.
+
+## Remaining blockers
+
+- Exact ONNX model binary still has no immutable external source.
+- Hosted workflow proof has not been pushed, dispatched, or monitored.
+- The real PyPI ONNX Runtime wheel has not been used in a hosted workflow proof.
+- ONNX production/default promotion remains blocked.
+
+## Non-actions
+
+- No push.
+- No workflow dispatch.
+- No artifact upload.
+- No production/default ONNX promotion.
+- No raw legal text, raw embedding input text, secrets, or signed artifact URLs recorded.
