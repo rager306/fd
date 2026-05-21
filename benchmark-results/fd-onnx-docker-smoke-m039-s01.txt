@@ -1,0 +1,54 @@
+# fd ONNX packaged Docker smoke — M039 S01
+
+```json
+{
+  "generated_at": "2026-05-21T11:06:46.413805+00:00",
+  "verdict": "pass",
+  "image": {
+    "tag": "fd-api:onnx1024-m039",
+    "id": "sha256:40b80c47491d27402b0213a76e86c46332968dabba7ff1c55b75555ee6ca79dc"
+  },
+  "container": {
+    "name": "fd-onnx-m039-smoke",
+    "network": "host",
+    "port": 18000
+  },
+  "api_url": "http://localhost:18000",
+  "model": "deepvk/USER-bge-m3",
+  "cache_namespace": "m039-docker-smoke",
+  "probe_sha256": "163a55081975f313f6c33728e27963dff1a8dc22e0a500d5e5454e50d673d390",
+  "raw_probe_text_logged": false,
+  "runtime": {
+    "backend": "onnx",
+    "artifact_id": "user-bge-m3-dense-fp32",
+    "artifact_verified": true,
+    "tokenizer_verified": true,
+    "runtime_library_verified": true,
+    "provider": "CPUExecutionProvider",
+    "dimensions": 1024,
+    "validated_max_sequence_length": 1024,
+    "cache_namespace": "m039-docker-smoke",
+    "production_default": false
+  },
+  "embedding": {
+    "dimensions_field": 1024,
+    "embedding_length": 1024,
+    "l2_norm": 1.00000053
+  },
+  "required_checks": {
+    "health_ok": true,
+    "backend_onnx": true,
+    "artifact_verified": true,
+    "tokenizer_verified": true,
+    "runtime_library_verified": true,
+    "provider_cpu": true,
+    "dimensions_1024": true,
+    "norm_close_to_1": true,
+    "namespace_isolated": true,
+    "production_default_false": true
+  }
+}
+```
+
+Raw probe text is intentionally excluded; only sha256 is recorded.
+TEI remains production/default and ONNX remains opt-in experimental.

@@ -1,0 +1,54 @@
+# fd ONNX packaged Docker target-runtime acceptance — M039 S02
+
+## Status
+
+M039 reruns target-runtime validation through the dedicated packaged Go ONNX Docker image for the current local ONNX artifact setup.
+
+TEI remains production/default. ONNX remains explicit opt-in and experimental.
+
+## Image under test
+
+- image tag: `fd-api:onnx1024-m039`
+- image id: `sha256:40b80c47491d27402b0213a76e86c46332968dabba7ff1c55b75555ee6ca79dc`
+- image size: `1377538338` bytes
+- ONNX artifact sha256: `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`
+- native tokenizer sha256: `e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50`
+- tokenizer JSON sha256: `068d9f7ed9dd190a00a567e5f7750fdc591b93bc623072ac8050a303c25f5937`
+- ONNX Runtime library sha256: `50775d390eb55e7abd9f6d734da103a04f0e5342ef0a76b1c6ec795544439295`
+
+## Evidence artifacts
+
+- Packaged smoke: `benchmark-results/fd-onnx-docker-smoke-m039-s01.txt`
+- Packaged smoke rerun: `benchmark-results/fd-onnx-docker-smoke-rerun-m039-s01.txt`
+- Packaged legal gate: `benchmark-results/fd-legal-retrieval-m039-docker-onnx-target-runtime.txt`
+- Packaged performance benchmark: `benchmark-results/fd-benchmark-m039-docker-onnx-target-runtime.txt`
+
+## Packaged target-runtime coverage matrix
+
+| Gate | Result | Evidence |
+|---|---|---|
+| Artifact prerequisites | PASS | ONNX artifact and native tokenizer verified by `tools/verify_onnx_artifacts.py`; tokenizer JSON and ONNX Runtime library checksum checks passed. |
+| Fresh image build | PASS | `tools/build_onnx_image.sh` built `fd-api:onnx1024-m039` with image id `sha256:40b80c47491d27402b0213a76e86c46332968dabba7ff1c55b75555ee6ca79dc`. |
+| Packaged Go ONNX smoke | PASS | Container on port 18000 returned backend `onnx`, artifact/tokenizer/runtime-library verified, provider `CPUExecutionProvider`, dimensions `1024`, namespace `m039-docker-smoke`, normalized embedding. |
+| Packaged smoke rerun | PASS | User-requested rerun passed with namespace `m039-docker-smoke-rerun`, runtime verification true, 1024-dimensional normalized embedding. |
+| Packaged legal retrieval | PASS | TEI Go API `localhost:8000` vs packaged Go ONNX API `localhost:18000`; min cosine `0.99989883`, top1 agreement `1.0`, mean overlap@5 `0.997701`, ONNX recall ratio `1.0`, namespace `m039-docker-legal`. |
+| Packaged performance | PASS | Best cold latency `10.3ms`, warm latency mean `1.52ms`, max throughput `~937 req/s`, Batch L1 p95 `4.78ms`, chunk reuse warm p95 `13.55ms`, namespace `m039-docker-benchmark`. |
+| Runtime library health verification | PASS with explicit env | `ONNX_RUNTIME_SHA256` must be supplied to the container for `/health` to report `runtime_library_verified=true`. |
+| Redis L2 restart subcheck | SKIPPED | `BENCHMARK_API_RESTART_COMMAND` was intentionally empty because the packaged container was managed externally. Benchmark artifact records Redis L2 restart as skipped. |
+| Hosted workflow proof | NOT RUN | No push and no workflow dispatch occurred. |
+| Exact ONNX binary source proof | NOT RESOLVED | Local ignored artifact remains the tested binary; immutable hosted source or regenerated-export proof remains required before promotion. |
+
+## Interpretation
+
+M039 proves the current local ONNX artifact setup can be built into the dedicated Docker image and pass packaged Go ONNX smoke, legal retrieval parity, and performance gates through actual packaged API endpoints.
+
+This strengthens M038 by moving from a local `go run` target-runtime proof to packaged Docker runtime proof. It still does not authorize production/default promotion because hosted source, hosted workflow proof, Redis L2 restart proof, rollout/rollback proof, and explicit production decision remain open.
+
+## Non-actions
+
+- No ONNX artifact was regenerated.
+- No artifact was uploaded or mirrored.
+- No GitHub push occurred.
+- No workflow dispatch occurred.
+- No production/default ONNX promotion occurred.
+- No raw legal text, raw embedding input text, secrets, or signed artifact URLs recorded.

@@ -1,0 +1,190 @@
+======================================================================
+EMBEDDING BENCHMARK — Russian Text / Redis Cache
+Model: deepvk/USER-bge-m3 (1024 dimensions)
+======================================================================
+
+## 0. Effective Configuration Snapshot (sanitized)
+
+{
+  "benchmark": {
+    "api_restart_command_configured": false,
+    "api_url": "http://localhost:18000",
+    "dimensions": 1024,
+    "input_texts_logged": false,
+    "model": "deepvk/USER-bge-m3",
+    "script": "benchmark.py"
+  },
+  "docker_compose": {
+    "config_sha256": "2fd661ebc94f7072c14233f4b8ab431c40fba508f561171c16d6916b440b2213",
+    "images": [
+      "CONTAINER           REPOSITORY                                      TAG                 PLATFORM            IMAGE ID            SIZE                CREATED",
+      "fd_api              fd-api                                          latest              linux/amd64         24cdf4e4c5f4        43.8MB              42 hours ago",
+      "fd_redis            redis/redis-stack                               latest              linux/amd64         5d5154123426        403MB               7 days ago",
+      "fd_tei              ghcr.io/huggingface/text-embeddings-inference   cpu-1.9             linux/amd64         ad950d30878e        239MB               7 days ago"
+    ],
+    "images_available": true,
+    "images_output_sha256": "ad8fa91bdf8224b800204384dc2a7a5bc80f403773fccd4fb36914adc0bae33e"
+  },
+  "environment": {
+    "allowlist_size": 50,
+    "omitted_secret_like_keys": [],
+    "values": {
+      "BENCHMARK_API_RESTART_COMMAND": "",
+      "BENCHMARK_API_URL": "http://localhost:18000",
+      "EMBEDDING_BACKEND": "onnx",
+      "EMBEDDING_CACHE_VERSION": "m039-docker-benchmark",
+      "ONNX_ARTIFACT_MANIFEST": "docs/onnx-artifacts/user-bge-m3-dense-fp32.json",
+      "ONNX_MAX_SEQUENCE_LENGTH": "1024"
+    }
+  },
+  "environment_baseline": {
+    "exists": true,
+    "path": "benchmark-results/fd-environment-inxi-m008.txt",
+    "sha256": "97c438a26a3b00e28a9625f98660034bdca513aae22c0831cf14db149fed1ccd"
+  },
+  "git": {
+    "branch": "master",
+    "commit": "dae44fe9cff2bf8ad35f409955380d0ff22dec62",
+    "dirty": true
+  },
+  "redaction_policy": {
+    "mode": "allowlist_with_secret_like_omission",
+    "raw_benchmark_texts_excluded": true,
+    "secret_key_parts": [
+      "SECRET",
+      "TOKEN",
+      "PASSWORD",
+      "PASS",
+      "KEY",
+      "CREDENTIAL",
+      "AUTH",
+      "COOKIE"
+    ]
+  },
+  "redis_before_run": {
+    "available": true,
+    "config": {
+      "appendonly": "no",
+      "maxmemory": "2147483648",
+      "maxmemory-policy": "allkeys-lru",
+      "save": "300 1"
+    },
+    "db0_keys": 568,
+    "evicted_keys": 0,
+    "expired_keys": 0,
+    "keyspace_hits": 2456,
+    "keyspace_misses": 3091,
+    "mem_fragmentation_ratio": 2.98,
+    "redis_version": "7.4.7",
+    "used_memory_human": "4.06M",
+    "used_memory_peak_human": "7.04M"
+  },
+  "runtime": {
+    "build_tags": [],
+    "native_tokenizer_artifact": {
+      "configured": false
+    },
+    "onnx_artifact": {
+      "configured": false
+    },
+    "onnx_runtime_library": {
+      "configured": false,
+      "exists": null,
+      "path": null,
+      "sha256": null
+    },
+    "runtime_label": "tei-default"
+  },
+  "snapshot_version": 3
+}
+
+[warmup]... OK
+
+## 1. Single-Request Latency (cold vs warm, 5 runs each)
+
+Label                     Chars     COLD mean  WARM mean  Speedup
+-----------------------------------------------------------------
+short (17 chars)             17        20.7ms      1.80ms    11.5x
+medium (73 chars)            73        10.3ms      1.25ms     8.2x
+long (422 chars)            422        25.9ms      1.39ms    18.6x
+very_long (693 chars)       693        67.6ms      1.65ms    40.8x
+
+## 2. Repeated Requests — Cache Hit Behavior (100 requests)
+
+  text_label: medium (73 chars)
+  chars: 73
+  mean:   1.10ms
+  stdev:  0.25ms
+  min:    0.69ms
+  p50:    1.06ms
+  p95:    1.67ms
+  p99:    1.76ms
+  max:    1.76ms
+  redis_delta/l1_hot_repeated: hits=0 misses=0 evicted=0 expired=0 commands=2 db0_key_delta=0
+
+## 3. Throughput — Concurrent Requests (5s window)
+
+ Concurrency    Req/s  Mean ms   p50 ms   p95 ms
+--------------------------------------------------
+           1    743.4      1.2ms      1.1ms      1.8ms
+           4    937.2      3.7ms      3.4ms      6.3ms
+           8    766.2      9.2ms      8.3ms     18.2ms
+          16    651.4     22.2ms     21.1ms     39.0ms
+
+## 4. Response Format Verification
+
+  dimensions:  1024
+  model:       deepvk/USER-bge-m3
+  object:      list
+  usage/prompt_tokens: 2
+
+## 5. Redis L2 Persistence — After API Restart
+
+  skipped: BENCHMARK_API_RESTART_COMMAND is empty
+
+## 6. Cached Batch Endpoint — L1 and Redis L2
+
+  batch_size:               16
+  prime/cold batch:         580.07ms
+  prime/count:              16
+  l1_hot_batch:
+    mean:   2.11ms
+    stdev:  1.09ms
+    min:    0.93ms
+    p50:    1.72ms
+    p95:    4.78ms
+    p99:    4.78ms
+    max:    4.78ms
+  redis_delta/batch_l1_hot: hits=0 misses=0 evicted=0 expired=0 commands=2 db0_key_delta=0
+  redis_l2_batch_after_api_restart: skipped: BENCHMARK_API_RESTART_COMMAND is empty
+
+## 7. Repeated Chunk Reuse Pattern
+
+  unique_chunks:            8
+  batch_items_per_round:    32
+  rounds:                   8
+  first_cold_round:         332.14ms
+  warm_reuse_rounds:
+    mean:   5.27ms
+    stdev:  4.47ms
+    min:    1.91ms
+    p50:    2.26ms
+    p95:    13.55ms
+    p99:    13.55ms
+    max:    13.55ms
+  redis_delta/repeated_chunk_reuse: hits=0 misses=8 evicted=0 expired=0 commands=18 db0_key_delta=8
+
+======================================================================
+SUMMARY
+======================================================================
+
+  Best cold latency:  10.3ms (medium (73 chars))
+  Cache speedup:      40.8x (median text)
+  Warm latency mean:  1.52ms
+  Max throughput:     ~937 req/s (4 concurrent)
+  Redis L2 restart:   skipped
+  Batch L1 p95:       4.78ms (16 items)
+  Batch L2 p95:       skipped
+  Chunk reuse warm p95: 13.55ms
+
+======================================================================
