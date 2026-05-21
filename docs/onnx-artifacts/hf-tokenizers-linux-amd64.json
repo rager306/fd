@@ -9,13 +9,17 @@
     "native_filename": "libtokenizers.a",
     "native_kind": "static_library",
     "upstream": "Hugging Face tokenizers Rust library via daulet/tokenizers release asset",
-    "source_url": "https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-amd64.tar.gz",
+    "source_url": "https://github.com/daulet/tokenizers/releases/download/v1.27.0/libtokenizers.linux-amd64.tar.gz",
     "archive_filename": "libtokenizers.linux-amd64.tar.gz",
     "platform": {
       "os": "linux",
       "architecture": "amd64",
       "cgo_required": true
-    }
+    },
+    "source_url_previous": "https://github.com/daulet/tokenizers/releases/latest/download/libtokenizers.linux-amd64.tar.gz",
+    "source_tag": "v1.27.0",
+    "archive_sha256": "72556cdca798dd4ea7cdaba308e5f0d68a8cb93b67c96edf485b7a0edd7b07f4",
+    "archive_size_bytes": 14331593
   },
   "artifact": {
     "format": "ar_static_library",
@@ -55,5 +59,17 @@
     "Docker and CI path for supplying libtokenizers.a without committing it",
     "Tagged token parity tests against benchmark-results/fd-tokenizer-baseline-m012-s01.txt",
     "Isolated-cache TEI-vs-ONNX cosine comparison after runtime integration"
-  ]
+  ],
+  "source_contract": {
+    "source_status": "immutable_selected",
+    "rollout_readiness": "requires_hosted_workflow_proof_before_rollout_claims",
+    "source_url": "https://github.com/daulet/tokenizers/releases/download/v1.27.0/libtokenizers.linux-amd64.tar.gz",
+    "archive_size_bytes": 14331593,
+    "archive_sha256": "72556cdca798dd4ea7cdaba308e5f0d68a8cb93b67c96edf485b7a0edd7b07f4",
+    "extracted_member": "libtokenizers.a",
+    "extracted_size_bytes": 49776794,
+    "extracted_sha256": "e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50",
+    "verification": ".gsd/exec/78224446-6bc5-4bcb-84f1-633ade016a0c.stdout",
+    "note": "Pinned release asset replaces mutable latest URL for future provisioning inputs. Default builds remain artifact-free."
+  }
 }

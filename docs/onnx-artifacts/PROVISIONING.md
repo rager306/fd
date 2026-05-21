@@ -8,10 +8,10 @@ TEI remains the production/default runtime. ONNX remains explicit opt-in and exp
 
 | Logical artifact | Manifest / contract source | Destination path | Required verification | Current source status |
 |---|---|---|---|---|
-| ONNX model | `docs/onnx-artifacts/user-bge-m3-dense-fp32.json` | `.gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx` | size + sha256 from manifest | **Blocked for hosted CI**: no external canonical URL is recorded yet. |
-| Native tokenizer static library | `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json` | `.gsd/runtime/tokenizers/linux-amd64/libtokenizers.a` | size + sha256 from manifest | Upstream URL exists but uses `latest`; production should pin an immutable release asset or mirror. |
-| Tokenizer JSON | `docs/onnx-artifacts/user-bge-m3-dense-fp32.json` `model.source_files.tokenizer.json` | `tei-models/deepvk--USER-bge-m3/tokenizer.json` or CI cache equivalent | size + sha256 from manifest source_files | Needs explicit source URL/cache entry before hosted CI. |
-| ONNX Runtime shared library | benchmark/runtime config | packaged image path such as `/opt/onnxruntime/libonnxruntime.so.1.26.0` | pinned version + sha256 | Needs pinned distribution source or base image contract before hosted CI. |
+| ONNX model | `docs/onnx-artifacts/user-bge-m3-dense-fp32.json` | `.gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx` | size + sha256 from manifest | **Blocked for hosted CI**: exact exported binary has no immutable external source yet. |
+| Native tokenizer static library | `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json` | `.gsd/runtime/tokenizers/linux-amd64/libtokenizers.a` | archive sha256 + extracted size + extracted sha256 | **Pinned candidate selected**: `daulet/tokenizers` `v1.27.0` release asset; hosted proof still required. |
+| Tokenizer JSON | `docs/onnx-artifacts/user-bge-m3-dense-fp32.json` `model.source_files.tokenizer.json` | `tei-models/deepvk--USER-bge-m3/tokenizer.json` or CI cache equivalent | size + sha256 from manifest source_files | **Pinned candidate selected**: Hugging Face `deepvk/USER-bge-m3` revision `0cc6cfe48e260fb0474c753087a69369e88709ae`; hosted proof still required. |
+| ONNX Runtime shared library | `docs/onnx-artifacts/user-bge-m3-dense-fp32.json` `source_contract.onnx_runtime` | `.gsd/runtime/onnxruntime/libonnxruntime.so.1.26.0` or image `/opt/onnxruntime/libonnxruntime.so.1.26.0` | wheel sha256 + extracted library sha256 | **Pinned candidate selected**: PyPI `onnxruntime==1.26.0` CP313 manylinux x86_64 wheel; hosted proof still required. |
 
 ## Provisioning rules
 
@@ -68,6 +68,19 @@ Path rules:
 - default diagnostics should use repo-relative paths or basename-safe placeholders such as `.../artifact.onnx` for absolute local inputs;
 - build-script missing-artifact messages name the relevant env var instead of printing its full configured value.
 
+## Source selection status
+
+M031 selected pinned source candidates for every supporting artifact except the exported ONNX model binary.
+
+| Artifact | Source status | Source | Verification |
+|---|---|---|---|
+| ONNX model `user-bge-m3-dense.onnx` | `blocked` | No immutable external source yet. Exact binary must be mirrored/uploaded or reproduced under a separate validated export gate. | Required size `1432482908`, sha256 `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`. |
+| Native tokenizer archive | `immutable_selected` candidate | `https://github.com/daulet/tokenizers/releases/download/v1.27.0/libtokenizers.linux-amd64.tar.gz` | Archive sha256 `72556cdca798dd4ea7cdaba308e5f0d68a8cb93b67c96edf485b7a0edd7b07f4`; extracted `libtokenizers.a` sha256 `e6862b31745bb7d07980fcee70e49cd3b4318097609180f5d2d3fb394f305d50`. |
+| Tokenizer JSON | `immutable_selected` candidate | `https://huggingface.co/deepvk/USER-bge-m3/resolve/0cc6cfe48e260fb0474c753087a69369e88709ae/tokenizer.json` | Size `3327728`, sha256 `068d9f7ed9dd190a00a567e5f7750fdc591b93bc623072ac8050a303c25f5937`. |
+| ONNX Runtime CP313 wheel | `immutable_selected` candidate | PyPI `onnxruntime-1.26.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl` | Wheel sha256 `c07af6fc6d5557835f2b6ee7a96d8b3235d0c57a8e230efdedaee106a8a3cbc6`; extracted `libonnxruntime.so.1.26.0` sha256 `50775d390eb55e7abd9f6d734da103a04f0e5342ef0a76b1c6ec795544439295`. |
+
+`immutable_selected` here means a non-secret, pinned, checksum-matched source candidate has been selected. It does not mean hosted CI has run or that ONNX is production-ready.
+
 ## Recommended cache layout
 
 Local and CI caches should use ignored paths:
@@ -109,8 +122,8 @@ Preferred order:
 
 Current blocker:
 
-- The ONNX model artifact has only a local ignored path. Hosted CI/full deployment cannot be truthful until this binary has an immutable external source.
-- The native tokenizer manifest currently references an upstream `latest` URL; this is acceptable only when checksum verification remains mandatory, but production should pin or mirror it.
+- The ONNX model artifact has only a local ignored path. Hosted CI/full deployment cannot be truthful until this exact binary has an immutable external source, or until a separate reproducible-export workflow is created and revalidates quality/performance from the regenerated artifact.
+- Pinned source candidates exist for native tokenizer, tokenizer JSON, and ONNX Runtime, but they still require a real hosted workflow run before they are rollout evidence.
 
 ## Failure and diagnostics contract
 

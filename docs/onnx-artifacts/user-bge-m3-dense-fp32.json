@@ -174,5 +174,35 @@
     "Startup health and failure observability for missing/mismatched ONNX and tokenizer artifacts",
     "Security review for artifact path handling and logging",
     "Controlled opt-in rollout plan with TEI default preserved"
-  ]
+  ],
+  "source_contract": {
+    "status": "partial_sources_selected_model_artifact_blocked",
+    "rollout_readiness": "blocked_until_onnx_model_binary_has_immutable_source_and_hosted_workflow_proof",
+    "onnx_model_artifact": {
+      "source_status": "blocked",
+      "reason": "Exact exported ONNX binary exists only as a local ignored artifact; no non-secret immutable external URL, release asset, object key, or CI cache key is recorded.",
+      "required_size_bytes": 1432482908,
+      "required_sha256": "28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4",
+      "required_next_action": "Mirror or upload the exact ONNX binary to an immutable source, then provision and verify it by size and sha256 before hosted proof."
+    },
+    "tokenizer_json": {
+      "source_status": "immutable_selected",
+      "source_url": "https://huggingface.co/deepvk/USER-bge-m3/resolve/0cc6cfe48e260fb0474c753087a69369e88709ae/tokenizer.json",
+      "size_bytes": 3327728,
+      "sha256": "068d9f7ed9dd190a00a567e5f7750fdc591b93bc623072ac8050a303c25f5937",
+      "verification": ".gsd/exec/24907b45-1ff7-436e-a6fa-b99bc5be5f06.stdout"
+    },
+    "onnx_runtime": {
+      "source_status": "immutable_selected",
+      "package": "onnxruntime==1.26.0",
+      "source_url": "https://files.pythonhosted.org/packages/3d/26/4d09ddc755a84fc8d5e192991626b0e0680e8f6c5d58f4f1d05c42bc48cf/onnxruntime-1.26.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "wheel_size_bytes": 18185632,
+      "wheel_sha256": "c07af6fc6d5557835f2b6ee7a96d8b3235d0c57a8e230efdedaee106a8a3cbc6",
+      "library_member": "onnxruntime/capi/libonnxruntime.so.1.26.0",
+      "library_size_bytes": 23031768,
+      "library_sha256": "50775d390eb55e7abd9f6d734da103a04f0e5342ef0a76b1c6ec795544439295",
+      "verification": ".gsd/exec/24907b45-1ff7-436e-a6fa-b99bc5be5f06.stdout",
+      "note": "Python-version/platform-specific source candidate; future hosted proof must use this exact wheel or define and verify an equivalent runtime source."
+    }
+  }
 }
