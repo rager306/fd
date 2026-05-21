@@ -1,0 +1,63 @@
+# M029 S02 — ONNX Provisioning Security Remediation Outcome
+
+## Verdict
+
+PASS.
+
+M029 remediates M028 MEDIUM-1 and MEDIUM-2 for the ONNX provisioning helper. TEI remains the default runtime and ONNX remains opt-in experimental.
+
+## Remediated findings
+
+### M028 MEDIUM-1
+
+Manual artifact URLs previously allowed arbitrary outbound HTTP(S) fetches and unbounded downloads before checksum failure.
+
+M029 remediation:
+
+- remote artifact URLs must use HTTPS;
+- redirects are disabled;
+- private, loopback, link-local, reserved, multicast, and unspecified resolved addresses are blocked by default;
+- optional host allowlisting is available through `--allowed-artifact-host` or `FD_ONNX_ALLOWED_ARTIFACT_HOSTS`;
+- trusted private-host testing requires explicit opt-in through `--allow-private-artifact-hosts` or `FD_ONNX_ALLOW_PRIVATE_ARTIFACT_HOSTS=true`;
+- remote downloads enforce `Content-Length` and streaming byte caps through `--max-download-bytes` / `FD_ONNX_MAX_DOWNLOAD_BYTES`;
+- displayed URLs are query-redacted by `source_display`.
+
+### M028 MEDIUM-2
+
+Native tokenizer archive extraction previously copied the selected member before size/hash verification.
+
+M029 remediation:
+
+- selected archive member must be a regular file;
+- member size is checked before copying;
+- manifest expected size is used as the cap when available;
+- otherwise `--max-archive-member-bytes` / `FD_ONNX_MAX_ARCHIVE_MEMBER_BYTES` applies;
+- extraction streams through a bounded copy helper.
+
+## Verification evidence
+
+- Deterministic local security probes: pass.
+  - `block_http_localhost`
+  - `block_disallowed_host`
+  - `remote_content_length_cap`
+  - `archive_member_expected_size_cap`
+  - `archive_member_regular_file_required`
+- Python compile: pass.
+- Provisioning dry-run JSON: pass.
+- Missing-source failure behavior: pass.
+- Verifier allow-missing: pass.
+- Default Go tests: `85 passed in 4 packages`.
+- GolangCI-Lint: `0 issues`.
+- actionlint: pass.
+- Default Docker build: pass.
+- Binary hygiene: pass.
+- Runtime cleanup: pass.
+
+## Remaining security gaps
+
+- M028 LOW-3 remains open: default startup/verifier/build path output can still be further sanitized.
+- M028 LOW-4 remains open: manifest artifact path root policy can still be tightened.
+- Hosted ONNX packaging still needs immutable artifact sources and an actual workflow run before it is rollout evidence.
+- This remediation does not authorize ONNX production/default promotion.
+
+Raw embedding input text and signed artifact URLs are intentionally excluded from this artifact.

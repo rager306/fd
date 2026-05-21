@@ -24,6 +24,33 @@ TEI remains the production/default runtime. ONNX remains explicit opt-in and exp
 7. Native tokenizer artifacts must remain isolated behind `hf_tokenizers`; the ONNX runtime remains isolated behind `onnx`.
 8. Default `api/Dockerfile` and default Go Quality CI must remain artifact-free and TEI/default-path oriented.
 
+## Remote source safety policy
+
+M029 hardens `tools/provision_onnx_artifacts.py` for remote artifact sources before hosted workflow output can be treated as rollout evidence.
+
+Remote URL rules:
+
+- local file sources remain supported for local/offline proof;
+- remote sources must use `https`;
+- redirects are rejected instead of followed;
+- private, loopback, link-local, reserved, multicast, and unspecified resolved addresses are blocked by default;
+- optional host allowlisting is available with repeated `--allowed-artifact-host` or `FD_ONNX_ALLOWED_ARTIFACT_HOSTS=host1,host2`;
+- private artifact hosts can be enabled only for trusted local testing with `--allow-private-artifact-hosts` or `FD_ONNX_ALLOW_PRIVATE_ARTIFACT_HOSTS=true`;
+- downloads are bounded by `--max-download-bytes` or `FD_ONNX_MAX_DOWNLOAD_BYTES`;
+- URL display redacts query strings through the helper's summarized source display.
+
+Archive rules:
+
+- native tokenizer archive extraction selects `libtokenizers.a` by basename, writes to a fixed destination, and does not use `extractall`;
+- the selected member must be a regular file;
+- member size is checked before copy against manifest `size_bytes` when available, otherwise `--max-archive-member-bytes` / `FD_ONNX_MAX_ARCHIVE_MEMBER_BYTES`;
+- extraction streams through the same bounded-copy helper.
+
+Remaining security work:
+
+- LOW findings from M028 remain open: default log/path output sanitization and manifest artifact path root policy.
+- Hosted ONNX packaging still needs immutable artifact sources and a real workflow run before it is rollout evidence.
+
 ## Recommended cache layout
 
 Local and CI caches should use ignored paths:
