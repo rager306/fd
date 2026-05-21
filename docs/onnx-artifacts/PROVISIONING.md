@@ -125,6 +125,29 @@ Current blocker:
 - The ONNX model artifact has only a local ignored path. Hosted CI/full deployment cannot be truthful until this exact binary has an immutable external source, or until a separate reproducible-export workflow is created and revalidates quality/performance from the regenerated artifact.
 - Pinned source candidates exist for native tokenizer, tokenizer JSON, and ONNX Runtime, but they still require a real hosted workflow run before they are rollout evidence.
 
+## Local export contract verifier
+
+M032 adds `tools/verify_onnx_export_contract.py` as a local verifier for the current ignored ONNX export artifact. It checks the tracked ONNX manifest, M010 source provenance, M010 export metadata, and the local `.onnx` file.
+
+The verifier's claim scope is intentionally narrow:
+
+```text
+existing_artifact_contract_verification_not_regenerated_export
+```
+
+It verifies:
+
+- `production_default=false`;
+- local ONNX artifact size and sha256;
+- M010 model revision and source file checksums;
+- M010 export toolchain pins, including `transformers==4.51.3`;
+- export metadata output checksum and CPU provider/1024-dimension metadata.
+
+It does not regenerate the ONNX binary. It must not be treated as byte-for-byte reproducible export proof. The next gate must choose one of two paths:
+
+1. exact-binary hosting: mirror/upload the existing `.onnx` binary to a non-secret immutable source and verify size/sha256; or
+2. reproducible-export workflow: regenerate the ONNX binary from pinned source/toolchain and rerun legal quality, performance, packaging, and hosted proof gates.
+
 ## Failure and diagnostics contract
 
 Provisioning failures must name:

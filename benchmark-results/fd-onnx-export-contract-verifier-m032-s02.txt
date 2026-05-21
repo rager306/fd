@@ -1,0 +1,71 @@
+# fd ONNX export contract verifier outcome — M032 S02
+
+## Status
+
+M032 adds a local verifier for the existing USER-bge-m3 ONNX export contract:
+
+```bash
+python3 tools/verify_onnx_export_contract.py
+```
+
+This does not switch production/default runtime. TEI remains production/default. ONNX remains explicit opt-in and experimental.
+
+## Verifier claim scope
+
+`existing_artifact_contract_verification_not_regenerated_export`
+
+The verifier checks the existing local ignored ONNX artifact against tracked contract metadata. It does not regenerate the ONNX binary and must not be treated as byte-for-byte reproducible export proof.
+
+## What the verifier checks
+
+- `production_default=false` and artifact remains untracked.
+- ONNX artifact path is under `.gsd/runtime/onnx`.
+- ONNX artifact size and sha256 match `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`.
+- M010 source provenance model revision matches `deepvk/USER-bge-m3` revision `0cc6cfe48e260fb0474c753087a69369e88709ae`.
+- Source file sizes and sha256 values match tracked manifest expectations.
+- M010 export metadata uses pinned toolchain values:
+  - Python `3.13.12`
+  - `torch==2.12.0`
+  - `transformers==4.51.3`
+  - `onnx==1.21.0`
+  - `onnxruntime==1.26.0`
+  - `safetensors==0.7.0`
+- Export metadata records the manifest ONNX artifact checksum.
+- ONNX Runtime metadata includes `CPUExecutionProvider` and 1024-dimensional output shape.
+
+## Positive evidence
+
+Fresh positive run:
+
+- command: `python3 -m py_compile tools/verify_onnx_export_contract.py && python3 tools/verify_onnx_export_contract.py`
+- result: pass
+- artifact verified: true
+- source files verified: 4
+- claim scope: `existing_artifact_contract_verification_not_regenerated_export`
+
+## Negative evidence
+
+Temporary tamper probes failed as expected:
+
+| Probe | Error label |
+|---|---|
+| Bad ONNX artifact sha256 in manifest | `artifact_sha256` |
+| Bad provenance model revision | `model_revision` |
+| Bad `transformers` export metadata version | `export_metadata` |
+
+Evidence file: `.gsd/exec/2b3f90be-849f-4c8f-af94-b87cd7aed5f1.stdout`
+
+## Remaining blocker
+
+The exact ONNX binary still needs one of these next gates before hosted packaging proof:
+
+1. **Exact-binary hosting**: mirror/upload `.gsd/runtime/onnx/m010-s03/user-bge-m3-dense.onnx` to a non-secret immutable source and verify size `1432482908` plus sha256 `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`.
+2. **Reproducible-export workflow**: regenerate the binary from pinned model/source/toolchain and rerun legal quality, performance, packaging, and hosted workflow gates.
+
+## Non-actions
+
+- No push.
+- No workflow dispatch.
+- No artifact upload.
+- No production/default ONNX promotion.
+- No raw legal text, raw embedding input text, secrets, or signed artifact URLs recorded.

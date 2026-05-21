@@ -183,7 +183,7 @@
       "reason": "Exact exported ONNX binary exists only as a local ignored artifact; no non-secret immutable external URL, release asset, object key, or CI cache key is recorded.",
       "required_size_bytes": 1432482908,
       "required_sha256": "28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4",
-      "required_next_action": "Mirror or upload the exact ONNX binary to an immutable source, then provision and verify it by size and sha256 before hosted proof."
+      "required_next_action": "Choose one next gate: mirror/upload the exact ONNX binary to an immutable non-secret source and verify size/sha, or build a separate reproducible-export workflow that regenerates the artifact and reruns legal/performance/package gates."
     },
     "tokenizer_json": {
       "source_status": "immutable_selected",
@@ -203,6 +203,24 @@
       "library_sha256": "50775d390eb55e7abd9f6d734da103a04f0e5342ef0a76b1c6ec795544439295",
       "verification": ".gsd/exec/24907b45-1ff7-436e-a6fa-b99bc5be5f06.stdout",
       "note": "Python-version/platform-specific source candidate; future hosted proof must use this exact wheel or define and verify an equivalent runtime source."
+    },
+    "local_export_contract_verifier": {
+      "script": "tools/verify_onnx_export_contract.py",
+      "claim_scope": "existing_artifact_contract_verification_not_regenerated_export",
+      "verifies": [
+        "manifest production_default=false and artifact metadata",
+        "local ONNX artifact size and sha256",
+        "M010 source provenance model revision and source file checksums",
+        "M010 export metadata toolchain pins and output artifact checksum",
+        "CPUExecutionProvider and expected 1024-dimensional output metadata"
+      ],
+      "does_not_verify": [
+        "fresh byte-for-byte regenerated export reproducibility",
+        "immutable external hosting of the ONNX binary",
+        "hosted workflow proof",
+        "production/default readiness"
+      ],
+      "verification_evidence": ".gsd/milestones/M032-qq6po2/slices/S01/S01-RESEARCH.md"
     }
   }
 }
