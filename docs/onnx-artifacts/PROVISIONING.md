@@ -170,6 +170,45 @@ Current blocker:
 - The ONNX model artifact has only a local ignored path. Hosted CI/full deployment cannot be truthful until this exact binary has an immutable external source, or until a separate reproducible-export workflow is created and revalidates quality/performance from the regenerated artifact.
 - Pinned source candidates exist for native tokenizer, tokenizer JSON, and ONNX Runtime, but they still require a real hosted workflow run before they are rollout evidence.
 
+## Reproducible-export workflow contract
+
+M036 defines the no-upload alternative to exact-binary hosting: regenerate an ONNX artifact from pinned model files and a pinned toolchain, then rerun quality, performance, packaging, and hosted proof gates. This is a planned contract only. It is not current reproducibility proof.
+
+Pinned inputs for a future regenerated export:
+
+- model: `deepvk/USER-bge-m3`
+- model revision: `0cc6cfe48e260fb0474c753087a69369e88709ae`
+- source files: checksums under `model.source_files` in `user-bge-m3-dense-fp32.json`
+- export script: `tools/export_user_bge_m3_dense_onnx.py`
+- Python: `3.13.12`
+- packages: `torch==2.12.0`, `transformers==4.51.3`, `onnx==1.21.0`, `onnxruntime==1.26.0`, `safetensors==0.7.0`
+- export shape contract: opset `17`, dummy export sequence length `128`, dynamic sequence axes, CLS pooling, L2 normalization, output `dense_vecs`
+- runtime contract: `CPUExecutionProvider`, 1024 dimensions, normalized output, validated runtime max sequence length `1024`
+
+Future acceptance gates:
+
+1. Regenerate ONNX in a clean ignored workspace using only pinned inputs and toolchain.
+2. Record source provenance and export metadata for the regenerated artifact.
+3. Verify regenerated artifact structure, provider, dimensions, and normalization metadata.
+4. Compare regenerated artifact to TEI baseline on fixed probes without raw text logging.
+5. Rerun selected Russian/legal quality gate at `ONNX_MAX_SEQUENCE_LENGTH=1024` with an isolated Redis namespace.
+6. Rerun local performance benchmark with sanitized effective configuration snapshot.
+7. Build opt-in ONNX Docker image from the regenerated artifact.
+8. Rerun packaged legal quality and packaged performance gates.
+9. Run hosted workflow proof only after explicit user approval for push/dispatch.
+
+Success/failure interpretation:
+
+- byte-for-byte match with the existing local artifact may replace exact-binary hosting as source proof only after all gates pass;
+- non-identical regenerated artifact can be accepted only as a new artifact revision after legal quality, performance, packaging, and hosted proof gates pass;
+- failed or divergent regeneration keeps TEI default and leaves the ONNX source blocker unresolved.
+
+Forbidden claims:
+
+- do not call the M032 verifier reproducible-export proof;
+- do not treat this planned workflow contract as hosted CI evidence;
+- do not promote ONNX to production/default from regenerated metadata alone.
+
 ## Local export contract verifier
 
 M032 adds `tools/verify_onnx_export_contract.py` as a local verifier for the current ignored ONNX export artifact. It checks the tracked ONNX manifest, M010 source provenance, M010 export metadata, and the local `.onnx` file.

@@ -97,6 +97,8 @@ Manual workflow input policy is defined in `docs/onnx-artifacts/PROVISIONING.md`
 
 M035 defines a planned exact-binary hosting contract for that blocker: the current `.onnx` must be mirrored/uploaded as the exact `1432482908` byte binary with sha256 `28538a17a99302e144149732d73fb273cd7c7a0468dc59167caa5a2d5ff2a3d4`. The recommended object key and release filename are documented, but they are not real sources until the artifact is actually uploaded/mirrored and reverified. Do not use local developer paths, mutable `latest` URLs, or signed/plain-secret URLs as hosted proof.
 
+M036 defines the no-upload alternative: a planned reproducible-export workflow contract. That path would regenerate ONNX from pinned `deepvk/USER-bge-m3` source files and pinned toolchain versions, then rerun fixed-probe comparison, Russian/legal quality, local performance, opt-in Docker packaging, packaged legal/performance, and hosted proof gates. This is currently `planned_not_proven`; `tools/verify_onnx_export_contract.py` still verifies only the existing ignored artifact contract and must not be treated as regenerated-export proof.
+
 ## Future Docker/CI gate
 
 A future packaging milestone should define how CI or Docker builds obtain these artifacts without committing binaries. That gate should verify:

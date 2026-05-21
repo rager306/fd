@@ -245,6 +245,88 @@
         "production/default readiness"
       ],
       "verification_evidence": ".gsd/milestones/M032-qq6po2/slices/S01/S01-RESEARCH.md"
+    },
+    "reproducible_export_workflow": {
+      "contract_status": "planned_not_proven",
+      "must_not_be_treated_as_reproducibility_proof": true,
+      "claim_boundary": "future regenerated_export_contract_only_after_export_is_rerun_and_gates_pass",
+      "current_verifier_claim_scope": "existing_artifact_contract_verification_not_regenerated_export",
+      "pinned_inputs": {
+        "model_id": "deepvk/USER-bge-m3",
+        "model_revision": "0cc6cfe48e260fb0474c753087a69369e88709ae",
+        "source_files": {
+          "model.safetensors": {
+            "size_bytes": 1436151696,
+            "sha256": "e6aa9c8e51a60ff383186a2f28f658305ba4ad23d2fa24296607885458ef2733"
+          },
+          "tokenizer.json": {
+            "size_bytes": 3327728,
+            "sha256": "068d9f7ed9dd190a00a567e5f7750fdc591b93bc623072ac8050a303c25f5937"
+          },
+          "config.json": {
+            "size_bytes": 697,
+            "sha256": "f3552b70cacff0f14829896d9021372a7667676f900111d1e68664e021ab3f7f"
+          },
+          "1_Pooling/config.json": {
+            "size_bytes": 297,
+            "sha256": "13e69897522ee8255104483ed9f219465d1be3936654a54a318758738052789e"
+          }
+        },
+        "python": "3.13.12",
+        "torch": "2.12.0",
+        "transformers": "4.51.3",
+        "onnx": "1.21.0",
+        "onnxruntime": "1.26.0",
+        "safetensors": "0.7.0",
+        "export_script": "tools/export_user_bge_m3_dense_onnx.py",
+        "opset": 17,
+        "sequence_length": 128,
+        "pooling": "cls_token_last_hidden_state[:,0]",
+        "normalization": "torch.nn.functional.normalize(..., p=2, dim=1)",
+        "dynamic_axes": {
+          "input_ids": {
+            "0": "batch_size",
+            "1": "sequence_length"
+          },
+          "attention_mask": {
+            "0": "batch_size",
+            "1": "sequence_length"
+          },
+          "dense_vecs": {
+            "0": "batch_size",
+            "1": "embedding"
+          }
+        }
+      },
+      "expected_artifact_contract": {
+        "format": "onnx",
+        "dtype": "fp32",
+        "expected_dimensions": 1024,
+        "expected_normalized": true,
+        "provider": "CPUExecutionProvider",
+        "output_name": "dense_vecs"
+      },
+      "acceptance_gates": [
+        "regenerate ONNX in a clean ignored workspace using only pinned inputs and toolchain",
+        "record source provenance and export metadata for the regenerated artifact",
+        "verify regenerated artifact structure, provider, dimensions, and normalization metadata",
+        "compare regenerated artifact to TEI baseline on fixed probes without raw text logging",
+        "rerun selected Russian/legal quality gate at ONNX_MAX_SEQUENCE_LENGTH=1024 with isolated Redis namespace",
+        "rerun local performance benchmark with sanitized effective configuration snapshot",
+        "build opt-in ONNX Docker image from regenerated artifact",
+        "rerun packaged legal quality and packaged performance gates",
+        "run hosted workflow proof only after explicit user approval for push/dispatch"
+      ],
+      "success_outcomes": [
+        "byte-for-byte match with existing local artifact may replace exact-binary hosting as source proof only after all gates pass",
+        "non-identical regenerated artifact may be accepted only as a new artifact revision after legal quality, performance, packaging, and hosted proof gates pass",
+        "failed or divergent regeneration keeps TEI default and leaves ONNX source blocker unresolved"
+      ],
+      "forbidden_claims": [
+        "do not call M032 verifier reproducible-export proof",
+        "do not treat planned workflow contract as hosted CI evidence",
+        "do not promote ONNX to production/default from regenerated metadata alone"
+      ]
     }
   }
 }
