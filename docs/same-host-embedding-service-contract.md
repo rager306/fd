@@ -379,6 +379,7 @@ The following are explicitly **out of scope** for the `fd` same-host embedding s
 ## 11. Related Documents
 
 - [README.md](../README.md) — Quick start, configuration reference, and Docker Compose setup
+- [M040 S04 runtime recommendation](../benchmark-results/fd-runtime-recommendation-m040-s04.md) — Final TEI-vs-ONNX same-host runtime recommendation and evidence envelope
 - [docs/onnx-artifacts/OPERATIONS.md](./onnx-artifacts/OPERATIONS.md) — ONNX-specific preflight, health, and rollback contract
 - [docs/onnx-artifacts/PROVISIONING.md](./onnx-artifacts/PROVISIONING.md) — ONNX artifact build and provisioning
 - [benchmark.py](../benchmark.py) — Benchmark harness; uses `BENCHMARK_API_RESTART_COMMAND` for restart/cache proof
