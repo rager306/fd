@@ -93,6 +93,8 @@ func verifyTokenizerJSON(path string, validation *embed.ONNXArtifactValidation) 
 	return nil
 }
 
+func boolPtr(v bool) *bool { return &v }
+
 func getLogLevel(value string) slog.Level {
 	switch strings.ToLower(value) {
 	case "debug":
@@ -126,23 +128,45 @@ type embeddingRuntimeConfig struct {
 	ONNXRuntimeLibraryVerified bool
 }
 
+// Health returns safe runtime metadata for the active backend.
+// TEI/default returns backend, model, fixed dimensions, production-default flag,
+// and cache namespace — no internal URLs, paths, or secrets.
+// ONNX additionally returns artifact, tokenizer, and runtime library verification fields.
 func (c *embeddingRuntimeConfig) Health(modelID, cacheNamespace string) *handlers.RuntimeHealth {
-	if c == nil || c.Backend != embeddingBackendONNX || c.ONNXArtifact == nil {
+	if c == nil {
 		return nil
 	}
-	return &handlers.RuntimeHealth{
-		Backend:                    string(c.Backend),
-		Model:                      modelID,
-		ArtifactID:                 c.ONNXArtifact.ArtifactID,
-		Dimensions:                 c.ONNXArtifact.Dimensions,
-		MaxSequenceLength:          c.ONNXMaxSequenceLength,
-		ValidatedMaxSequenceLength: c.ONNXArtifact.ValidatedMaxSequenceLength,
-		ProductionDefault:          c.ONNXArtifact.ProductionDefault,
-		ArtifactVerified:           true,
-		TokenizerVerified:          c.ONNXTokenizerVerified,
-		RuntimeLibraryVerified:     c.ONNXRuntimeLibraryVerified,
-		Provider:                   c.ONNXProvider,
-		CacheNamespace:             cacheNamespace,
+	switch c.Backend {
+	case embeddingBackendTEI:
+		return &handlers.RuntimeHealth{
+			Backend:           string(c.Backend),
+			Model:             modelID,
+			Dimensions:        1024, // deepvk/USER-bge-m3 is 1024-dimensional
+			ProductionDefault: true,
+			CacheNamespace:    cacheNamespace,
+		}
+	case embeddingBackendONNX:
+		if c.ONNXArtifact == nil {
+			return nil
+		}
+		tv := c.ONNXTokenizerVerified
+		rlv := c.ONNXRuntimeLibraryVerified
+		return &handlers.RuntimeHealth{
+			Backend:                    string(c.Backend),
+			Model:                      modelID,
+			ArtifactID:                 c.ONNXArtifact.ArtifactID,
+			Dimensions:                 c.ONNXArtifact.Dimensions,
+			MaxSequenceLength:          c.ONNXMaxSequenceLength,
+			ValidatedMaxSequenceLength: c.ONNXArtifact.ValidatedMaxSequenceLength,
+			ProductionDefault:          c.ONNXArtifact.ProductionDefault,
+			ArtifactVerified:           boolPtr(true),
+			TokenizerVerified:          &tv,
+			RuntimeLibraryVerified:     &rlv,
+			Provider:                   c.ONNXProvider,
+			CacheNamespace:             cacheNamespace,
+		}
+	default:
+		return nil
 	}
 }
 

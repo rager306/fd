@@ -22,7 +22,7 @@ Run benchmarks from the host with `uv` and Python 3.13 against the local Docker 
 docker compose up -d
 curl -X POST http://localhost:8000/v1/embeddings \
   -H 'Content-Type: application/json' \
-  -d '{"input":["юридическая справка"]}'
+  -d '{"input":["short non-sensitive smoke text"]}'
 ```
 
 ## API
@@ -55,6 +55,8 @@ POST /embeddings/batch    — batch embeddings for FalkorDB
 ```
 
 `encoding_format`: `base64` (default) or `float`.
+
+> **Full service contract:** For same-host local clients, see [docs/same-host-embedding-service-contract.md](docs/same-host-embedding-service-contract.md). It covers `/health` readiness semantics, timeout/retry guidance, cache namespace isolation, no-silent-fallback rules, and the ONNX opt-in operating contract.
 
 ## Architecture
 

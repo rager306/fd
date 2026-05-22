@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-21T11:15:29Z | Files: 123 | Described: 0/123
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-21T11:15:29Z","fingerprint":"4bc1ed36dc67c0f0163e4dabc5f3635c51128954","fileCount":123,"truncated":false} -->
+Generated: 2026-05-22T07:19:14Z | Files: 128 | Described: 0/128
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-22T07:19:14Z","fingerprint":"658ebb10e12058c69529689a03d417ae085dd28f","fileCount":128,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -63,7 +63,7 @@ Generated: 2026-05-21T11:15:29Z | Files: 123 | Described: 0/123
 - `api/handlers/health.go`
 
 ### benchmark-results/
-- *(55 files: 55 .txt)*
+- *(60 files: 60 .txt)*
 
 ### docs/onnx-artifacts/
 - `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`

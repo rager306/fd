@@ -268,6 +268,25 @@ func TestCreateBatchEmbeddings_Base64Response(t *testing.T) {
 	assert.NoError(t, err, "embedding should be valid base64")
 }
 
+func TestCreateEmbedding_ModelRequestFieldIsCompatibilityMetadata(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	embedder := &mockEmbedder{embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
+		return [][]float32{{0.1, 0.2, 0.3}}, nil
+	}}
+	handler := NewEmbeddingsHandler(embedder, &mockEmbeddingCache{}, "configured-model", testLogger())
+	router := gin.New()
+	router.POST("/v1/embeddings", handler.CreateEmbedding)
+
+	w := postJSON(router, "/v1/embeddings", `{"model":"client-placeholder","input":"hello"}`)
+	require.Equal(t, http.StatusOK, w.Code, "body: %s", w.Body.String())
+
+	var resp embed.EmbeddingsResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp), "unmarshal response")
+	assert.Equal(t, "configured-model", resp.Model, "response model should be authoritative")
+	assert.Equal(t, 1, embedder.calls, "mismatched request model should not block embedding generation")
+}
+
 func TestCreateEmbedding_SuccessDoesNotEmitInfo(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

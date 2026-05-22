@@ -1,0 +1,60 @@
+# S02: Docker restart and Redis L2 proof
+
+**Goal:** Prove packaged Docker ONNX API restart behavior and Redis L2 reuse with Redis kept alive, isolated cache namespace, safe runtime metadata, benchmark artifact semantics, legal quality guard, leak audit, and cleanup evidence.
+**Demo:** After this, packaged ONNX restart/cache behavior is measured instead of skipped.
+
+## Must-Haves
+
+- Packaged ONNX image build or reuse is attempted through the existing build path, with exact blocker evidence if artifacts/runtime prerequisites are missing.
+- Packaged ONNX API starts on the proof port with Redis external/alive and an S02-specific cache namespace.
+- `/health` reports ONNX backend, model `deepvk/USER-bge-m3`, 1024 dimensions, expected cache namespace, and verified runtime metadata when `ONNX_RUNTIME_SHA256` is available.
+- Smoke `/v1/embeddings` returns response model `deepvk/USER-bge-m3` and a 1024-dimensional vector before benchmark execution.
+- `benchmark.py` is executed with `BENCHMARK_API_RESTART_COMMAND` targeting only the ONNX API container/process, and the resulting artifact shows restart sections measured rather than skipped.
+- Legal-domain no-regression evidence is produced for the packaged ONNX proof run or, if blocked, the blocker states why M039 baseline reuse is the only available evidence.
+- M040 S02 artifacts are checked for raw probe/legal text and obvious secret material; proof container is stopped/removed and port 18000 is clear after cleanup.
+
+## Proof Level
+
+- This slice proves: operational: real Docker/Redis/HTTP runtime proof using the packaged ONNX service path, with executable artifact assertions and truthful blocker artifacts if host prerequisites fail.
+
+## Integration Closure
+
+Upstream surfaces consumed: S01 same-host service contract, existing `benchmark.py` restart hook, ONNX Docker packaging, Redis L2 cache behavior, legal retrieval evaluator, and prior M039 evidence. New wiring introduced: lightweight S02 proof/verification helper scripts only, not new service behavior. Remaining end-to-end work: S04 consumes S02 evidence with S03 model quick-gate output to make the final TEI-vs-ONNX runtime recommendation.
+
+## Verification
+
+- S02 makes restart/cache readiness inspectable through `/health.runtime.*`, smoke embedding response shape, benchmark sanitized effective config, explicit restart command configuration, Redis L2 restart latency sections, legal quality result, proof audit artifact, and cleanup evidence. Redaction boundary: no raw benchmark/legal probe texts, secrets, private key blocks, bearer tokens, signed URL query parameters, or broad Redis exposure.
+
+## Tasks
+
+- [x] **T01: Create reproducible S02 Docker proof runner and artifact verifier** `est:1h`
+  skills_used:
+    - api-design
+    - observability
+    - tdd
+    - verify-before-complete
+  - Files: `tools/run_m040_s02_docker_restart_proof.sh`, `tools/verify_m040_s02_artifacts.py`
+  - Verify: bash -n tools/run_m040_s02_docker_restart_proof.sh && python3 -m py_compile tools/verify_m040_s02_artifacts.py
+
+- [ ] **T02: Run packaged ONNX Docker restart and Redis L2 benchmark proof** `est:1h 30m`
+  skills_used:
+    - observability
+    - verify-before-complete
+  - Files: `benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt`, `benchmark-results/fd-m040-s02-onnx-docker-preflight.txt`
+  - Verify: python3 tools/verify_m040_s02_artifacts.py --benchmark benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt --preflight benchmark-results/fd-m040-s02-onnx-docker-preflight.txt
+
+- [ ] **T03: Run legal guard, leak audit, and cleanup proof** `est:1h`
+  skills_used:
+    - observability
+    - verify-before-complete
+  - Files: `benchmark-results/fd-legal-retrieval-m040-s02-onnx-docker-restart.txt`, `benchmark-results/fd-m040-s02-proof-audit.txt`
+  - Verify: python3 tools/verify_m040_s02_artifacts.py --benchmark benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt --preflight benchmark-results/fd-m040-s02-onnx-docker-preflight.txt --legal benchmark-results/fd-legal-retrieval-m040-s02-onnx-docker-restart.txt --audit benchmark-results/fd-m040-s02-proof-audit.txt
+
+## Files Likely Touched
+
+- tools/run_m040_s02_docker_restart_proof.sh
+- tools/verify_m040_s02_artifacts.py
+- benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt
+- benchmark-results/fd-m040-s02-onnx-docker-preflight.txt
+- benchmark-results/fd-legal-retrieval-m040-s02-onnx-docker-restart.txt
+- benchmark-results/fd-m040-s02-proof-audit.txt

@@ -58,3 +58,24 @@ Thumbs.db
 tei-models/
 api/api
 api/fd-api
+
+# ── GSD baseline (auto-generated) ──
+.gsd-id
+.mcp.json
+*~
+*.code-workspace
+.env.*
+!.env.example
+node_modules/
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+coverage/
+.cache/
+tmp/

@@ -172,18 +172,47 @@ func TestEmbeddingRuntimeConfigHealthForONNX(t *testing.T) {
 	if health == nil {
 		t.Fatal("expected ONNX runtime health")
 	}
-	if health.ArtifactID != "artifact-test" || health.CacheNamespace != "m026-test" || !health.ArtifactVerified {
+	if health.ArtifactID != "artifact-test" || health.CacheNamespace != "m026-test" || health.ArtifactVerified == nil || !*health.ArtifactVerified {
 		t.Fatalf("unexpected health metadata: %#v", health)
 	}
-	if health.Provider != onnxProviderCPU || !health.TokenizerVerified || !health.RuntimeLibraryVerified {
+	if health.Provider != onnxProviderCPU || health.TokenizerVerified == nil || !*health.TokenizerVerified || health.RuntimeLibraryVerified == nil || !*health.RuntimeLibraryVerified {
 		t.Fatalf("unexpected verification metadata: %#v", health)
 	}
 }
 
-func TestEmbeddingRuntimeConfigHealthNilForTEI(t *testing.T) {
+func TestEmbeddingRuntimeConfigHealthReturnsSafeTEIMetadata(t *testing.T) {
 	config := &embeddingRuntimeConfig{Backend: embeddingBackendTEI}
-	if health := config.Health("deepvk/USER-bge-m3", "v2"); health != nil {
-		t.Fatalf("TEI health metadata should be nil, got %#v", health)
+	health := config.Health("deepvk/USER-bge-m3", "v2")
+	if health == nil {
+		t.Fatal("TEI health metadata should not be nil")
+	}
+	if health.Backend != "tei" {
+		t.Fatalf("backend = %q, want tei", health.Backend)
+	}
+	if health.Model != "deepvk/USER-bge-m3" {
+		t.Fatalf("model = %q", health.Model)
+	}
+	if health.Dimensions != 1024 {
+		t.Fatalf("dimensions = %d, want 1024", health.Dimensions)
+	}
+	if !health.ProductionDefault {
+		t.Fatal("production_default should be true for TEI")
+	}
+	if health.CacheNamespace != "v2" {
+		t.Fatalf("cache_namespace = %q", health.CacheNamespace)
+	}
+	// ONNX-only fields must be nil (omitted from JSON)
+	if health.ArtifactVerified != nil {
+		t.Fatal("artifact_verified should be nil for TEI")
+	}
+	if health.TokenizerVerified != nil {
+		t.Fatal("tokenizer_verified should be nil for TEI")
+	}
+	if health.RuntimeLibraryVerified != nil {
+		t.Fatal("runtime_library_verified should be nil for TEI")
+	}
+	if health.Provider != "" {
+		t.Fatalf("provider = %q, want empty for TEI", health.Provider)
 	}
 }
 

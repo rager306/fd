@@ -15,11 +15,12 @@ type RuntimeHealth struct {
 	MaxSequenceLength          int    `json:"max_sequence_length,omitempty"`
 	ValidatedMaxSequenceLength int    `json:"validated_max_sequence_length,omitempty"`
 	ProductionDefault          bool   `json:"production_default"`
-	ArtifactVerified           bool   `json:"artifact_verified"`
-	TokenizerVerified          bool   `json:"tokenizer_verified"`
-	RuntimeLibraryVerified     bool   `json:"runtime_library_verified"`
-	Provider                   string `json:"provider,omitempty"`
-	CacheNamespace             string `json:"cache_namespace,omitempty"`
+	// Pointer bools omitted from JSON when nil (TEI path); set for ONNX only.
+	ArtifactVerified       *bool `json:"artifact_verified,omitempty"`
+	TokenizerVerified      *bool `json:"tokenizer_verified,omitempty"`
+	RuntimeLibraryVerified  *bool `json:"runtime_library_verified,omitempty"`
+	Provider                string `json:"provider,omitempty"`
+	CacheNamespace          string `json:"cache_namespace,omitempty"`
 }
 
 func HealthHandler(c *gin.Context) {
