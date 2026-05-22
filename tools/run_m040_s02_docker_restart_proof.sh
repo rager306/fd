@@ -53,6 +53,7 @@ wait_for_http_health() {
   local last_status=""
   while (( SECONDS < deadline )); do
     if last_status="$(curl -fsS --max-time 2 "$url/health" 2>&1)"; then
+      printf '%s\n' "$last_status"
       return 0
     fi
     sleep 1
@@ -62,15 +63,15 @@ wait_for_http_health() {
 }
 
 json_get() {
-  python3 - "$1" <<'PY'
+  python3 -c '
 import json
 import sys
-expr = sys.argv[1].split('.')
+expr = sys.argv[1].split(".")
 data = json.load(sys.stdin)
 for part in expr:
     data = data[part]
 print(data)
-PY
+' "$1"
 }
 
 cleanup_api() {
@@ -188,8 +189,13 @@ import sys
 body = json.load(sys.stdin)
 assert body.get("object") == "list", body
 assert body.get("data") and body["data"][0].get("object") == "embedding", body
-embedding = body["data"][0].get("embedding")
-assert isinstance(embedding, str) and embedding, "expected base64 embedding string"
+item = body["data"][0]
+embedding = item.get("embedding")
+assert item.get("dimensions") == 1024, item
+if isinstance(embedding, list):
+    assert len(embedding) == 1024, f"expected 1024 embedding values, got {len(embedding)}"
+else:
+    assert isinstance(embedding, str) and embedding, "expected non-empty encoded embedding or 1024-float vector"
 assert body.get("model") == "deepvk/USER-bge-m3", body.get("model")
 '
 

@@ -147,8 +147,15 @@ def verify_preflight(preflight: Path, text: str) -> None:
     data = smoke.get("data")
     if not isinstance(data, list) or not data or data[0].get("object") != "embedding":
         fail("smoke embedding response missing embedding data")
-    if not isinstance(data[0].get("embedding"), str) or not data[0].get("embedding"):
-        fail("smoke embedding is not a non-empty base64 string")
+    item = data[0]
+    embedding = item.get("embedding")
+    if item.get("dimensions") != EXPECTED_DIMENSIONS:
+        fail(f"smoke embedding dimensions={item.get('dimensions')!r}, expected {EXPECTED_DIMENSIONS}")
+    if isinstance(embedding, list):
+        if len(embedding) != EXPECTED_DIMENSIONS:
+            fail(f"smoke embedding vector length={len(embedding)}, expected {EXPECTED_DIMENSIONS}")
+    elif not isinstance(embedding, str) or not embedding:
+        fail("smoke embedding is neither a 1024-value vector nor a non-empty encoded string")
 
     container = extract_marked_json(text, "CONTAINER")
     if not isinstance(container, list) or not container:
@@ -173,9 +180,12 @@ def verify_benchmark(benchmark: Path, text: str) -> None:
     if require_path(config, "benchmark.api_restart_command_configured") is not True:
         fail("benchmark effective config must set api_restart_command_configured=true")
 
-    env = require_path(config, "environment")
-    if not isinstance(env, dict):
+    env_snapshot = require_path(config, "environment")
+    if not isinstance(env_snapshot, dict):
         fail("effective environment snapshot is not an object")
+    env = env_snapshot.get("values", env_snapshot)
+    if not isinstance(env, dict):
+        fail("effective environment values snapshot is not an object")
     expected_env = {
         "BENCHMARK_API_URL": EXPECTED_API_URL,
         "BENCHMARK_REDIS_HOST": "127.0.0.1",
