@@ -1,0 +1,41 @@
+# M040 S02 Proof Audit
+
+Generated at: 2026-05-22T07:57:50Z
+
+## Legal Gate
+
+artifact: benchmark-results/fd-legal-retrieval-m040-s02-onnx-docker-restart.txt
+verdict: PASS
+runtime_label: docker-onnx-go-api-m040-s02
+cache_namespace: m040-s02-onnx-restart
+raw legal corpus text: excluded by evaluator artifact contract
+
+## Leak Audit
+
+verdict: PASS
+artifacts_checked:
+- benchmark-results/fd-m040-s02-onnx-docker-preflight.txt
+- benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt
+- benchmark-results/fd-legal-retrieval-m040-s02-onnx-docker-restart.txt
+prohibited_patterns_checked: private-key blocks, bearer tokens, secret-like assignments, signed/auth URLs, raw benchmark probes, raw Redis diagnostic probes
+details: no prohibited patterns found
+
+## Cleanup Evidence
+
+cleanup_scope: stopped/removed only the S02 proof ONNX API container; Redis proof container intentionally left running for local development cache reuse
+command: docker rm -f fd-m040-s02-onnx-api
+exit_behavior: command output captured; missing container is acceptable only after removal
+output: fd-m040-s02-onnx-api
+
+## Docker Status After Cleanup
+
+api_container_status: ABSENT
+redis_container_status: fd-m040-s02-redis Up 14 minutes 127.0.0.1:16379->6379/tcp
+
+## Port 18000 Status After Cleanup
+
+status: CLEAR
+
+## Blockers
+
+None.

@@ -90,6 +90,29 @@ def section_text(text: str, section_number: int) -> str:
     return text[start.start() : end]
 
 
+def extract_fenced_json_after_heading(text: str, heading: str) -> dict[str, Any]:
+    heading_index = text.find(heading)
+    if heading_index < 0:
+        fail(f"missing section: {heading}")
+    match = re.search(r"```json\n(.*?)\n```", text[heading_index:], re.DOTALL)
+    if not match:
+        fail(f"section {heading} does not contain fenced JSON")
+    try:
+        value = json.loads(match.group(1))
+    except json.JSONDecodeError as err:
+        fail(f"section {heading} JSON is invalid: {err}")
+    if not isinstance(value, dict):
+        fail(f"section {heading} JSON is not an object")
+    return value
+
+
+def extract_verdict(text: str) -> str:
+    match = re.search(r"^## Verdict\s*\n\s*\n([^\n]+)", text, re.MULTILINE)
+    if not match:
+        fail("missing verdict section")
+    return match.group(1).strip()
+
+
 def require_path(data: dict[str, Any], dotted_path: str) -> Any:
     current: Any = data
     for part in dotted_path.split("."):
@@ -239,18 +262,91 @@ def verify_benchmark(benchmark: Path, text: str) -> None:
             fail(f"summary reports skipped proof: {forbidden_summary}")
 
 
+def verify_legal(legal: Path, text: str) -> None:
+    verdict = extract_verdict(text)
+    if verdict != "PASS":
+        fail(f"legal artifact verdict={verdict!r}, expected 'PASS'")
+    if "Raw legal corpus text is intentionally excluded from this artifact." not in text:
+        fail("legal artifact missing raw-text exclusion statement")
+
+    config = extract_fenced_json_after_heading(text, "## Effective Configuration")
+    if config.get("raw_text_logged") is not False:
+        fail("legal config must set raw_text_logged=false")
+    if config.get("model") != EXPECTED_MODEL:
+        fail("legal config has unexpected model")
+    if config.get("dimensions") != EXPECTED_DIMENSIONS:
+        fail("legal config has unexpected dimensions")
+    if require_path(config, "onnx.api_url") not in {"http://localhost:18000", "http://127.0.0.1:18000"}:
+        fail("legal config has unexpected ONNX API URL")
+    if require_path(config, "onnx.runtime_label") != "docker-onnx-go-api-m040-s02":
+        fail("legal config has unexpected ONNX runtime label")
+    if require_path(config, "onnx.cache_namespace") != EXPECTED_CACHE_VERSION:
+        fail("legal config has unexpected ONNX cache namespace")
+
+    thresholds = require_path(config, "thresholds")
+    metrics = extract_fenced_json_after_heading(text, "## Metrics")
+    minimum_cosine = require_path(metrics, "cross_backend_cosine.minimum_overall")
+    if minimum_cosine < thresholds.get("min_cross_backend_cosine", 0.999):
+        fail("legal minimum cross-backend cosine is below threshold")
+    top_k = config.get("top_k", 5)
+    overlap_key = f"mean_overlap_at_{top_k}"
+    overlap = require_path(metrics, f"ranking.{overlap_key}")
+    if overlap < thresholds.get(f"min_{overlap_key}", 0.90):
+        fail("legal mean overlap is below threshold")
+    top1 = require_path(metrics, "ranking.top1_agreement")
+    if top1 < thresholds.get("min_top1_agreement", 0.90):
+        fail("legal top1 agreement is below threshold")
+    recall_ratio = require_path(metrics, "onnx_recall_ratio")
+    if recall_ratio < thresholds.get("min_onnx_recall_ratio", 0.98):
+        fail("legal ONNX recall ratio is below threshold")
+
+
+def verify_audit(audit: Path, text: str) -> None:
+    required = [
+        "# M040 S02 Proof Audit",
+        "## Legal Gate",
+        "verdict: PASS",
+        "runtime_label: docker-onnx-go-api-m040-s02",
+        "cache_namespace: m040-s02-onnx-restart",
+        "## Leak Audit",
+        "verdict: PASS",
+        "details: no prohibited patterns found",
+        "## Cleanup Evidence",
+        "command: docker rm -f fd-m040-s02-onnx-api",
+        "api_container_status: ABSENT",
+        "status: CLEAR",
+        "## Blockers",
+        "None.",
+    ]
+    for needle in required:
+        if needle not in text:
+            fail(f"audit artifact missing required evidence: {needle}")
+    if "BLOCKER:" in text:
+        fail("audit artifact contains BLOCKER")
+    if "redis_container_status: ABSENT" in text:
+        fail("audit artifact says proof Redis was removed; Redis should remain alive")
+
+
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preflight", type=Path, default=Path("benchmark-results/fd-m040-s02-onnx-docker-preflight.txt"))
     parser.add_argument("--benchmark", type=Path, default=Path("benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt"))
+    parser.add_argument("--legal", type=Path, default=Path("benchmark-results/fd-legal-retrieval-m040-s02-onnx-docker-restart.txt"))
+    parser.add_argument("--audit", type=Path, default=Path("benchmark-results/fd-m040-s02-proof-audit.txt"))
     args = parser.parse_args(argv)
 
     preflight_text = read_text(args.preflight)
     benchmark_text = read_text(args.benchmark)
+    legal_text = read_text(args.legal)
+    audit_text = read_text(args.audit)
     assert_no_leaks(args.preflight, preflight_text)
     assert_no_leaks(args.benchmark, benchmark_text)
+    assert_no_leaks(args.legal, legal_text)
+    assert_no_leaks(args.audit, audit_text)
     verify_preflight(args.preflight, preflight_text)
     verify_benchmark(args.benchmark, benchmark_text)
+    verify_legal(args.legal, legal_text)
+    verify_audit(args.audit, audit_text)
     print("M040 S02 artifact verification: PASS")
     return 0
 
