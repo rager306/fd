@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M040-pbp9z1/S04/T02",
+  "timestamp": 1779438669951,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "python3 tools/verify_m040_s04_recommendation.py --artifact benchmark-results/fd-runtime-recommendation-m040-s04.md --s02-benchmark benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt --s02-preflight benchmark-results/fd-m040-s02-onnx-docker-preflight.txt --s02-legal benchmark-results/fd-legal-retrieval-m040-s02-onnx-docker-restart.txt --s02-audit benchmark-results/fd-m040-s02-proof-audit.txt --s03-gate benchmark-results/fd-legal-model-quick-gate-m040-s03.md",
+      "exitCode": 0,
+      "durationMs": 102,
+      "verdict": "pass"
+    }
+  ]
+}

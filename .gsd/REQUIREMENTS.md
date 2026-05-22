@@ -59,39 +59,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Mapped to M040 service contract artifact and final recommendation.
 - Notes: M040 scope excludes embedded/library API and remote hosted CI proof.
 
-### R006 — The TEI-vs-ONNX runtime recommendation must be based on an evidence envelope covering legal quality, same-host performance, restart/cache behavior, health/preflight clarity, and operational simplicity.
-- Class: quality-attribute
-- Status: active
-- Description: The TEI-vs-ONNX runtime recommendation must be based on an evidence envelope covering legal quality, same-host performance, restart/cache behavior, health/preflight clarity, and operational simplicity.
-- Why it matters: The project goal is the best local embedding service for quality and speed, not ONNX experimentation for its own sake.
-- Source: user
-- Primary owning slice: M040-pbp9z1/S04
-- Supporting slices: M040-pbp9z1/S01, M040-pbp9z1/S02, M040-pbp9z1/S03
-- Validation: Mapped to M040 final recommendation artifact.
-- Notes: Do not choose ONNX merely because it is available; do not choose TEI merely from conservatism if ONNX clears the local-service envelope.
-
-### R007 — M040 must not treat hosted GitHub Actions proof, remote workflow dispatch, push, upload, or artifact mirroring as required readiness gates.
-- Class: constraint
-- Status: active
-- Description: M040 must not treat hosted GitHub Actions proof, remote workflow dispatch, push, upload, or artifact mirroring as required readiness gates.
-- Why it matters: The target deployment is same-host local service readiness, so hosted CI proof is outside the relevant acceptance boundary.
-- Source: user
-- Primary owning slice: M040-pbp9z1/S04
-- Supporting slices: none
-- Validation: Mapped to final recommendation non-goals and artifact caveats.
-- Notes: Human decision D036 removed hosted GitHub Actions proof from ONNX acceptance blockers.
-
-### R008 — Alternative embedding model checks must be bounded to 1-2 plausible candidates and must use legal-domain evidence before any model can challenge `deepvk/USER-bge-m3`.
-- Class: constraint
-- Status: active
-- Description: Alternative embedding model checks must be bounded to 1-2 plausible candidates and must use legal-domain evidence before any model can challenge `deepvk/USER-bge-m3`.
-- Why it matters: The user wants excellent legal-domain quality and speed without open-ended model experimentation.
-- Source: user
-- Primary owning slice: M040-pbp9z1/S03
-- Supporting slices: M040-pbp9z1/S04
-- Validation: Mapped to M040 bounded model quick gate.
-- Notes: If candidate evaluation grows beyond a quick gate, defer it to a separate milestone.
-
 ### R009 — The local embedding service must avoid silent per-request fallback between TEI and ONNX runtimes or between different tokenizers/models within one service run.
 - Class: operability
 - Status: active
@@ -104,6 +71,39 @@ This file is the explicit capability and coverage contract for the project.
 - Notes: Fallback/rollback is an operational restart/reconfiguration procedure, not hidden request-level behavior.
 
 ## Validated
+
+### R006 — The TEI-vs-ONNX runtime recommendation must be based on an evidence envelope covering legal quality, same-host performance, restart/cache behavior, health/preflight clarity, and operational simplicity.
+- Class: quality-attribute
+- Status: validated
+- Description: The TEI-vs-ONNX runtime recommendation must be based on an evidence envelope covering legal quality, same-host performance, restart/cache behavior, health/preflight clarity, and operational simplicity.
+- Why it matters: The project goal is the best local embedding service for quality and speed, not ONNX experimentation for its own sake.
+- Source: user
+- Primary owning slice: M040-pbp9z1/S04
+- Supporting slices: M040-pbp9z1/S01, M040-pbp9z1/S02, M040-pbp9z1/S03
+- Validation: M040 S04 final artifact `benchmark-results/fd-runtime-recommendation-m040-s04.md` passed `tools/verify_m040_s04_recommendation.py` against S02/S03 evidence inputs in gsd_exec c52073f9-7ea0-4b13-9efa-99d54193c6f0, proving the final TEI-vs-ONNX evidence envelope and recommendation caveats are machine-checkable.
+- Notes: Validated by S04 closeout verification; recommendation keeps TEI default until explicit ONNX switch and defers alternative model replacement fail-closed.
+
+### R007 — M040 must not treat hosted GitHub Actions proof, remote workflow dispatch, push, upload, or artifact mirroring as required readiness gates.
+- Class: constraint
+- Status: validated
+- Description: M040 must not treat hosted GitHub Actions proof, remote workflow dispatch, push, upload, or artifact mirroring as required readiness gates.
+- Why it matters: The target deployment is same-host local service readiness, so hosted CI proof is outside the relevant acceptance boundary.
+- Source: user
+- Primary owning slice: M040-pbp9z1/S04
+- Supporting slices: none
+- Validation: M040 S04 verifier and final artifact passed in gsd_exec c52073f9-7ea0-4b13-9efa-99d54193c6f0, including hosted/remote CI readiness-gate rejection semantics and final artifact language that keeps hosted CI proof out of the same-host readiness gate.
+- Notes: Validated by S04 closeout verification; readiness depends on same-host contract, preflight, cache namespace isolation, and smoke `POST /v1/embeddings`, not hosted CI.
+
+### R008 — Alternative embedding model checks must be bounded to 1-2 plausible candidates and must use legal-domain evidence before any model can challenge `deepvk/USER-bge-m3`.
+- Class: constraint
+- Status: validated
+- Description: Alternative embedding model checks must be bounded to 1-2 plausible candidates and must use legal-domain evidence before any model can challenge `deepvk/USER-bge-m3`.
+- Why it matters: The user wants excellent legal-domain quality and speed without open-ended model experimentation.
+- Source: user
+- Primary owning slice: M040-pbp9z1/S03
+- Supporting slices: M040-pbp9z1/S04
+- Validation: M040-pbp9z1/S03 produced `benchmark-results/fd-legal-model-quick-gate-m040-s03.md`, validated by `tools/verify_legal_model_quick_gate_artifact.py --max-candidates 2` plus closeout schema checks. The artifact caps candidates to BAAI/bge-m3 and intfloat/multilingual-e5-large, records sanitized legal-corpus hashes/counts, rejects cross-model cosine parity as a replacement criterion, and defers candidate replacement fail-closed because baseline `/health` lacks runtime metadata.
+- Notes: S03 validated the bounded alternative-model gate contract. Candidate replacement remains deferred until a baseline and candidate endpoints expose contract-required runtime metadata and live legal retrieval metrics can run.
 
 ## Deferred
 
@@ -118,14 +118,14 @@ This file is the explicit capability and coverage contract for the project.
 | R003 | operability | active | M040-pbp9z1/S01 | M040-pbp9z1/S02, M040-pbp9z1/S04 | Mapped to M040 service contract, restart harness, and final operating contract. |
 | R004 | operability | active | M040-pbp9z1/S02 | M040-pbp9z1/S04 | Mapped to M040 benchmark artifacts and final recommendation artifact. |
 | R005 | core-capability | active | M040-pbp9z1/S01 | M040-pbp9z1/S04 | Mapped to M040 service contract artifact and final recommendation. |
-| R006 | quality-attribute | active | M040-pbp9z1/S04 | M040-pbp9z1/S01, M040-pbp9z1/S02, M040-pbp9z1/S03 | Mapped to M040 final recommendation artifact. |
-| R007 | constraint | active | M040-pbp9z1/S04 | none | Mapped to final recommendation non-goals and artifact caveats. |
-| R008 | constraint | active | M040-pbp9z1/S03 | M040-pbp9z1/S04 | Mapped to M040 bounded model quick gate. |
+| R006 | quality-attribute | validated | M040-pbp9z1/S04 | M040-pbp9z1/S01, M040-pbp9z1/S02, M040-pbp9z1/S03 | M040 S04 final artifact `benchmark-results/fd-runtime-recommendation-m040-s04.md` passed `tools/verify_m040_s04_recommendation.py` against S02/S03 evidence inputs in gsd_exec c52073f9-7ea0-4b13-9efa-99d54193c6f0, proving the final TEI-vs-ONNX evidence envelope and recommendation caveats are machine-checkable. |
+| R007 | constraint | validated | M040-pbp9z1/S04 | none | M040 S04 verifier and final artifact passed in gsd_exec c52073f9-7ea0-4b13-9efa-99d54193c6f0, including hosted/remote CI readiness-gate rejection semantics and final artifact language that keeps hosted CI proof out of the same-host readiness gate. |
+| R008 | constraint | validated | M040-pbp9z1/S03 | M040-pbp9z1/S04 | M040-pbp9z1/S03 produced `benchmark-results/fd-legal-model-quick-gate-m040-s03.md`, validated by `tools/verify_legal_model_quick_gate_artifact.py --max-candidates 2` plus closeout schema checks. The artifact caps candidates to BAAI/bge-m3 and intfloat/multilingual-e5-large, records sanitized legal-corpus hashes/counts, rejects cross-model cosine parity as a replacement criterion, and defers candidate replacement fail-closed because baseline `/health` lacks runtime metadata. |
 | R009 | operability | active | M040-pbp9z1/S01 | M040-pbp9z1/S04 | Mapped to service contract and error handling strategy. |
 
 ## Coverage Summary
 
-- Active requirements: 9
-- Mapped to slices: 9
-- Validated: 0
+- Active requirements: 6
+- Mapped to slices: 6
+- Validated: 3 (R006, R007, R008)
 - Unmapped active requirements: 0

@@ -15,13 +15,13 @@
 - [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: After this, local services have a concrete contract for calling fd and interpreting runtime readiness.
 
-- [ ] **S02: S02** `risk:high` `depends:[]`
+- [x] **S02: S02** `risk:high` `depends:[]`
   > After this: After this, packaged ONNX restart/cache behavior is measured instead of skipped.
 
-- [ ] **S03: Bounded legal model quick gate** `risk:medium` `depends:[S01]`
+- [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: After this, alternative model scope is bounded by legal-domain evidence and cannot hijack the service-readiness milestone.
 
-- [ ] **S04: Runtime recommendation and operating contract** `risk:medium` `depends:[S02,S03]`
+- [x] **S04: S04** `risk:medium` `depends:[]`
   > After this: After this, the user has a TEI-vs-ONNX same-host runtime recommendation with evidence and operating contract.
 
 ## Boundary Map

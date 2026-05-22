@@ -36,14 +36,14 @@ Upstream surfaces consumed: S01 same-host service contract, existing `benchmark.
   - Files: `tools/run_m040_s02_docker_restart_proof.sh`, `tools/verify_m040_s02_artifacts.py`
   - Verify: bash -n tools/run_m040_s02_docker_restart_proof.sh && python3 -m py_compile tools/verify_m040_s02_artifacts.py
 
-- [ ] **T02: Run packaged ONNX Docker restart and Redis L2 benchmark proof** `est:1h 30m`
+- [x] **T02: Run packaged ONNX Docker restart and Redis L2 benchmark proof** `est:1h 30m`
   skills_used:
     - observability
     - verify-before-complete
   - Files: `benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt`, `benchmark-results/fd-m040-s02-onnx-docker-preflight.txt`
   - Verify: python3 tools/verify_m040_s02_artifacts.py --benchmark benchmark-results/fd-benchmark-m040-s02-onnx-docker-restart.txt --preflight benchmark-results/fd-m040-s02-onnx-docker-preflight.txt
 
-- [ ] **T03: Run legal guard, leak audit, and cleanup proof** `est:1h`
+- [x] **T03: Run legal guard, leak audit, and cleanup proof** `est:1h`
   skills_used:
     - observability
     - verify-before-complete

@@ -26,7 +26,7 @@
     "title_queries_total": 76
   },
   "dry_run": true,
-  "generated_at": "2026-05-22T08:11:57.226169+00:00",
+  "generated_at": "2026-05-22T08:16:46.097277+00:00",
   "max_docs": 32,
   "max_self_queries": 8,
   "max_title_queries": 8,
@@ -151,5 +151,3 @@ defer_candidate
 ```
 
 Raw legal corpus text is intentionally excluded from this artifact.
-
-> Non-canonical note (T02): This T01 dry-run artifact is retained only as setup evidence. The canonical S03 output for S04 is `benchmark-results/fd-legal-model-quick-gate-m040-s03.md`.

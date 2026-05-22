@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-22T07:19:14Z | Files: 128 | Described: 0/128
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-22T07:19:14Z","fingerprint":"658ebb10e12058c69529689a03d417ae085dd28f","fileCount":128,"truncated":false} -->
+Generated: 2026-05-22T08:31:10Z | Files: 141 | Described: 0/141
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-22T08:31:10Z","fingerprint":"0e6474fd681e17df6d3474bf02efac1e349ff354","fileCount":141,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -63,7 +63,10 @@ Generated: 2026-05-22T07:19:14Z | Files: 128 | Described: 0/128
 - `api/handlers/health.go`
 
 ### benchmark-results/
-- *(60 files: 60 .txt)*
+- *(67 files: 64 .txt, 3 .md)*
+
+### docs/
+- `docs/same-host-embedding-service-contract.md`
 
 ### docs/onnx-artifacts/
 - `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`
@@ -91,9 +94,14 @@ Generated: 2026-05-22T07:19:14Z | Files: 128 | Described: 0/128
 - `tools/compare_onnx_dense_embeddings.py`
 - `tools/compare_tokenizers.py`
 - `tools/diagnose_onnx_sequence_length.py`
+- `tools/evaluate_legal_model_quick_gate.py`
 - `tools/evaluate_legal_retrieval.py`
 - `tools/export_user_bge_m3_dense_onnx.py`
 - `tools/profile_legal_divergence.py`
 - `tools/provision_onnx_artifacts.py`
+- `tools/run_m040_s02_docker_restart_proof.sh`
+- `tools/verify_legal_model_quick_gate_artifact.py`
+- `tools/verify_m040_s02_artifacts.py`
+- `tools/verify_m040_s04_recommendation.py`
 - `tools/verify_onnx_artifacts.py`
 - `tools/verify_onnx_export_contract.py`
