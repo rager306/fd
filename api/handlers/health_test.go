@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const testModelID = "deepvk/USER-bge-m3"
+
 func TestHealthHandlerDefaultShape(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
@@ -41,7 +43,7 @@ func TestNewHealthHandlerIncludesSafeTEIRuntimeMetadata(t *testing.T) {
 	r := gin.New()
 	r.GET("/health", NewHealthHandler(&RuntimeHealth{
 		Backend:           "tei",
-		Model:             "deepvk/USER-bge-m3",
+		Model:             testModelID,
 		Dimensions:        1024,
 		ProductionDefault: true,
 		CacheNamespace:    "m026-tei",
@@ -65,7 +67,7 @@ func TestNewHealthHandlerIncludesSafeTEIRuntimeMetadata(t *testing.T) {
 	if runtime["backend"] != "tei" {
 		t.Fatalf("backend = %#v, want tei", runtime["backend"])
 	}
-	if runtime["model"] != "deepvk/USER-bge-m3" {
+	if runtime["model"] != testModelID {
 		t.Fatalf("model = %#v", runtime["model"])
 	}
 	if dims, ok := runtime["dimensions"].(float64); !ok || dims != 1024 {
@@ -98,7 +100,7 @@ func TestNewHealthHandlerIncludesSafeRuntimeMetadata(t *testing.T) {
 	r := gin.New()
 	r.GET("/health", NewHealthHandler(&RuntimeHealth{
 		Backend:                    "onnx",
-		Model:                      "deepvk/USER-bge-m3",
+		Model:                      testModelID,
 		ArtifactID:                 "user-bge-m3-dense-fp32",
 		Dimensions:                 1024,
 		MaxSequenceLength:          1024,
