@@ -23,6 +23,10 @@ TEI remains the production/default runtime. ONNX 1024 has passed local Go runtim
 
 There is no active milestone. Future work should start from a new GSD milestone or quick task depending on scope.
 
+## Communication
+
+Project communication should be in Russian by default: dialogue, informational output, questions, discussion, intermediate status updates, and final summaries. Use another language only when the user explicitly asks for it.
+
 ## Architecture / Key Patterns
 
 - Go API under `api/` exposes embedding handlers and health metadata.
