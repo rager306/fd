@@ -15,6 +15,7 @@ CLAUDE.md
 .gsd/notifications.jsonl
 .gsd/runtime/
 .gsd/state-manifest.json
+.gsd/gsd.db
 .gsd/gsd.db-shm
 .gsd/gsd.db-wal
 
