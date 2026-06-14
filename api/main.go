@@ -416,6 +416,7 @@ func main() {
 	r.Use(metrics.Middleware())
 	r.Use(middleware.APIKeyAuthFromEnv())
 	r.Use(middleware.IPRateLimitFromEnv())
+	r.Use(middleware.CacheHeaders())
 
 	// 404/405 envelopes for paths/methods that don't match a registered
 	// route. Without these, gin returns text/plain "404 page not found"

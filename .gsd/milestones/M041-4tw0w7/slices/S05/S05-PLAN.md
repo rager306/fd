@@ -52,7 +52,7 @@
   - Files: `api/handlers/v1batch.go`, `api/handlers/v1batch_test.go`
   - Verify: Unit tests: 2 batches × 4 strings → 200 с 2 batches × 4 embeddings. Oversized inner batch → 413. Empty batches → 400 input_required.
 
-- [ ] **T05: ETag + Cache-Control на responses** `est:2h`
+- [x] **T05: Added ETag and Cache-Control middleware for `/v1/embeddings` and `/info` with If-None-Match 304 support.** `est:2h`
   api/middleware/cache_headers.go: на /v1/embeddings и /info responses вычислять ETag = SHA256(response body) и выставлять Cache-Control: public, max-age=86400. Поддержка If-None-Match: если request header matches ETag → 304 Not Modified без body.
   - Files: `api/middleware/cache_headers.go`, `api/middleware/cache_headers_test.go`
   - Verify: Unit tests: первый request → ETag: <hash>, Cache-Control: public, max-age=86400. Повторный с If-None-Match: <hash> → 304.
