@@ -16,6 +16,7 @@ const (
 	paramInput          = "input"
 	paramDimensions     = "dimensions"
 	paramEncodingFormat = "encoding_format"
+	paramPriority       = "priority"
 )
 
 func TestAllErrorCodesRegistered(t *testing.T) {
@@ -44,6 +45,7 @@ func TestErrorEnvelopeShape(t *testing.T) {
 		{CodeDimensionsRequired, paramDimensions, "dimensions is required", "dimensions_required", TypeInvalidRequest, http.StatusBadRequest},
 		{CodeDimensionsMismatch, paramDimensions, "model does not support 512-dim", "dimensions_mismatch", TypeInvalidRequest, http.StatusBadRequest},
 		{CodeEncodingInvalid, paramEncodingFormat, "encoding_format must be float or base64", "encoding_format_invalid", TypeInvalidRequest, http.StatusBadRequest},
+		{CodePriorityInvalid, paramPriority, "priority must be low, normal, or high", "priority_invalid", TypeInvalidRequest, http.StatusBadRequest},
 		{CodeInvalidJSON, "", "invalid JSON: unexpected end of JSON input", "invalid_json", TypeInvalidRequest, http.StatusBadRequest},
 		{CodeUnauthorized, "", "missing or invalid API key", "unauthorized", TypeAuthError, http.StatusUnauthorized},
 		{CodeNotFound, "", "path /v9999 not found", "not_found", TypeNotFoundError, http.StatusNotFound},

@@ -16,14 +16,23 @@ func TestEmbeddingsRequest_Unmarshal(t *testing.T) {
 		t.Errorf("unexpected: %v", req1.Input)
 	}
 
-	// Array input
-	json2 := `{"model":"test","input":["a","b","c"]}`
+	// Array input plus OpenAI-compatible optional metadata.
+	json2 := `{"model":"test","input":["a","b","c"],"user":"caller-123","priority":"high","encoding_format":"base64"}`
 	var req2 EmbeddingsRequest
 	if err := json.Unmarshal([]byte(json2), &req2); err != nil {
 		t.Fatalf("unmarshal error: %v", err)
 	}
 	if len(req2.Input) != 3 {
 		t.Errorf("expected 3, got %d", len(req2.Input))
+	}
+	if req2.User == nil || *req2.User != "caller-123" {
+		t.Errorf("unexpected user: %v", req2.User)
+	}
+	if req2.Priority == nil || *req2.Priority != "high" {
+		t.Errorf("unexpected priority: %v", req2.Priority)
+	}
+	if req2.EncodingFormat == nil || *req2.EncodingFormat != EncodingFormatBase64 {
+		t.Errorf("unexpected encoding_format: %v", req2.EncodingFormat)
 	}
 }
 

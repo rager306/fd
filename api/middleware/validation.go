@@ -139,7 +139,10 @@ func validateEmbeddingsPayload(c *gin.Context, req *embed.EmbeddingsRequest) boo
 			fmt.Sprintf("batch size %d exceeds max %d; split into smaller batches", len(req.Input), maxBatchSize))
 		return false
 	}
-	return validateInputLengths(c, req.Input) && validateDimensions(c, req.Dimensions) && validateEncodingFormat(c, req.EncodingFormat)
+	return validateInputLengths(c, req.Input) &&
+		validateDimensions(c, req.Dimensions) &&
+		validateEncodingFormat(c, req.EncodingFormat) &&
+		validatePriority(c, req.Priority)
 }
 
 func validateInputLengths(c *gin.Context, input []string) bool {
@@ -187,5 +190,21 @@ func validateEncodingFormat(c *gin.Context, encodingFormat *string) bool {
 	}
 	handlers.WriteError(c, handlers.CodeEncodingInvalid, "encoding_format",
 		fmt.Sprintf("encoding_format must be float or base64, got %q", ef))
+	return false
+}
+
+func validatePriority(c *gin.Context, priority *string) bool {
+	// priority is accepted for OpenAI-compatible clients and future routing.
+	// It is not used for scheduling yet, but validating the enum prevents
+	// callers from persisting arbitrary values into future observability/rate-limit paths.
+	if priority == nil || *priority == "" {
+		return true
+	}
+	p := *priority
+	if p == "low" || p == "normal" || p == "high" {
+		return true
+	}
+	handlers.WriteError(c, handlers.CodePriorityInvalid, "priority",
+		fmt.Sprintf("priority must be low, normal, or high, got %q", p))
 	return false
 }

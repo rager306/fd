@@ -27,6 +27,7 @@ const (
 	CodeRequestTimeout     = "request_timeout"
 	CodeDimensionsMismatch = "dimensions_mismatch"
 	CodeEncodingInvalid    = "encoding_format_invalid"
+	CodePriorityInvalid    = "priority_invalid"
 )
 
 // OpenAI-style error types. Values match docs/fd-v2.md Section 3 catalog.
@@ -66,6 +67,7 @@ var errorCodeRegistry = map[string]struct {
 	CodeDimensionsRequired: {TypeInvalidRequest, http.StatusBadRequest},
 	CodeDimensionsMismatch: {TypeInvalidRequest, http.StatusBadRequest},
 	CodeEncodingInvalid:    {TypeInvalidRequest, http.StatusBadRequest},
+	CodePriorityInvalid:    {TypeInvalidRequest, http.StatusBadRequest},
 	CodeInvalidJSON:        {TypeInvalidRequest, http.StatusBadRequest},
 	CodeUnauthorized:       {TypeAuthError, http.StatusUnauthorized},
 	CodeNotFound:           {TypeNotFoundError, http.StatusNotFound},
@@ -126,6 +128,7 @@ func AllErrorCodes() []string {
 		CodeDimensionsRequired,
 		CodeDimensionsMismatch,
 		CodeEncodingInvalid,
+		CodePriorityInvalid,
 		CodeInvalidJSON,
 		CodeUnauthorized,
 		CodeNotFound,

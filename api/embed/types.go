@@ -9,6 +9,8 @@ type EmbeddingsRequest struct {
 	Input          []string `json:"input"`           // slice for batch, filled from string or []string
 	Dimensions     *int     `json:"dimensions"`      // pointer: nil=1024 (default), 512, or explicitly 1024
 	EncodingFormat *string  `json:"encoding_format"` // pointer: nil=float (default), "float", or "base64"
+	User           *string  `json:"user"`            // optional caller identifier for compatibility/observability
+	Priority       *string  `json:"priority"`        // optional priority: low, normal, or high
 }
 
 // UnmarshalJSON implements custom JSON unmarshaling to handle both string and []string input.
@@ -21,6 +23,8 @@ func (r *EmbeddingsRequest) UnmarshalJSON(data []byte) error {
 		Input          json.RawMessage `json:"input"`
 		Dimensions     *int            `json:"dimensions"`
 		EncodingFormat *string         `json:"encoding_format"`
+		User           *string         `json:"user"`
+		Priority       *string         `json:"priority"`
 	}
 	var raw rawRequest
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -29,6 +33,8 @@ func (r *EmbeddingsRequest) UnmarshalJSON(data []byte) error {
 	r.Model = raw.Model
 	r.Dimensions = raw.Dimensions
 	r.EncodingFormat = raw.EncodingFormat
+	r.User = raw.User
+	r.Priority = raw.Priority
 
 	// Field absent — leave r.Input as nil; validation middleware emits input_required.
 	if len(raw.Input) == 0 {

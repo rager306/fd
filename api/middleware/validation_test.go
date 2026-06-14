@@ -68,6 +68,14 @@ func TestValidationHappyPathBase64(t *testing.T) {
 	}
 }
 
+func TestValidationHappyPathPriorityAndUser(t *testing.T) {
+	body := `{"input":["hello"],"priority":"high","user":"caller-123"}`
+	w := runMiddleware(t, body, int64(len(body)))
+	if w.Code != http.StatusOK {
+		t.Errorf("status = %d, want 200; body=%s", w.Code, w.Body.String())
+	}
+}
+
 func TestValidationEmptyInput(t *testing.T) {
 	body := `{"input":[]}`
 	w := runMiddleware(t, body, int64(len(body)))
@@ -163,6 +171,12 @@ func TestValidationEncodingFormatInvalid(t *testing.T) {
 	body := `{"input":["x"],"encoding_format":"hex"}`
 	w := runMiddleware(t, body, int64(len(body)))
 	assertCode(t, w, handlers.CodeEncodingInvalid, http.StatusBadRequest, "encoding_format")
+}
+
+func TestValidationPriorityInvalid(t *testing.T) {
+	body := `{"input":["x"],"priority":"urgent"}`
+	w := runMiddleware(t, body, int64(len(body)))
+	assertCode(t, w, handlers.CodePriorityInvalid, http.StatusBadRequest, "priority")
 }
 
 func TestValidationInvalidJSONMalformed(t *testing.T) {

@@ -123,6 +123,39 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 			},
 		},
 		{
+			name: "base64 encoding format response",
+			body: `{"model":"test","input":"hello","encoding_format":"base64"}`,
+			embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
+				return [][]float32{{1, 2, 3, 4}}, nil
+			},
+			wantStatus: http.StatusOK,
+			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder, _ *mockEmbedder) {
+				var resp embed.EmbeddingsResponse
+				if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+					t.Fatalf("unmarshal response: %v", err)
+				}
+				embedding, ok := resp.Data[0].Embedding.(string)
+				if !ok {
+					t.Fatalf("expected base64 string embedding, got %T", resp.Data[0].Embedding)
+				}
+				decoded, err := base64.StdEncoding.DecodeString(embedding)
+				if err != nil {
+					t.Fatalf("decode base64 embedding: %v", err)
+				}
+				if len(decoded) != 16 {
+					t.Fatalf("decoded length = %d, want 16 bytes", len(decoded))
+				}
+			},
+		},
+		{
+			name: "priority and user are accepted",
+			body: `{"model":"test","input":"hello","priority":"high","user":"caller-123"}`,
+			embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
+				return [][]float32{{0.1, 0.2, 0.3}}, nil
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
 			name: "512 dimensions slices embedding",
 			body: `{"model":"test","input":"hello","dimensions":512}`,
 			embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
@@ -211,6 +244,12 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 		{
 			name:       "empty input array",
 			body:       `{"model":"test","input":[]}`,
+			embedFunc:  func(ctx context.Context, texts []string) ([][]float32, error) { return nil, nil },
+			wantStatus: http.StatusBadRequest,
+		},
+		{
+			name:       "invalid priority",
+			body:       `{"model":"test","input":"hello","priority":"urgent"}`,
 			embedFunc:  func(ctx context.Context, texts []string) ([][]float32, error) { return nil, nil },
 			wantStatus: http.StatusBadRequest,
 		},

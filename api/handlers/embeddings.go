@@ -135,6 +135,14 @@ func validateInlineEmbeddingRequest(c *gin.Context, req *embed.EmbeddingsRequest
 			return false
 		}
 	}
+	if req.Priority != nil && *req.Priority != "" {
+		p := *req.Priority
+		if p != "low" && p != "normal" && p != "high" {
+			WriteError(c, CodePriorityInvalid, "priority",
+				"priority must be low, normal, or high, got \""+p+"\"")
+			return false
+		}
+	}
 	return true
 }
 

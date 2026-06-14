@@ -1,7 +1,7 @@
 # S05: OpenAI v2 compat features OpenAPI schema and P2 enhancements
 
 **Goal:** OpenAI v2 compat (encoding_format=user=priority), optional API key auth (FD_API_KEY), CORS, OpenAPI 3.1 schema at /openapi.json + Swagger UI at /docs, /v1/batch, rate limiting (per-IP/user), ETag+Cache-Control, /v1/traces. Закрывает R-P1-5..R-P1-9, R-P2-1..R-P2-6.
-**Demo:** After this, /v1/embeddings принимает encoding_format=base64, user, priority. FD_API_KEY env включает bearer auth с 401 unauthorized. CORS headers на responses. /openapi.json возвращает валидный OpenAPI 3.1 spec, /docs рендерит Swagger UI. /v1/batch принимает batches:[[..]] и возвращает batches:[[..]]. Rate limiting (если включен) даёт 429 с X-RateLimit-*. ETag на /v1/embeddings responses. /v1/traces возвращает последние N requests.
+**Demo:** After this, remaining OpenAI v2 compat work is complete without reimplementing encoding_format already covered by S01; user/priority/auth/CORS/OpenAPI/rate-limit/traces work passes M043 gates and documents any new API godoc.
 
 ## Must-Haves
 
@@ -32,7 +32,7 @@
 
 ## Tasks
 
-- [ ] **T01: Extended request fields: encoding_format, user, priority** `est:3h`
+- [x] **T01: Added OpenAI-compatible `user` and `priority` request fields, priority validation, and tests for base64/user/priority behavior.** `est:3h`
   api/handlers/embeddings.go: расширить request struct: EncodingFormat *string (valid: float|base64), User *string, Priority *string (valid: low|normal|high). Validation в S01 middleware: невалидный encoding_format → 400. Base64 encoding для response: при encoding_format=base64, кодировать []float32 в base64-encoded float32 LE array.
   - Files: `api/handlers/embeddings.go`, `api/handlers/batch.go`, `api/embed/base64.go`, `api/middleware/validation.go`, `api/handlers/embeddings_test.go`
   - Verify: Unit tests: T-H-5 (encoding_format=base64 → base64 string в response), T-H-6 (priority=high принимается), user field принимается. Невалидный encoding_format → 400.
