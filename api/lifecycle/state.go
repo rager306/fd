@@ -86,6 +86,28 @@ func (s *State) IsShuttingDown() bool {
 func (s *State) TrackRequest() func() {
 	s.inflight.Add(1)
 	s.inflightCount.Add(1)
+	return s.doneRequestOnce()
+}
+
+// TryTrackRequest tracks a request only when maxInFlight is not already
+// reached. A maxInFlight value <= 0 disables capacity limiting.
+func (s *State) TryTrackRequest(maxInFlight int64) (func(), bool) {
+	if maxInFlight <= 0 {
+		return s.TrackRequest(), true
+	}
+	for {
+		current := s.inflightCount.Load()
+		if current >= maxInFlight {
+			return nil, false
+		}
+		if s.inflightCount.CompareAndSwap(current, current+1) {
+			s.inflight.Add(1)
+			return s.doneRequestOnce(), true
+		}
+	}
+}
+
+func (s *State) doneRequestOnce() func() {
 	var once sync.Once
 	return func() {
 		once.Do(func() {

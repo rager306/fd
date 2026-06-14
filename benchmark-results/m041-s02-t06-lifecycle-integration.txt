@@ -1,0 +1,10 @@
+=== RUN   TestFdV2LifecycleStartupSequence
+--- PASS: TestFdV2LifecycleStartupSequence (0.00s)
+=== RUN   TestFdV2LifecycleF1ModelNotLoadedThenReady
+--- PASS: TestFdV2LifecycleF1ModelNotLoadedThenReady (0.00s)
+=== RUN   TestFdV2LifecycleF2ModelOverloadedThenRecovers
+--- PASS: TestFdV2LifecycleF2ModelOverloadedThenRecovers (0.00s)
+=== RUN   TestFdV2LifecycleF5ShutdownRejectsNewAndDrainsInflight
+--- PASS: TestFdV2LifecycleF5ShutdownRejectsNewAndDrainsInflight (0.00s)
+PASS
+ok  	fd-api	0.012s

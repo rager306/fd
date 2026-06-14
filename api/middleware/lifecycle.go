@@ -15,6 +15,13 @@ const (
 // LifecycleGate rejects embedding requests while the process is warming up or
 // shutting down, and tracks accepted requests for graceful drain.
 func LifecycleGate(state *lifecycle.State) gin.HandlerFunc {
+	return LifecycleGateWithCapacity(state, 0)
+}
+
+// LifecycleGateWithCapacity behaves like LifecycleGate and additionally
+// rejects requests with model_overloaded when maxInFlight is reached. A
+// maxInFlight value <= 0 disables capacity limiting.
+func LifecycleGateWithCapacity(state *lifecycle.State, maxInFlight int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if state != nil && state.IsShuttingDown() {
 			c.Header("Retry-After", shutdownRetryAfterSeconds)
@@ -27,7 +34,12 @@ func LifecycleGate(state *lifecycle.State) gin.HandlerFunc {
 			return
 		}
 
-		done := state.TrackRequest()
+		done, ok := state.TryTrackRequest(maxInFlight)
+		if !ok {
+			c.Header("Retry-After", warmupRetryAfterSeconds)
+			handlers.WriteError(c, handlers.CodeModelOverloaded, "", "model capacity is exhausted")
+			return
+		}
 		defer done()
 		c.Next()
 	}

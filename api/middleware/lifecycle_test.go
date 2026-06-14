@@ -30,6 +30,23 @@ func TestLifecycleGateRejectsDuringShutdown(t *testing.T) {
 	assertLifecycleError(t, w, http.StatusServiceUnavailable, handlers.CodeShuttingDown, shutdownRetryAfterSeconds)
 }
 
+func TestLifecycleGateRejectsWhenCapacityReached(t *testing.T) {
+	state := lifecycle.NewState()
+	state.MarkWarmupDone()
+	activeDone := state.TrackRequest()
+	defer activeDone()
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/protected", LifecycleGateWithCapacity(state, 1), func(c *gin.Context) {
+		c.Status(http.StatusNoContent)
+	})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/protected", http.NoBody))
+
+	assertLifecycleError(t, w, http.StatusServiceUnavailable, handlers.CodeModelOverloaded, warmupRetryAfterSeconds)
+}
+
 func TestLifecycleGateTracksAcceptedRequest(t *testing.T) {
 	state := lifecycle.NewState()
 	state.MarkWarmupDone()

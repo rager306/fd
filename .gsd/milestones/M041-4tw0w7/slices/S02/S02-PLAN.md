@@ -52,7 +52,7 @@ Lifecycle state (warmupDone, shuttingDown, inflight) атомики исполь
   - Files: `api/lifecycle/shutdown.go`, `api/lifecycle/shutdown_test.go`, `api/main.go`
   - Verify: Integration test: запустить fd, послать 1 long-running request, послать SIGTERM, новые запросы получают 503 shutting_down+Retry-After: 30, in-flight завершается нормально, process exit 0, total time ≤ 35s. Также test: SIGTERM при idle → exit < 1s.
 
-- [ ] **T06: Integration tests для behavior scenarios F-1/F-2/F-5** `est:3h`
+- [x] **T06: Added executable lifecycle integration coverage for startup readiness, F-1 model_not_loaded, F-2 model_overloaded, and F-5 shutdown drain behavior.** `est:3h`
   tests/integration/fd_v2_lifecycle_test.go: воспроизвести F-1 (caller hit во время warmup → 503 model_not_loaded + Retry-After), F-2 (concurrent overload → 503 model_overloaded + Retry-After, после снижения load → 200), F-5 (SIGTERM → 503 shutting_down + drain). Также test: startup sequence — /live=200, /ready=503, /ready=200 после warmup, /health deep корректно меняется. Спека: docs/fd-v2.md Section 6.1 + 6.3 F-1/F-2/F-5.
   - Files: `tests/integration/fd_v2_lifecycle_test.go`
   - Verify: go test ./tests/integration/... -run TestFdV2Lifecycle -v: F-1, F-2, F-5, и startup sequence test все pass.

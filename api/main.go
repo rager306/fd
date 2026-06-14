@@ -345,6 +345,10 @@ func main() {
 	}
 
 	lifecycleState := lifecycle.DefaultState()
+	maxInFlight := getEnvInt("FD_MAX_IN_FLIGHT", 0)
+	if maxInFlight > 0 {
+		logger.Info("embedding lifecycle capacity gate enabled", "max_in_flight", maxInFlight)
+	}
 
 	var embeddingClient handlers.Embedder
 	var onnxCloser interface{ Close() error }
@@ -406,7 +410,7 @@ func main() {
 	// 4xx/5xx (400 input_required, 413 input_too_long, 413 batch_too_large,
 	// 413 payload_too_large) are returned without burning inference
 	// capacity. The handler reads the parsed request from gin context.
-	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), middleware.LifecycleGate(lifecycleState), embedHandler.CreateEmbedding)
+	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), embedHandler.CreateEmbedding)
 	r.POST("/embeddings/batch", batchHandler.CreateBatchEmbeddings)
 
 	addr := bindHost + ":" + port

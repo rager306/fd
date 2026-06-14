@@ -98,6 +98,43 @@ func TestTrackRequestAndWaitDrainBlocksUntilDone(t *testing.T) {
 	}
 }
 
+func TestTryTrackRequestRejectsWhenCapacityReached(t *testing.T) {
+	state := NewState()
+	doneRequest, ok := state.TryTrackRequest(1)
+	if !ok {
+		t.Fatal("first TryTrackRequest should fit capacity")
+	}
+	defer doneRequest()
+
+	if _, ok := state.TryTrackRequest(1); ok {
+		t.Fatal("second TryTrackRequest should exceed capacity")
+	}
+
+	doneRequest()
+	nextDone, ok := state.TryTrackRequest(1)
+	if !ok {
+		t.Fatal("TryTrackRequest should fit after previous request completes")
+	}
+	nextDone()
+}
+
+func TestTryTrackRequestUnlimitedWhenMaxIsZero(t *testing.T) {
+	state := NewState()
+	doneOne, ok := state.TryTrackRequest(0)
+	if !ok {
+		t.Fatal("unlimited TryTrackRequest should accept first request")
+	}
+	doneTwo, ok := state.TryTrackRequest(0)
+	if !ok {
+		t.Fatal("unlimited TryTrackRequest should accept second request")
+	}
+	doneOne()
+	doneTwo()
+	if err := state.WaitDrain(0); err != nil {
+		t.Fatalf("WaitDrain after unlimited requests = %v, want nil", err)
+	}
+}
+
 func TestWaitDrainTimesOutWhenInflight(t *testing.T) {
 	state := NewState()
 	doneRequest := state.TrackRequest()
