@@ -7,11 +7,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -209,8 +209,9 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim)) //nolint:gosec // G115: bounds-checked above
-	for i := 0; i < dim; i++ {
-		binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+	if dim > 0 {
+		src := unsafe.Slice((*byte)(unsafe.Pointer(&embedding[0])), dim*4)   //nolint:gosec // G103: performance optimization for byte casting
+		copy(buf[2:], src)
 	}
 	return buf, nil
 }
@@ -230,8 +231,9 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 		return nil, 0
 	}
 	emb := make([]float32, dim)
-	for i := 0; i < dim; i++ {
-		emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
+	if dim > 0 {
+		src := unsafe.Slice((*float32)(unsafe.Pointer(&data[2])), dim) //nolint:gosec // G103: performance optimization for byte casting
+		copy(emb, src)
 	}
 	return emb, dim
 }
