@@ -406,7 +406,7 @@ func main() {
 	// 4xx/5xx (400 input_required, 413 input_too_long, 413 batch_too_large,
 	// 413 payload_too_large) are returned without burning inference
 	// capacity. The handler reads the parsed request from gin context.
-	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), embedHandler.CreateEmbedding)
+	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), middleware.LifecycleGate(lifecycleState), embedHandler.CreateEmbedding)
 	r.POST("/embeddings/batch", batchHandler.CreateBatchEmbeddings)
 
 	addr := bindHost + ":" + port

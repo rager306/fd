@@ -42,7 +42,7 @@ Lifecycle state (warmupDone, shuttingDown, inflight) атомики исполь
   - Files: `api/handlers/probes.go`, `api/handlers/probes_test.go`
   - Verify: Unit tests: после MarkWarmupDone → /ready 200; до → /ready 503 с code=model_not_loaded, Retry-After: 5. /live всегда 200.
 
-- [ ] **T04: Lifecycle gate middleware на /v1/embeddings** `est:2h`
+- [x] **T04: Added lifecycle gate middleware for /v1/embeddings with warmup/shutdown rejection and in-flight request tracking.** `est:2h`
   api/middleware/lifecycle.go: gin middleware который проверяет IsReady() и !IsShuttingDown() перед передачей в handler. Если !IsReady → 503 model_not_loaded + Retry-After: 5. Если IsShuttingDown → 503 shutting_down + Retry-After: 30. Также TrackRequest(start, done) для inflight tracking. Подключается в router setup после validation (S01), до embed handler.
   - Files: `api/middleware/lifecycle.go`, `api/middleware/lifecycle_test.go`
   - Verify: Unit tests: до warmup → 503 model_not_loaded, Retry-After: 5. После BeginShutdown → 503 shutting_down, Retry-After: 30. inflight counter инкрементируется на request и декрементируется на response.
