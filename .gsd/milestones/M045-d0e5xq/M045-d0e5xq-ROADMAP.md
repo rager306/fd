@@ -18,7 +18,7 @@
 - [x] **S02: Select safe TEI startup mitigation** `risk:high` `depends:[S01]`
   > After this: A selected mitigation is encoded as compose/docs changes or a documented no change decision with rationale.
 
-- [ ] **S03: Controlled startup proof** `risk:high` `depends:[S02]`
+- [x] **S03: Controlled startup proof** `risk:high` `depends:[S02]`
   > After this: Startup proof artifact records time to TEI health, fd readiness, first embedding, and remaining ORT/ONNX warnings under the selected configuration.
 
 ## Boundary Map
