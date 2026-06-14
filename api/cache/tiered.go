@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -41,7 +40,7 @@ func NewTieredCacheWithLogger(local *LocalCache, redis *RedisCache, localTTL tim
 
 // GetOrLoad checks L1 then L2, invoking loader if both miss.
 func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
-	localKey := fmt.Sprintf("%s:d%d", key, dim)
+	localKey := localCacheKey(key, dim)
 	keyHash := shortCacheKeyHash(key)
 
 	// L1 check — returns []byte
@@ -133,7 +132,7 @@ func (tc *TieredCache) Close() error {
 // results in zero TEI traffic. Returns (vec, true) on hit, (nil, false)
 // on miss.
 func (tc *TieredCache) GetIfPresent(ctx context.Context, key string, dim int) ([]float32, bool) {
-	localKey := fmt.Sprintf("%s:d%d", key, dim)
+	localKey := localCacheKey(key, dim)
 	data, ok := tc.local.Get(ctx, localKey)
 	if !ok {
 		// L2 fallback (without backfilling L1)
@@ -157,7 +156,7 @@ func (tc *TieredCache) Set(ctx context.Context, key string, dim int, emb []float
 	if len(emb) < dim {
 		return
 	}
-	localKey := fmt.Sprintf("%s:d%d", key, dim)
+	localKey := localCacheKey(key, dim)
 	data, err := marshalEmbedding(emb[:dim], dim)
 	if err != nil {
 		return
