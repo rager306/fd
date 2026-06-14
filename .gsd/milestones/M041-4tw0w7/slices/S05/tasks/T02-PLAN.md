@@ -4,7 +4,7 @@ estimated_files: 4
 skills_used: []
 ---
 
-# T02: API key auth (FD_API_KEY env) и CORS
+# T02: Added optional FD_API_KEY bearer auth and CORS/preflight middleware with tests and main wiring.
 
 api/middleware/auth.go: если env FD_API_KEY задан, требует Authorization: Bearer <key> на всех endpoints кроме /live, /metrics, /docs, /openapi.json. На missing/wrong → 401 unauthorized. api/middleware/cors.go: Access-Control-Allow-Origin (из env FD_CORS_ORIGINS или * default), Access-Control-Allow-Methods: GET,POST,OPTIONS, Access-Control-Allow-Headers: Content-Type,Authorization,X-Request-Id. OPTIONS preflight → 204.
 

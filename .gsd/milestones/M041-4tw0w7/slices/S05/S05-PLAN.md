@@ -37,7 +37,7 @@
   - Files: `api/handlers/embeddings.go`, `api/handlers/batch.go`, `api/embed/base64.go`, `api/middleware/validation.go`, `api/handlers/embeddings_test.go`
   - Verify: Unit tests: T-H-5 (encoding_format=base64 → base64 string в response), T-H-6 (priority=high принимается), user field принимается. Невалидный encoding_format → 400.
 
-- [ ] **T02: API key auth (FD_API_KEY env) и CORS** `est:3h`
+- [x] **T02: Added optional FD_API_KEY bearer auth and CORS/preflight middleware with tests and main wiring.** `est:3h`
   api/middleware/auth.go: если env FD_API_KEY задан, требует Authorization: Bearer <key> на всех endpoints кроме /live, /metrics, /docs, /openapi.json. На missing/wrong → 401 unauthorized. api/middleware/cors.go: Access-Control-Allow-Origin (из env FD_CORS_ORIGINS или * default), Access-Control-Allow-Methods: GET,POST,OPTIONS, Access-Control-Allow-Headers: Content-Type,Authorization,X-Request-Id. OPTIONS preflight → 204.
   - Files: `api/middleware/auth.go`, `api/middleware/cors.go`, `api/middleware/auth_test.go`, `api/middleware/cors_test.go`
   - Verify: Unit tests: T-E-9 (с FD_API_KEY=test, без Authorization → 401 unauthorized, с правильным Bearer → 200). OPTIONS preflight → 204 с правильными CORS headers.
