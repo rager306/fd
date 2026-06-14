@@ -1,0 +1,147 @@
+{
+  "runId": "uat:M045-d0e5xq:S03:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M045-d0e5xq",
+  "sliceId": "S03",
+  "uatType": "runtime-executable",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-14T12:20:08.075Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Local path proof artifact shows healthy outcome and embedding smoke.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "335f897b-97a6-4a0d-bb21-44e2df9fc8cc",
+          "note": "Verified proof artifact contains healthy outcome, local path, fd health, and embedding length evidence.",
+          "tool": "gsd_uat_exec",
+          "executionId": "335f897b-97a6-4a0d-bb21-44e2df9fc8cc"
+        }
+      ],
+      "notes": "An earlier over-strict UAT-01 assertion failed on filename text only; this corrected check validates the actual proof fields."
+    },
+    {
+      "id": "UAT-02",
+      "description": "Running TEI container is healthy and uses local snapshot command.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "a55d4583-cd51-4b8f-943a-b56c1a045b1e",
+          "note": "docker inspect verified fd_tei health=healthy and command includes the local snapshot path.",
+          "tool": "gsd_uat_exec",
+          "executionId": "a55d4583-cd51-4b8f-943a-b56c1a045b1e"
+        }
+      ],
+      "notes": "Confirms the proof is applied to the current running container."
+    },
+    {
+      "id": "UAT-03",
+      "description": "fd health and embedding smoke pass after local path startup.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "708de145-0232-4cc6-9346-75b837562a25",
+          "note": "fd /health and /v1/embeddings returned TEI 1024 runtime and 1024-dimensional vector.",
+          "tool": "gsd_uat_exec",
+          "executionId": "708de145-0232-4cc6-9346-75b837562a25"
+        }
+      ],
+      "notes": "Preserves client-visible runtime contract."
+    },
+    {
+      "id": "UAT-04",
+      "description": "Compose uses local path and no failed HF_HUB_OFFLINE candidate.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "298cc0b1-45c5-48cd-9748-eca5e1854320",
+          "note": "docker compose config includes local path and excludes HF_HUB_OFFLINE.",
+          "tool": "gsd_uat_exec",
+          "executionId": "298cc0b1-45c5-48cd-9748-eca5e1854320"
+        }
+      ],
+      "notes": "Ensures the rejected offline env is not in effective compose."
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "S03 UAT verifies the controlled local-path startup proof and final runtime state.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: local snapshot path is validated as the TEI startup mitigation; R028 is validated."
+}

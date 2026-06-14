@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "id": 1,
+      "tool": "browser_navigate",
+      "status": "success",
+      "durationMs": 997,
+      "beforeUrl": "about:blank",
+      "afterUrl": "http://localhost:8000/health",
+      "line": "#1 | browser_navigate | success | 997ms | url=\"http://localhost:8000/health\", screenshot=false | URL changed to http://localhost:8000/health; visible text changed"
+    }
+  ],
+  "retained": 1,
+  "totalRecorded": 1,
+  "bounded": false,
+  "summary": "Timeline: 1 browser action recorded."
+}

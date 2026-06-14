@@ -1,6 +1,8 @@
 services:
   tei:
-    command: --model-id deepvk/USER-bge-m3
+    # Keep override aligned with docker-compose.yaml; command replacement in
+    # compose overrides is total, not merged.
+    command: --model-id /data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae --max-batch-tokens 8192
     healthcheck:
       start_period: 300s
 

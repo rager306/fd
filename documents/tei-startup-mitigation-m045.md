@@ -1,144 +1,82 @@
-# M045 S02 TEI Startup Mitigation Selection
+# M045 TEI Startup Mitigation Outcome
 
-Captured: 2026-06-14T11:35:29Z
+Updated: 2026-06-14T12:16:00Z
 
-## Safety Boundary
+## Summary
 
-This slice remains non-destructive so far. No TEI restart, compose up/down, recreate, or image run was performed while producing this inventory.
+The validated startup mitigation is to run HuggingFace TEI with the cached local USER-bge-m3 snapshot path as `--model-id`, not the Hub repo ID.
 
-## Cache Mount
+Validated command:
 
-`fd_tei` mounts Docker volume `fd_tei_data` at `/data`. The symlink-aware inventory found 33 files or symlinks under `/data`; total blob scan size from the initial file-only pass was 1440196876 bytes.
+```text
+text-embeddings-router --model-id /data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae --max-batch-tokens 8192
+```
 
-## USER-bge-m3 Cached Files
+Why this works:
 
-The current model snapshot contains the files needed for Candle/safetensors startup:
+- Official TEI CLI docs say `--model-id` may be a local directory containing model files saved by Transformers or Sentence Transformers.
+- Indexed TEI source shows local paths take the local-model branch and set `api_repo=None`; Hub IDs use `ApiBuilder`, `download_artifacts`, and later allow the ORT/ONNX probe path.
+- The cached `/data` snapshot contains the required USER-bge-m3 safetensors/tokenizer/config files.
+- The local-path proof reached TEI healthy and passed fd/direct TEI embedding smoke.
+
+## Cache Inventory
+
+`fd_tei` mounts Docker volume `fd_tei_data` at `/data`. Symlink-aware inventory found the current model snapshot at:
+
+```text
+/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae
+```
+
+Important files present:
 
 | Path | Size bytes | Kind |
 |---|---:|---|
-| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/config.json` | 697 | L |
-| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/1_Pooling/config.json` | 297 | L |
-| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/model.safetensors` | 1436151696 | L |
-| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/tokenizer_config.json` | 1362 | L |
-| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/modules.json` | 349 | L |
-| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/tokenizer.json` | 3327728 | L |
-| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/sentence_bert_config.json` | 54 | L |
-| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/config_sentence_transformers.json` | 195 | L |
-
-Required-file counts from symlink-aware scan:
-
-```json
-{
-  "config.json": 4,
-  "tokenizer.json": 2,
-  "tokenizer_config.json": 1,
-  "special_tokens_map.json": 0,
-  "safetensors": 1,
-  "pooling_config": 2,
-  "modules.json": 1
-}
-```
+| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/config.json` | 697 | symlink |
+| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/1_Pooling/config.json` | 297 | symlink |
+| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/model.safetensors` | 1436151696 | symlink |
+| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/modules.json` | 349 | symlink |
+| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/tokenizer_config.json` | 1362 | symlink |
+| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/tokenizer.json` | 3327728 | symlink |
+| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/sentence_bert_config.json` | 54 | symlink |
+| `/data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae/config_sentence_transformers.json` | 195 | symlink |
 
 ONNX files found: `0`.
 
-## Candidate Decision
+## Candidate Outcomes
 
-Selected candidate for S03 controlled proof: add `HF_HUB_OFFLINE=1` to the TEI service environment.
+| Candidate | Outcome | Reason |
+|---|---|---|
+| Local snapshot path as `--model-id` | Validated | Reached TEI healthy in the controlled proof and avoids the Hub `api_repo` path. |
+| `HF_HUB_OFFLINE=1` with Hub ID | Rejected | TEI stayed unhealthy after the 15-minute proof timeout and still entered `Downloading onnx/model.onnx`. |
+| Add ONNX artifacts | Rejected | Reintroduces ONNX operational artifact scope removed in M042. |
+| Change `--dtype` | Rejected | Does not control backend selection and may alter numerical behavior. |
+| Build/switch Candle-only image | Future fallback | Larger supply-chain/build change; unnecessary after local-path proof passed. |
 
-Rationale:
+## Proof Result
 
-- M045 S01 found TEI currently starts from Hub repo ID and enters a slow ORT/ONNX missing-file probe before Candle fallback.
-- Hugging Face Hub docs state `HF_HUB_OFFLINE=1` prevents HTTP calls and uses only cached files.
-- The mounted `/data` cache contains the required USER-bge-m3 safetensors, tokenizer, pooling, module, and config files.
-- ONNX files are absent, which is expected and should remain true under fd's TEI-only posture.
+Local-path proof artifact: `benchmark-results/m045-tei-local-path-startup-proof.md`.
 
-Rejected options:
+Result summary:
 
-| Option | Reason |
-|---|---|
-| Add ONNX artifacts | Reintroduces ONNX operational artifact scope that M042 explicitly removed. |
-| Change `--dtype` | Does not appear to control ORT probing and may alter numerical behavior. |
-| Local model path immediately | More invasive than offline mode; keep as fallback if offline proof still probes remotely or fails. |
-| Build or switch to a Candle-only TEI image | Larger supply-chain/build change; no existing documented image variant was proven in S01. |
+- Container command: `--model-id /data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae --max-batch-tokens 8192`.
+- TEI container started: `2026-06-14T12:12:14Z`.
+- TEI became healthy: `2026-06-14T12:15:15Z`.
+- Approximate time to healthy from container start: about 3 minutes.
+- fd `/health`: HTTP 200, backend `tei`, model `deepvk/USER-bge-m3`, dimensions `1024`.
+- fd `/v1/embeddings`: HTTP 200, 1024-dimensional embedding.
+- direct TEI `/embeddings`: HTTP 200, 1024-dimensional embedding.
 
-## S03 Proof Plan
-
-Before performing any restart proof:
-
-1. Record current compose config and container start times.
-2. Apply the compose candidate only through tracked config, not ad-hoc container mutation.
-3. Capture TEI logs from process start until ready or timeout.
-4. Measure time to TEI health, fd readiness, and first fd embedding.
-5. Roll back by removing `HF_HUB_OFFLINE=1` if TEI fails because required files are not found.
-
-Success criteria:
-
-- TEI reaches healthy state substantially faster than the prior tens-of-minutes ORT download/probe path, or ONNX/ORT remote download warnings disappear/fail fast.
-- fd `/health` still reports backend `tei`, model `deepvk/USER-bge-m3`, dimensions `1024`.
-- fd `/v1/embeddings` returns a 1024-dimensional embedding.
-
-## Current Recommendation
-
-Proceed to prepare `docker-compose.yaml` with `HF_HUB_OFFLINE=1` for the TEI service. Do not restart in S02. S03 will be the controlled proof.
-
-## Compose Candidate Prepared
-
-`docker-compose.yaml` now includes the S03 candidate environment for the TEI service:
+TEI still logs an immediate local ORT failure because ONNX files are intentionally absent:
 
 ```text
-## compose tei environment candidate
-    environment:
-      HF_HOME: /data
-      HF_HUB_OFFLINE: "1"
-      HUGGINGFACE_HUB_CACHE: /data
-    healthcheck:
-\n## current running TEI env subset
-HF_HOME=/data
-HUGGINGFACE_HUB_CACHE=/data
-\n## current container started
-/fd_tei running health=healthy started=2026-06-14T09:24:48.743364832Z
-/fd_api running health=healthy started=2026-06-14T08:30:46.620802937Z
-/fd_redis running health=healthy started=2026-05-19T18:08:09.5269274Z
-
+Could not start ORT backend: File at `/data/.../onnx/model.onnx` does not exist
 ```
 
-Important: the running `fd_tei` container does **not** yet have `HF_HUB_OFFLINE=1`; this is expected because S02 did not restart or recreate TEI. S03 is the controlled proof slice.
+That failure is now local and fast. The prior long remote Hub probe/download path is avoided by using the local snapshot directory.
 
-## S02 Non Destructive Smoke
+## Operational Guidance
 
-```json
-{
-  "fd_health": {
-    "http_status": 200,
-    "runtime": {
-      "backend": "tei",
-      "model": "deepvk/USER-bge-m3",
-      "dimensions": 1024,
-      "production_default": true,
-      "cache_namespace": "v2"
-    },
-    "status": "ok"
-  },
-  "fd_ready": {
-    "http_status": 200,
-    "body": {
-      "status": "ready",
-      "time": "2026-06-14T11:37:00Z"
-    }
-  },
-  "fd_embedding": {
-    "http_status": 200,
-    "latency_ms": 492.09,
-    "embedding_len": 1024,
-    "model": "deepvk/USER-bge-m3"
-  },
-  "tei_embedding": {
-    "http_status": 200,
-    "latency_ms": 396.17,
-    "embedding_len": 1024
-  }
-}
-```
-
-S02 verification result: current runtime remains healthy and TEI-only while the candidate compose file is staged for a future controlled restart proof.
-
+- Keep the TEI Docker volume `tei_data` populated before using the local path command.
+- If the model snapshot changes, update the compose command to the new snapshot directory and run a controlled proof.
+- Do not add ONNX artifacts for this fd product path; ONNX remains future research only.
+- If TEI fails to start with the local path, rollback to the previous Hub ID command only as a temporary recovery path and expect slower startup behavior.

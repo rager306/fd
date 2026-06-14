@@ -33,15 +33,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
-### R028 — TEI startup must have a bounded, observable startup path without prolonged avoidable ORT/ONNX probing in the normal TEI-only deployment.
-- Class: operability
-- Status: active
-- Description: TEI startup must have a bounded, observable startup path without prolonged avoidable ORT/ONNX probing in the normal TEI-only deployment.
-- Why it matters: fd is now TEI-only; a healthy steady-state container is insufficient if restart/recreate can take tens of minutes due to external TEI backend probing.
-- Source: M045
-- Validation: A restart/startup proof records effective TEI command/config, logs from process start to ready, measured time to health/readiness, and whether ONNX/ORT probing is removed, bounded, or explicitly accepted with operator guidance.
-- Notes: Do not destructively restart the working TEI container until the plan defines capture windows and rollback.
-
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -270,6 +261,15 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M042 S02 evidence validates TEI-only current posture: `api/main.go` rejects non-TEI `EMBEDDING_BACKEND`; ONNX Go embedder/build-tag files, `Dockerfile.onnx`, and ONNX packaging workflow are removed; `api/go.mod`/`go.sum` no longer include ONNX/runtime tokenizer deps; docs/compose describe TEI-only current runtime; final gates passed in `benchmark-results/m042-s02-*`.
 - Notes: Historical ONNX benchmark/GSD artifacts remain as research history only.
 
+### R028 — TEI startup must have a bounded, observable startup path without prolonged avoidable ORT/ONNX probing in the normal TEI-only deployment.
+- Class: operability
+- Status: validated
+- Description: TEI startup must have a bounded, observable startup path without prolonged avoidable ORT/ONNX probing in the normal TEI-only deployment.
+- Why it matters: fd is now TEI-only; a healthy steady-state container is insufficient if restart/recreate can take tens of minutes due to external TEI backend probing.
+- Source: M045
+- Validation: M045 S03 local snapshot proof validates bounded TEI startup posture: TEI command uses cached local USER-bge-m3 snapshot path under `/data`, reached Docker health healthy at 2026-06-14T12:15:15 after container start 2026-06-14T12:12:14, fd `/health` and `/ready` passed, fd `/v1/embeddings` and direct TEI `/embeddings` returned 1024-dimensional embeddings. Evidence: `benchmark-results/m045-tei-local-path-startup-proof.md`.
+- Notes: The earlier `HF_HUB_OFFLINE=1` candidate failed and is rejected; local snapshot path is the validated mitigation.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -325,11 +325,11 @@ This file is the explicit capability and coverage contract for the project.
 | R025 | quality-attribute | validated | M043-dpr0cq/S03 | none | M043 S03: govulncheck CI step added and local govulncheck exits 0 with 0 reachable vulnerabilities; docs finalized. Evidence: benchmark-results/m043-s03-govulncheck-final.txt, docs/static-analysis-recommendation.md. |
 | R026 | integration | active | none | none | `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass. |
 | R027 | constraint | validated | M042-fjf2en/S02 | none | M042 S02 evidence validates TEI-only current posture: `api/main.go` rejects non-TEI `EMBEDDING_BACKEND`; ONNX Go embedder/build-tag files, `Dockerfile.onnx`, and ONNX packaging workflow are removed; `api/go.mod`/`go.sum` no longer include ONNX/runtime tokenizer deps; docs/compose describe TEI-only current runtime; final gates passed in `benchmark-results/m042-s02-*`. |
-| R028 | operability | active | none | none | A restart/startup proof records effective TEI command/config, logs from process start to ready, measured time to health/readiness, and whether ONNX/ORT probing is removed, bounded, or explicitly accepted with operator guidance. |
+| R028 | operability | validated | none | none | M045 S03 local snapshot proof validates bounded TEI startup posture: TEI command uses cached local USER-bge-m3 snapshot path under `/data`, reached Docker health healthy at 2026-06-14T12:15:15 after container start 2026-06-14T12:12:14, fd `/health` and `/ready` passed, fd `/v1/embeddings` and direct TEI `/embeddings` returned 1024-dimensional embeddings. Evidence: `benchmark-results/m045-tei-local-path-startup-proof.md`. |
 
 ## Coverage Summary
 
-- Active requirements: 4
+- Active requirements: 3
 - Mapped to slices: 2
-- Validated: 22 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027)
-- Unmapped active requirements: 2
+- Validated: 23 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028)
+- Unmapped active requirements: 1

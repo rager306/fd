@@ -10,11 +10,9 @@ services:
     environment:
       HF_HOME: /data
       HUGGINGFACE_HUB_CACHE: /data
-      # M045: startup mitigation candidate. The USER-bge-m3 files are
-      # cached in tei_data; offline mode should make missing ONNX probes
-      # fail fast instead of spending minutes on remote Hub requests.
-      HF_HUB_OFFLINE: "1"
-    command: --model-id deepvk/USER-bge-m3 --max-batch-tokens 8192
+    # M045: use the cached local snapshot path so TEI takes its local-model
+    # branch instead of the Hugging Face Hub/api_repo path that probes ONNX.
+    command: --model-id /data/models--deepvk--USER-bge-m3/snapshots/0cc6cfe48e260fb0474c753087a69369e88709ae --max-batch-tokens 8192
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 5s
