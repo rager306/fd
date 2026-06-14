@@ -1,0 +1,49 @@
+# S01: Non destructive TEI startup recon
+
+**Goal:** Understand current TEI startup behavior and mitigation options without restarting or replacing the running service.
+**Demo:** A recon artifact shows current TEI image command env model cache layout and startup log timeline, plus candidate knobs to test.
+
+## Must-Haves
+
+- Current compose config and container inspect evidence captured.
+- Recent TEI logs summarized from container start through ready where available.
+- Candidate TEI flags/env/model layout options identified from docs/help/safe inspection.
+- No container restart or service interruption performed.
+
+## Proof Level
+
+- This slice proves: artifact plus runtime read only evidence
+
+## Integration Closure
+
+Produces the candidate list consumed by S02.
+
+## Verification
+
+- Improves operator visibility into TEI startup phases and known warning signatures.
+
+## Tasks
+
+- [x] **T01: Captured current TEI runtime state without restarting containers.** `est:30m`
+  Collect read-only evidence from docker compose config, docker inspect, fd `/health`, fd `/ready`, fd embedding smoke, direct TEI embedding smoke, and container health state. Do not restart or recreate containers. Save a compact evidence artifact under benchmark-results or documents.
+  - Files: `documents/tei-startup-recon-m045.md`
+  - Verify: Read-only commands succeed and artifact contains image, command, env subset, health state, fd runtime block, and smoke results.
+
+- [x] **T02: Summarized TEI startup log sequence and ONNX/ORT probe pattern.** `est:45m`
+  Read recent TEI logs from current container and prior M042 log artifacts where available. Extract timestamped startup phases from container start to ready, ONNX/ORT warning sequence, and any missing-artifact URLs. Do not restart TEI.
+  - Files: `documents/tei-startup-recon-m045.md`
+  - Verify: Artifact includes a startup timeline and separates current-running evidence from historical M042 evidence.
+
+- [x] **T03: Identified safe TEI startup mitigation candidates from source/docs without destructive commands.** `est:60m`
+  Use current TEI image help/docs and public documentation lookup to identify flags/env/model layout options that may force Candle, skip ORT, preload safetensors, set revision, or otherwise avoid ONNX probing. Prefer non-destructive documentation and help inspection. Do not run blocked destructive docker commands.
+  - Files: `documents/tei-startup-recon-m045.md`
+  - Verify: Artifact includes candidate options with source, expected effect, risk, and whether it requires restart proof.
+
+- [x] **T04: Recommended offline-cache mitigation design for S02 and confirmed S01 stayed non-destructive.** `est:30m`
+  Synthesize T01-T03 into a recommendation for S02: config change to test, no-change limitation, or blocker requiring user confirmation before destructive proof. Include explicit non-restart verification evidence.
+  - Files: `documents/tei-startup-recon-m045.md`
+  - Verify: Artifact has a recommendation, next-step decision, and confirms no restart/recreate occurred during S01.
+
+## Files Likely Touched
+
+- documents/tei-startup-recon-m045.md

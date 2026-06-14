@@ -24,15 +24,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: D045 фиксирует cache-hot трактовку T-P-1..T-P-5. `tools/verify_fd_v2_perf.sh` prewarm-ит measured payload через real inference и затем требует `X-Cache: HIT` для latency cases. Evidence: `benchmark-results/fd-v2-perf-validation-m041-s04.md` PASS (batch=1 p95 2.236ms, batch=10 p95 3.468ms, batch=32 p95 7.595ms, sequential/concurrent/cache HIT pass) плюс non-blocking cache-miss diagnostics.
 - Notes: Real cache-miss TEI CPU latency is intentionally diagnostic only for M041 S04; backend remediation was explicitly descoped by the user.
 
-### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
-- Class: quality-attribute
-- Status: active
-- Description: fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
-- Why it matters: TEI queue_time=2.7s создаёт sequential bottleneck: каждый chunk of 32 ждёт ~6s. Async pipeline в fd позволит параллельно слать несколько chunks — TEI может обрабатывать max_batch_requests=4 sub-batches параллельно. Reduction с 25s до 10s = 60% improvement для batch=128, без изменения TEI config.
-- Source: M041-4tw0w7 S04 perf measurement; M042 CONTEXT decision on bounded concurrency
-- Primary owning slice: M042-fjf2en/S02
-- Validation: tools/verify_fd_async_perf.sh: FD_ASYNC_CHUNKS=true vs false perf comparison. Cold path batch=128 ≤10s (was 25s sequential). Cold path batch=32 ≤4s (was 6s sequential). Cache hit path не regressed (≤5ms per request). Benchmark artifact в benchmark-results/fd-v2-async-perf-m042.md.
-
 ### R026 — Upgrade fd `/openapi.json` and `/docs` contract from OpenAPI 3.1.0 to OAS 3.2.0, including verifier and validation evidence.
 - Class: integration
 - Status: active
@@ -41,6 +32,15 @@ This file is the explicit capability and coverage contract for the project.
 - Source: User follow-up after reviewing https://spec.openapis.org/oas/v3.2.0.html#openapi-specification
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
+
+### R028 — TEI startup must have a bounded, observable startup path without prolonged avoidable ORT/ONNX probing in the normal TEI-only deployment.
+- Class: operability
+- Status: active
+- Description: TEI startup must have a bounded, observable startup path without prolonged avoidable ORT/ONNX probing in the normal TEI-only deployment.
+- Why it matters: fd is now TEI-only; a healthy steady-state container is insufficient if restart/recreate can take tens of minutes due to external TEI backend probing.
+- Source: M045
+- Validation: A restart/startup proof records effective TEI command/config, logs from process start to ready, measured time to health/readiness, and whether ONNX/ORT probing is removed, bounded, or explicitly accepted with operator guidance.
+- Notes: Do not destructively restart the working TEI container until the plan defines capture windows and rollback.
 
 ## Validated
 
@@ -272,6 +272,16 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Deferred
 
+### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
+- Class: quality-attribute
+- Status: deferred
+- Description: fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
+- Why it matters: TEI queue_time=2.7s создаёт sequential bottleneck: каждый chunk of 32 ждёт ~6s. Async pipeline в fd позволит параллельно слать несколько chunks — TEI может обрабатывать max_batch_requests=4 sub-batches параллельно. Reduction с 25s до 10s = 60% improvement для batch=128, без изменения TEI config.
+- Source: M041-4tw0w7 S04 perf measurement; M042 CONTEXT decision on bounded concurrency
+- Primary owning slice: M042-fjf2en/S02
+- Validation: Deferred by M042 S01/S02 RCA and user decision: before implementing async chunking, fd first removed ONNX active-path complexity and documented TEI startup/queue behavior. Parallel chunking metrics were incomplete after destructive restart profiling; async chunking requires a separate safe measurement/implementation pass if still needed.
+- Notes: The accepted M042 S02 outcome is TEI-only active-path cleanup, not async chunking implementation.
+
 ### R022 — Opt-in ONNX mode (FD_BACKEND=onnx, requires onnx build tag) — fd serves embeddings из Go ONNX runtime вместо TEI HTTP. Per M019: cold latency 8.3ms, warm 1.19ms, throughput 858 req/s. Опционально через env, default off (TEI остаётся production per R001/M015). fd binary должен билдиться с onnx tag без regression: все M041 acceptance criteria должны pass в обоих режимах.
 - Class: quality-attribute
 - Status: deferred
@@ -308,17 +318,18 @@ This file is the explicit capability and coverage contract for the project.
 | R018 | compliance/security | validated | M041-4tw0w7/S05 | none | Unit evidence in `benchmark-results/m041-s05-t02-go-test.txt` validates FD_API_KEY bearer auth: missing/wrong token -> 401 unauthorized, correct token -> 200, public endpoints skipped. `benchmark-results/fd-v2-validation-m041.md` validates CORS preflight (T027) and docs/openapi public surfaces. |
 | R019 | quality-attribute | validated | M041-4tw0w7/S05 | none | `benchmark-results/fd-v2-validation-m041.md` 45/45 PASS validates `/openapi.json` (T010/T043), `/docs` (T011), `/v1/batch` (T038-T040), ETag/Cache-Control and 304 (T024-T026), `/v1/traces` (T012/T042), and cache-hot performance checks (T044-T045). T03/T05/T06/T07 task evidence covers rate limiting, cache validators, traces, OpenAPI validator, and docs unit tests. |
 | R020 | quality-attribute | validated | M042-fjf2en/S01 | none | `documents/te-perf-root-cause-m042.md` explains TEI queue/startup behavior with T01/T02 evidence: direct TEI batch=32 queue p50 ~2434.795ms despite `max_concurrent_requests=512`, and restart/recreate spent ~48 minutes from `Starting model backend` to `Ready` after delayed missing-ONNX ORT fallback. The RCA includes hypothesis tree, verdict, and TEI-first recommendation. |
-| R021 | quality-attribute | active | M042-fjf2en/S02 | none | tools/verify_fd_async_perf.sh: FD_ASYNC_CHUNKS=true vs false perf comparison. Cold path batch=128 ≤10s (was 25s sequential). Cold path batch=32 ≤4s (was 6s sequential). Cache hit path не regressed (≤5ms per request). Benchmark artifact в benchmark-results/fd-v2-async-perf-m042.md. |
+| R021 | quality-attribute | deferred | M042-fjf2en/S02 | none | Deferred by M042 S01/S02 RCA and user decision: before implementing async chunking, fd first removed ONNX active-path complexity and documented TEI startup/queue behavior. Parallel chunking metrics were incomplete after destructive restart profiling; async chunking requires a separate safe measurement/implementation pass if still needed. |
 | R022 | quality-attribute | deferred | M042-fjf2en/S03 | none | Deferred by user decision during M042: ONNX will not be implemented as current opt-in runtime. Prior M019 evidence remains research-only, not production readiness proof. |
 | R023 | quality-attribute | validated | M043-dpr0cq/S01 | none | M043 S01: Tier 1 linters enabled and fixed; final lint 0 issues. Evidence: docs/static-analysis-phase1-report-m043.md, benchmark-results/m043-tier1-baseline.txt. |
 | R024 | quality-attribute | validated | M043-dpr0cq/S02 | none | M043 S02: Tier 2 linters enabled; 17 baseline issues fixed; final lint 0 issues. Evidence: docs/static-analysis-phase2-report-m043.md, benchmark-results/m043-s02-final-lint.txt. |
 | R025 | quality-attribute | validated | M043-dpr0cq/S03 | none | M043 S03: govulncheck CI step added and local govulncheck exits 0 with 0 reachable vulnerabilities; docs finalized. Evidence: benchmark-results/m043-s03-govulncheck-final.txt, docs/static-analysis-recommendation.md. |
 | R026 | integration | active | none | none | `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass. |
 | R027 | constraint | validated | M042-fjf2en/S02 | none | M042 S02 evidence validates TEI-only current posture: `api/main.go` rejects non-TEI `EMBEDDING_BACKEND`; ONNX Go embedder/build-tag files, `Dockerfile.onnx`, and ONNX packaging workflow are removed; `api/go.mod`/`go.sum` no longer include ONNX/runtime tokenizer deps; docs/compose describe TEI-only current runtime; final gates passed in `benchmark-results/m042-s02-*`. |
+| R028 | operability | active | none | none | A restart/startup proof records effective TEI command/config, logs from process start to ready, measured time to health/readiness, and whether ONNX/ORT probing is removed, bounded, or explicitly accepted with operator guidance. |
 
 ## Coverage Summary
 
 - Active requirements: 4
-- Mapped to slices: 3
+- Mapped to slices: 2
 - Validated: 22 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027)
-- Unmapped active requirements: 1
+- Unmapped active requirements: 2
