@@ -11,11 +11,14 @@ import (
 )
 
 const (
-	bearerPrefix   = "Bearer "
-	publicLivePath = "/live"
-	publicMetrics  = "/metrics"
-	publicDocs     = "/docs"
-	publicOpenAPI  = "/openapi.json"
+	bearerPrefix        = "Bearer "
+	publicLivePath      = "/live"
+	publicReadyPath     = "/ready"
+	publicHealthPath    = "/health"
+	publicV1Healthcheck = "/v1/healthcheck"
+	publicMetrics       = "/metrics"
+	publicDocs          = "/docs"
+	publicOpenAPI       = "/openapi.json"
 )
 
 // APIKeyAuthFromEnv returns auth middleware configured from FD_API_KEY.
@@ -51,6 +54,9 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 
 func isAuthPublicPath(path string) bool {
 	return path == publicLivePath ||
+		path == publicReadyPath ||
+		path == publicHealthPath ||
+		path == publicV1Healthcheck ||
 		path == publicMetrics ||
 		path == publicOpenAPI ||
 		path == publicDocs ||
