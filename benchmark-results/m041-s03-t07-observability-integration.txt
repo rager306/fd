@@ -1,0 +1,40 @@
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/T-H-7_health_deep
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/T-H-8_live
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/T-H-9_ready
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/T-H-10_version
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/T-E-1_version_exists
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/T-E-2_info_exists
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/T-E-3_metrics_exists
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/T-E-4_healthcheck_alias
+=== RUN   TestFdV2ObservabilityEndpointsAndHeaders/warmup_exists
+--- PASS: TestFdV2ObservabilityEndpointsAndHeaders (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/T-H-7_health_deep (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/T-H-8_live (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/T-H-9_ready (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/T-H-10_version (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/T-E-1_version_exists (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/T-E-2_info_exists (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/T-E-3_metrics_exists (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/T-E-4_healthcheck_alias (0.00s)
+    --- PASS: TestFdV2ObservabilityEndpointsAndHeaders/warmup_exists (0.00s)
+=== RUN   TestFdV2ObservabilityHeaders
+=== RUN   TestFdV2ObservabilityHeaders/T-HDR-1_server
+=== RUN   TestFdV2ObservabilityHeaders/T-HDR-2_request_id_echo
+=== RUN   TestFdV2ObservabilityHeaders/T-HDR-3_request_id_generated
+=== RUN   TestFdV2ObservabilityHeaders/T-HDR-4_model_id
+=== RUN   TestFdV2ObservabilityHeaders/T-HDR-5_dimensions
+=== RUN   TestFdV2ObservabilityHeaders/T-HDR-8_retry_after
+=== RUN   TestFdV2ObservabilityHeaders/T-HDR-9_connection_keep_alive
+--- PASS: TestFdV2ObservabilityHeaders (0.00s)
+    --- PASS: TestFdV2ObservabilityHeaders/T-HDR-1_server (0.00s)
+    --- PASS: TestFdV2ObservabilityHeaders/T-HDR-2_request_id_echo (0.00s)
+    --- PASS: TestFdV2ObservabilityHeaders/T-HDR-3_request_id_generated (0.00s)
+    --- PASS: TestFdV2ObservabilityHeaders/T-HDR-4_model_id (0.00s)
+    --- PASS: TestFdV2ObservabilityHeaders/T-HDR-5_dimensions (0.00s)
+    --- PASS: TestFdV2ObservabilityHeaders/T-HDR-8_retry_after (0.00s)
+    --- PASS: TestFdV2ObservabilityHeaders/T-HDR-9_connection_keep_alive (0.00s)
+=== RUN   TestFdV2ObservabilityHealthPayload
+--- PASS: TestFdV2ObservabilityHealthPayload (0.00s)
+PASS
+ok  	fd-api	(cached)

@@ -62,7 +62,7 @@ Metrics middleware инкрементит counters/histograms на каждом 
   - Files: `api/handlers/warmup.go`, `api/handlers/warmup_test.go`
   - Verify: Unit tests: GET /warmup → 200 status:ready после warmup, GET → 200 status:warming_up, progress:<fraction> во время. POST /warmup → 200 если ready, 202 если warming.
 
-- [ ] **T07: Integration tests для endpoints и headers** `est:3h`
+- [x] **T07: Added executable observability integration coverage for health/version/info/metrics/warmup endpoints and response headers.** `est:3h`
   tests/integration/fd_v2_observability_test.go: автоматизировать Section 5.1 T-H-7..T-H-10, Section 5.3 T-HDR-1..T-HDR-10 (кроме T-HDR-6/7 которые зависят от cache в S04), Section 5.5 T-E-1..T-E-3 (endpoints existence). Спека: docs/fd-v2.md Section 5.1, 5.3, 5.5.
   - Files: `tests/integration/fd_v2_observability_test.go`
   - Verify: go test ./tests/integration/... -run TestFdV2Observability -v: все 22 test cases pass.
