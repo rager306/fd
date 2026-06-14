@@ -25,7 +25,7 @@
 - [x] **S04: Exposure posture policy** `risk:high` `depends:[S01]`
   > After this: Default local compose remains usable for same-host development, while accidental non-loopback unauthenticated inference and sensitive diagnostics are blocked or explicitly opted in.
 
-- [ ] **S05: LocalCache correctness** `risk:medium` `depends:[S01]`
+- [x] **S05: LocalCache correctness** `risk:medium` `depends:[S01]`
   > After this: Race-enabled cache tests prove bounded size/accounting and clean shutdown under concurrent access.
 
 - [ ] **S06: Audit closure and residual plan** `risk:medium` `depends:[S02,S03,S04,S05]`

@@ -33,15 +33,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
-### R031 — L1 cache implementation must have bounded growth, race-safe size/accounting, and deterministic shutdown behavior.
-- Class: quality-attribute
-- Status: active
-- Description: L1 cache implementation must have bounded growth, race-safe size/accounting, and deterministic shutdown behavior.
-- Why it matters: Issue #3 flags LocalCache size drift/race/lifecycle risks that could lead to unbounded memory growth or goroutine leaks under concurrent load.
-- Source: GitHub issue #3 audit
-- Primary owning slice: M046-zqzcu6
-- Validation: Race-enabled tests and capacity tests prove no size drift beyond maxSize, eviction remains bounded, and Close/shutdown stops background eviction.
-
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -299,6 +290,16 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Validated by M046-zqzcu6/S04. Evidence: `benchmark-results/m046-s04-exposure-posture.md`; targeted auth/rate-limit/proxy tests pass; `go test ./...` passes with 279 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verifies probes public, `/v1/embeddings` protected without `FD_API_KEY`, `/metrics` protected, and OpenAPI public.
 - Notes: S04 closes issue #3 P0 #1 and P1 #7/#8. Health/readiness endpoints remain unauthenticated by prior explicit decision.
 
+### R031 — L1 cache implementation must have bounded growth, race-safe size/accounting, and deterministic shutdown behavior.
+- Class: quality-attribute
+- Status: validated
+- Description: L1 cache implementation must have bounded growth, race-safe size/accounting, and deterministic shutdown behavior.
+- Why it matters: Issue #3 flags LocalCache size drift/race/lifecycle risks that could lead to unbounded memory growth or goroutine leaks under concurrent load.
+- Source: GitHub issue #3 audit
+- Primary owning slice: M046-zqzcu6
+- Validation: Validated by M046-zqzcu6/S05. Evidence: `benchmark-results/m046-s05-localcache-correctness.md`; targeted LocalCache lifecycle/concurrency tests pass; `go test -race ./cache -run TestLocalCache` passes; full `go test ./...` passes with 281 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; static proof confirms no `sync.Map` or separate size counter and API shutdown closes LocalCache.
+- Notes: S05 closes issue #3 P1 #10. LocalCache now has a single lock-owned map, derived size, idempotent Close, and shutdown integration.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -357,11 +358,11 @@ This file is the explicit capability and coverage contract for the project.
 | R028 | operability | validated | none | none | M045 S03 local snapshot proof validates bounded TEI startup posture: TEI command uses cached local USER-bge-m3 snapshot path under `/data`, reached Docker health healthy at 2026-06-14T12:15:15 after container start 2026-06-14T12:12:14, fd `/health` and `/ready` passed, fd `/v1/embeddings` and direct TEI `/embeddings` returned 1024-dimensional embeddings. Evidence: `benchmark-results/m045-tei-local-path-startup-proof.md`. |
 | R029 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S02 and S03. S02 proved body, rate-limit, lifecycle, and input guardrails before backend work. S03 proved batch endpoints now batch cache misses into bounded TEI calls, preserve response ordering, backfill cache, and retain valid runtime behavior. |
 | R030 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S04. Evidence: `benchmark-results/m046-s04-exposure-posture.md`; targeted auth/rate-limit/proxy tests pass; `go test ./...` passes with 279 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verifies probes public, `/v1/embeddings` protected without `FD_API_KEY`, `/metrics` protected, and OpenAPI public. |
-| R031 | quality-attribute | active | M046-zqzcu6 | none | Race-enabled tests and capacity tests prove no size drift beyond maxSize, eviction remains bounded, and Close/shutdown stops background eviction. |
+| R031 | quality-attribute | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S05. Evidence: `benchmark-results/m046-s05-localcache-correctness.md`; targeted LocalCache lifecycle/concurrency tests pass; `go test -race ./cache -run TestLocalCache` passes; full `go test ./...` passes with 281 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; static proof confirms no `sync.Map` or separate size counter and API shutdown closes LocalCache. |
 
 ## Coverage Summary
 
-- Active requirements: 4
+- Active requirements: 3
 - Mapped to slices: 2
-- Validated: 25 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030)
+- Validated: 26 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031)
 - Unmapped active requirements: 1

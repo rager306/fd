@@ -2,9 +2,49 @@ package cache
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 )
+
+func TestLocalCache_CloseIsIdempotent(t *testing.T) {
+	c := NewLocalCache(1000, time.Millisecond)
+	if err := c.Close(); err != nil {
+		t.Fatalf("first Close returned error: %v", err)
+	}
+	if err := c.Close(); err != nil {
+		t.Fatalf("second Close returned error: %v", err)
+	}
+}
+
+func TestLocalCache_ConcurrentOverwriteKeepsSingleEntry(t *testing.T) {
+	c := NewLocalCache(1000, time.Minute)
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Fatalf("Close returned error: %v", err)
+		}
+	}()
+	ctx := context.Background()
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+	for i := 0; i < 200; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			c.Set(ctx, "same-key", []byte{1}, time.Minute)
+		}()
+	}
+	close(start)
+	wg.Wait()
+
+	if c.currentSize() != 1 {
+		t.Fatalf("size=%d, want 1 after concurrent overwrites", c.currentSize())
+	}
+	if _, ok := c.Get(ctx, "same-key"); !ok {
+		t.Fatal("expected same-key to be retained")
+	}
+}
 
 func TestLocalCache_SetAndGet(t *testing.T) {
 	c := NewLocalCache(1000, 30*time.Second)
