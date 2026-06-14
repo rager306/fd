@@ -10,9 +10,13 @@ RUN go mod download
 # Source
 COPY . .
 
+ARG VERSION=dev
+ARG BUILD_HASH=unknown
+ARG BUILD_DATE=unknown
+
 # Build — static binary (no CGO, no libc deps)
 RUN CGO_ENABLED=0 GOOS=linux go build \
-    -ldflags="-s -w" \
+    -ldflags="-s -w -X main.Version=${VERSION} -X main.BuildHash=${BUILD_HASH} -X main.BuildDate=${BUILD_DATE}" \
     -trimpath \
     -o /app/api .
 

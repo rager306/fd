@@ -16,6 +16,7 @@ import (
 	"syscall"
 	"time"
 
+	"fd-api/buildinfo"
 	"fd-api/cache"
 	"fd-api/embed"
 	"fd-api/handlers"
@@ -24,6 +25,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+// Version is injected by release builds with -ldflags "-X main.Version=...".
+var Version = buildinfo.DefaultVersion
+
+// BuildHash is injected by release builds with -ldflags "-X main.BuildHash=...".
+var BuildHash = buildinfo.DefaultBuildHash
+
+// BuildDate is injected by release builds with -ldflags "-X main.BuildDate=...".
+var BuildDate = buildinfo.DefaultBuildDate
 
 func getEnv(key, defaultValue string) string {
 	if v := os.Getenv(key); v != "" {

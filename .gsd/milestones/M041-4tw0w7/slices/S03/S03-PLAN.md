@@ -1,7 +1,7 @@
 # S03: Observability surface endpoints headers and deep health
 
 **Goal:** Observability surface: endpoints /version, /info, /metrics (Prometheus), /v1/healthcheck, deep /health + обязательные response headers (Server, X-Request-Id, X-Model-Id, X-Dimensions, X-Cache, Retry-After, Connection). Закрывает R-P0-7..R-P0-10, R-P0-11..R-P0-17, R-P1-1, R-P1-2, R-P1-3.
-**Demo:** After this, /version возвращает semver+model+build_hash+uptime, /info возвращает список моделей с dims/limits/device/loaded/warmup, /metrics возвращает Prometheus text format с requests_total, request_duration_seconds histogram, batch_size, cache_hits (после S04), errors_total, model_loaded gauge, /v1/healthcheck работает как alias, и каждый response несёт Server, X-Request-Id, X-Model-Id, X-Dimensions, Connection: keep-alive, Retry-After на 429/503.
+**Demo:** After this, /version, /info, /metrics, /v1/healthcheck, deep /health, /warmup, and response headers are implemented and tested; new exported observability APIs have godoc and pass M043 lint/test/govulncheck gates.
 
 ## Must-Haves
 
@@ -32,7 +32,7 @@ Metrics middleware инкрементит counters/histograms на каждом 
 
 ## Tasks
 
-- [ ] **T01: Build/version metadata injection** `est:2h`
+- [x] **T01: Added buildinfo metadata package and ldflags wiring for version, build hash, and build date.** `est:2h`
   api/buildinfo package: type Info { Service, Version, Model, ModelVersion, BuildHash, BuildDate, StartedAt, Uptime() time.Duration }. Значения передаются через ldflags при сборке (-X main.Version=2.0.0 -X main.BuildHash=$(git rev-parse --short HEAD) -X main.BuildDate=2026-06-13T00:00:00Z). Default values если ldflags не заданы. Обновить Dockerfile (если нужно) и Makefile (если есть) для передачи ldflags.
   - Files: `api/buildinfo/info.go`, `api/buildinfo/info_test.go`, `Dockerfile`
   - Verify: go test ./api/buildinfo/...: Uptime корректно увеличивается. Build с -ldflags передаёт значения в бинарь.
