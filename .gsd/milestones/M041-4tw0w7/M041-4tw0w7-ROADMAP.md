@@ -19,7 +19,7 @@
 - [x] **S01: Validation and OpenAI style error envelope** `risk:low` `depends:[]`
   > After this: After this, /v1/embeddings возвращает OpenAI style error envelope с machine readable code/type, oversized batch и oversized input дают 413 (не 500), malformed JSON даёт clean 400 invalid_json (не сырую Gin ошибку), и все 16 кодов из Section 3 catalog работают.
 
-- [ ] **S02: Lifecycle warmup readiness and graceful shutdown** `risk:medium` `depends:[]`
+- [x] **S02: Lifecycle warmup readiness and graceful shutdown** `risk:medium` `depends:[]`
   > After this: After this, fd pre-warms model at startup, /live is cheap, /ready transitions 503 to 200 after warmup, shutdown gates new requests with 503+Retry-After, and the slice passes M043 gates: go test ./..., golangci-lint 18 linters, no reachable govulncheck findings.
 
 - [ ] **S03: Observability surface endpoints headers and deep health** `risk:low` `depends:[S01,S02]`

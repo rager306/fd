@@ -13,15 +13,6 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M041-4tw0w7/S01
 - Validation: 45 test cases Section 5 (T-E-1..T-E-15): все 400/413/405/500 ошибки возвращают правильный code/type, batch_too_large и input_too_long НЕ возвращают 500, валидация происходит ДО model inference.
 
-### R011 — Сервис должен поддерживать корректный lifecycle: pre-warm model при старте (1 dummy inference), отдавать /live (cheap) и /ready (200 только после warmup), маппить model-not-loaded/overloaded на 503+Retry-After, и завершаться по SIGTERM за ≤30s с in-flight drain. Реализует R-P0-3, R-P0-4, R-P0-5.
-- Class: operability
-- Status: active
-- Description: Сервис должен поддерживать корректный lifecycle: pre-warm model при старте (1 dummy inference), отдавать /live (cheap) и /ready (200 только после warmup), маппить model-not-loaded/overloaded на 503+Retry-After, и завершаться по SIGTERM за ≤30s с in-flight drain. Реализует R-P0-3, R-P0-4, R-P0-5.
-- Why it matters: Сейчас при cold start caller получает 500 silent timeout; SIGTERM рвёт in-flight запросы; нет k8s probe surface.
-- Source: /root/fd-v2.md Section 2.1 P0 lifecycle + Section 6.1 startup sequence + Section 6.3 F-1/F-5
-- Primary owning slice: M041-4tw0w7/S02
-- Validation: Startup test: /live=200 сразу, /ready=503 до warmup, /ready=200 после; SIGTERM test: новые запросы получают 503+shutting_down+Retry-After:30, in-flight завершаются нормально, exit 0.
-
 ### R012 — На warm model с включённым cache: 1 input p95 < 50ms, 10 inputs p95 < 200ms, 32 inputs (max batch) p95 < 1000ms, 100 sequential requests без ошибок, 4 concurrent callers × 8 inputs < 2s total. Реализует R-P0-6.
 - Class: quality-attribute
 - Status: active
@@ -223,6 +214,16 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M040-pbp9z1 S01 contract and health metadata establish runtime identity and no-silent-fallback rules; /v1/embeddings request model is compatibility metadata, not a selector. S04 final stance and verifier require no request-level fallback and a smoke embedding readiness check beyond /health.
 - Notes: Validated for current service semantics: runtime fallback or model switching must be an operator-level restart/reconfiguration path, not hidden per-request behavior.
 
+### R011 — Сервис должен поддерживать корректный lifecycle: pre-warm model при старте (1 dummy inference), отдавать /live (cheap) и /ready (200 только после warmup), маппить model-not-loaded/overloaded на 503+Retry-After, и завершаться по SIGTERM за ≤30s с in-flight drain. Реализует R-P0-3, R-P0-4, R-P0-5.
+- Class: operability
+- Status: validated
+- Description: Сервис должен поддерживать корректный lifecycle: pre-warm model при старте (1 dummy inference), отдавать /live (cheap) и /ready (200 только после warmup), маппить model-not-loaded/overloaded на 503+Retry-After, и завершаться по SIGTERM за ≤30s с in-flight drain. Реализует R-P0-3, R-P0-4, R-P0-5.
+- Why it matters: Сейчас при cold start caller получает 500 silent timeout; SIGTERM рвёт in-flight запросы; нет k8s probe surface.
+- Source: /root/fd-v2.md Section 2.1 P0 lifecycle + Section 6.1 startup sequence + Section 6.3 F-1/F-5
+- Primary owning slice: M041-4tw0w7/S02
+- Validation: Validated by M041-4tw0w7/S02. Evidence: `benchmark-results/m041-s02-t06-lifecycle-integration.txt` covers startup readiness, F-1 model_not_loaded, F-2 model_overloaded via FD_MAX_IN_FLIGHT, and F-5 shutdown drain; `benchmark-results/m041-s02-t06-go-test.txt`, `m041-s02-t06-lint.txt`, and `m041-s02-t06-govulncheck.txt` pass the mandatory Go gates.
+- Notes: S02 implements lifecycle pre-warm, /live, /ready, /v1/embeddings lifecycle gate, graceful SIGTERM/SIGINT drain, and default-off capacity overload control via FD_MAX_IN_FLIGHT.
+
 ### R023 — Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
 - Class: quality-attribute
 - Status: validated
@@ -268,7 +269,7 @@ This file is the explicit capability and coverage contract for the project.
 | R008 | constraint | validated | M040-pbp9z1/S03 | M040-pbp9z1/S04 | M040-pbp9z1/S03 produced `benchmark-results/fd-legal-model-quick-gate-m040-s03.md`, validated by `tools/verify_legal_model_quick_gate_artifact.py --max-candidates 2` plus closeout schema checks. The artifact caps candidates to BAAI/bge-m3 and intfloat/multilingual-e5-large, records sanitized legal-corpus hashes/counts, rejects cross-model cosine parity as a replacement criterion, and defers candidate replacement fail-closed because baseline `/health` lacks runtime metadata. |
 | R009 | operability | validated | M040-pbp9z1/S01 | M040-pbp9z1/S04 | M040-pbp9z1 S01 contract and health metadata establish runtime identity and no-silent-fallback rules; /v1/embeddings request model is compatibility metadata, not a selector. S04 final stance and verifier require no request-level fallback and a smoke embedding readiness check beyond /health. |
 | R010 | core-capability | active | M041-4tw0w7/S01 | none | 45 test cases Section 5 (T-E-1..T-E-15): все 400/413/405/500 ошибки возвращают правильный code/type, batch_too_large и input_too_long НЕ возвращают 500, валидация происходит ДО model inference. |
-| R011 | operability | active | M041-4tw0w7/S02 | none | Startup test: /live=200 сразу, /ready=503 до warmup, /ready=200 после; SIGTERM test: новые запросы получают 503+shutting_down+Retry-After:30, in-flight завершаются нормально, exit 0. |
+| R011 | operability | validated | M041-4tw0w7/S02 | none | Validated by M041-4tw0w7/S02. Evidence: `benchmark-results/m041-s02-t06-lifecycle-integration.txt` covers startup readiness, F-1 model_not_loaded, F-2 model_overloaded via FD_MAX_IN_FLIGHT, and F-5 shutdown drain; `benchmark-results/m041-s02-t06-go-test.txt`, `m041-s02-t06-lint.txt`, and `m041-s02-t06-govulncheck.txt` pass the mandatory Go gates. |
 | R012 | quality-attribute | active | M041-4tw0w7/S04 | M041-4tw0w7/S02 | Section 5.4 T-P-1..T-P-5 пройдены с p95 метриками и X-Cache: HIT в кэш-попадающих сценариях; benchmark-results/ artifact зафиксирован. |
 | R013 | failure-visibility | active | M041-4tw0w7/S03 | none | Section 5.5 T-E-1..T-E-5 + T-H-7..T-H-10 все возвращают 200 с ожидаемым shape; /metrics отдаёт text/plain с требуемыми counter/histogram/gauge. |
 | R014 | operability | active | M041-4tw0w7/S03 | none | Section 5.3 T-HDR-1..T-HDR-10 — все headers присутствуют; X-Request-Id echo работает; Retry-After присутствует на 503. |
@@ -286,7 +287,7 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Coverage Summary
 
-- Active requirements: 13
-- Mapped to slices: 13
-- Validated: 12 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R023, R024, R025)
+- Active requirements: 12
+- Mapped to slices: 12
+- Validated: 13 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R023, R024, R025)
 - Unmapped active requirements: 0
