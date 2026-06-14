@@ -51,6 +51,15 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M042-fjf2en/S03
 - Validation: (1) ONNX binary builds clean с -tags onnx, (2) FD_BACKEND=onnx switches runtime, (3) cold path batch=32 ≤500ms (was 6s TEI), (4) warm path batch=1 ≤10ms (was 1.6ms TEI — comparable), (5) regression suite (all M041 acceptance tests) pass в обоих режимах, (6) legal quality gate deferred — documented в ONNX mode docs с reference to M015/M016.
 
+### R026 — Upgrade fd `/openapi.json` and `/docs` contract from OpenAPI 3.1.0 to OAS 3.2.0, including verifier and validation evidence.
+- Class: integration
+- Status: active
+- Description: Upgrade fd `/openapi.json` and `/docs` contract from OpenAPI 3.1.0 to OAS 3.2.0, including verifier and validation evidence.
+- Why it matters: OAS 3.2.0 is the newer official OpenAPI specification version; adopting it keeps fd's schema surface current while preserving M041's already-validated 3.1.0 baseline as historical evidence.
+- Source: User follow-up after reviewing https://spec.openapis.org/oas/v3.2.0.html#openapi-specification
+- Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
+- Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
+
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -292,10 +301,11 @@ This file is the explicit capability and coverage contract for the project.
 | R023 | quality-attribute | validated | M043-dpr0cq/S01 | none | M043 S01: Tier 1 linters enabled and fixed; final lint 0 issues. Evidence: docs/static-analysis-phase1-report-m043.md, benchmark-results/m043-tier1-baseline.txt. |
 | R024 | quality-attribute | validated | M043-dpr0cq/S02 | none | M043 S02: Tier 2 linters enabled; 17 baseline issues fixed; final lint 0 issues. Evidence: docs/static-analysis-phase2-report-m043.md, benchmark-results/m043-s02-final-lint.txt. |
 | R025 | quality-attribute | validated | M043-dpr0cq/S03 | none | M043 S03: govulncheck CI step added and local govulncheck exits 0 with 0 reachable vulnerabilities; docs finalized. Evidence: benchmark-results/m043-s03-govulncheck-final.txt, docs/static-analysis-recommendation.md. |
+| R026 | integration | active | none | none | `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass. |
 
 ## Coverage Summary
 
-- Active requirements: 5
+- Active requirements: 6
 - Mapped to slices: 5
 - Validated: 20 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R023, R024, R025)
-- Unmapped active requirements: 0
+- Unmapped active requirements: 1
