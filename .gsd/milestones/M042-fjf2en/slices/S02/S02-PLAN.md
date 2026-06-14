@@ -36,7 +36,7 @@ S02 consumes S01 RCA. It leaves fd in a coherent TEI-only current posture and pr
   - Files: `api/main.go`, `api/main_test.go`, `api/embed/`
   - Verify: Targeted Go tests for runtime config pass; TEI startup config still passes; ONNX selector is absent or fails closed as TEI-only.
 
-- [ ] **T03: Remove ONNX build dependency and artifact surfaces from active module** `est:1.5h`
+- [x] **T03: Removed active ONNX build-tagged embedder/runtime files, ONNX Dockerfile, and unused ONNX/tokenizer dependencies from the default module.** `est:1.5h`
   Remove ONNX-only build artifacts, Dockerfile paths, module dependencies, and tests that are no longer part of active product scope, or quarantine them in documentation-only research artifacts if deletion is unsafe. Run `go mod tidy` if dependencies are removed. Preserve historical benchmark/docs files.
   - Files: `api/go.mod`, `api/go.sum`, `Dockerfile.onnx`, `api/embed/onnx*.go`, `api/embed/*onnx*_test.go`, `tools/*onnx*`
   - Verify: Default `go test ./...` works without ONNX runtime/toolchain dependencies; `go list -deps ./...` no longer includes ONNX runtime packages unless justified.
