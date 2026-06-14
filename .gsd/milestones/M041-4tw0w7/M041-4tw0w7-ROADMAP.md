@@ -22,7 +22,7 @@
 - [x] **S02: Lifecycle warmup readiness and graceful shutdown** `risk:medium` `depends:[]`
   > After this: After this, fd pre-warms model at startup, /live is cheap, /ready transitions 503 to 200 after warmup, shutdown gates new requests with 503+Retry-After, and the slice passes M043 gates: go test ./..., golangci-lint 18 linters, no reachable govulncheck findings.
 
-- [ ] **S03: Observability surface endpoints headers and deep health** `risk:low` `depends:[S01,S02]`
+- [x] **S03: Observability surface endpoints headers and deep health** `risk:low` `depends:[S01,S02]`
   > After this: After this, /version, /info, /metrics, /v1/healthcheck, deep /health, /warmup, and response headers are implemented and tested; new exported observability APIs have godoc and pass M043 lint/test/govulncheck gates.
 
 - [ ] **S04: Performance baseline and LRU cache** `risk:medium` `depends:[S02,S03]`

@@ -23,15 +23,6 @@ This file is the explicit capability and coverage contract for the project.
 - Supporting slices: M041-4tw0w7/S02
 - Validation: Section 5.4 T-P-1..T-P-5 пройдены с p95 метриками и X-Cache: HIT в кэш-попадающих сценариях; benchmark-results/ artifact зафиксирован.
 
-### R013 — Должны быть доступны: GET /version (semver+model+build_hash+uptime), GET /info или /v1/models (список моделей с dims/limits/device/loaded/warmup), GET /metrics (Prometheus text: requests_total, request_duration_seconds histogram, batch_size histogram, cache_hits_total, errors_total, model_loaded gauge), GET /v1/healthcheck (alias). Реализует R-P0-7, R-P0-8, R-P0-9, R-P0-10.
-- Class: failure-visibility
-- Status: active
-- Description: Должны быть доступны: GET /version (semver+model+build_hash+uptime), GET /info или /v1/models (список моделей с dims/limits/device/loaded/warmup), GET /metrics (Prometheus text: requests_total, request_duration_seconds histogram, batch_size histogram, cache_hits_total, errors_total, model_loaded gauge), GET /v1/healthcheck (alias). Реализует R-P0-7, R-P0-8, R-P0-9, R-P0-10.
-- Why it matters: Сейчас нет machine-readable way узнать версию/модель/limits/метрики — caller и оператор работают вслепую.
-- Source: /root/fd-v2.md Section 1.3 missing endpoints + Section 2.2 P0 observability + Section 4 OpenAPI spec
-- Primary owning slice: M041-4tw0w7/S03
-- Validation: Section 5.5 T-E-1..T-E-5 + T-H-7..T-H-10 все возвращают 200 с ожидаемым shape; /metrics отдаёт text/plain с требуемыми counter/histogram/gauge.
-
 ### R014 — Каждый response должен нести: Server: fd/<version>, X-Request-Id (echo caller-passed или generated UUIDv4), X-Model-Id (на /v1/embeddings), X-Dimensions (на /v1/embeddings), X-Cache: HIT|MISS (если cache включен), Retry-After (на 429/503), Connection: keep-alive. Реализует R-P0-11..R-P0-17.
 - Class: operability
 - Status: active
@@ -224,6 +215,16 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Validated by M041-4tw0w7/S02. Evidence: `benchmark-results/m041-s02-t06-lifecycle-integration.txt` covers startup readiness, F-1 model_not_loaded, F-2 model_overloaded via FD_MAX_IN_FLIGHT, and F-5 shutdown drain; `benchmark-results/m041-s02-t06-go-test.txt`, `m041-s02-t06-lint.txt`, and `m041-s02-t06-govulncheck.txt` pass the mandatory Go gates.
 - Notes: S02 implements lifecycle pre-warm, /live, /ready, /v1/embeddings lifecycle gate, graceful SIGTERM/SIGINT drain, and default-off capacity overload control via FD_MAX_IN_FLIGHT.
 
+### R013 — Должны быть доступны: GET /version (semver+model+build_hash+uptime), GET /info или /v1/models (список моделей с dims/limits/device/loaded/warmup), GET /metrics (Prometheus text: requests_total, request_duration_seconds histogram, batch_size histogram, cache_hits_total, errors_total, model_loaded gauge), GET /v1/healthcheck (alias). Реализует R-P0-7, R-P0-8, R-P0-9, R-P0-10.
+- Class: failure-visibility
+- Status: validated
+- Description: Должны быть доступны: GET /version (semver+model+build_hash+uptime), GET /info или /v1/models (список моделей с dims/limits/device/loaded/warmup), GET /metrics (Prometheus text: requests_total, request_duration_seconds histogram, batch_size histogram, cache_hits_total, errors_total, model_loaded gauge), GET /v1/healthcheck (alias). Реализует R-P0-7, R-P0-8, R-P0-9, R-P0-10.
+- Why it matters: Сейчас нет machine-readable way узнать версию/модель/limits/метрики — caller и оператор работают вслепую.
+- Source: /root/fd-v2.md Section 1.3 missing endpoints + Section 2.2 P0 observability + Section 4 OpenAPI spec
+- Primary owning slice: M041-4tw0w7/S03
+- Validation: Validated by M041-4tw0w7/S03. Evidence: `benchmark-results/m041-s03-t07-observability-integration.txt` covers `/version`, `/info`, `/metrics`, and `/v1/healthcheck`; `m041-s03-t07-go-test.txt`, `m041-s03-t07-lint.txt`, and `m041-s03-t07-govulncheck.txt` pass mandatory Go gates.
+- Notes: Build/version metadata, model info, Prometheus metrics, and healthcheck alias are implemented under the executable `api/` module layout.
+
 ### R023 — Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
 - Class: quality-attribute
 - Status: validated
@@ -271,7 +272,7 @@ This file is the explicit capability and coverage contract for the project.
 | R010 | core-capability | active | M041-4tw0w7/S01 | none | 45 test cases Section 5 (T-E-1..T-E-15): все 400/413/405/500 ошибки возвращают правильный code/type, batch_too_large и input_too_long НЕ возвращают 500, валидация происходит ДО model inference. |
 | R011 | operability | validated | M041-4tw0w7/S02 | none | Validated by M041-4tw0w7/S02. Evidence: `benchmark-results/m041-s02-t06-lifecycle-integration.txt` covers startup readiness, F-1 model_not_loaded, F-2 model_overloaded via FD_MAX_IN_FLIGHT, and F-5 shutdown drain; `benchmark-results/m041-s02-t06-go-test.txt`, `m041-s02-t06-lint.txt`, and `m041-s02-t06-govulncheck.txt` pass the mandatory Go gates. |
 | R012 | quality-attribute | active | M041-4tw0w7/S04 | M041-4tw0w7/S02 | Section 5.4 T-P-1..T-P-5 пройдены с p95 метриками и X-Cache: HIT в кэш-попадающих сценариях; benchmark-results/ artifact зафиксирован. |
-| R013 | failure-visibility | active | M041-4tw0w7/S03 | none | Section 5.5 T-E-1..T-E-5 + T-H-7..T-H-10 все возвращают 200 с ожидаемым shape; /metrics отдаёт text/plain с требуемыми counter/histogram/gauge. |
+| R013 | failure-visibility | validated | M041-4tw0w7/S03 | none | Validated by M041-4tw0w7/S03. Evidence: `benchmark-results/m041-s03-t07-observability-integration.txt` covers `/version`, `/info`, `/metrics`, and `/v1/healthcheck`; `m041-s03-t07-go-test.txt`, `m041-s03-t07-lint.txt`, and `m041-s03-t07-govulncheck.txt` pass mandatory Go gates. |
 | R014 | operability | active | M041-4tw0w7/S03 | none | Section 5.3 T-HDR-1..T-HDR-10 — все headers присутствуют; X-Request-Id echo работает; Retry-After присутствует на 503. |
 | R015 | failure-visibility | active | M041-4tw0w7/S03 | none | T-H-7: /health 200 с model_loaded:true, warmup_done:true; degraded scenario (model unloaded) → 503; POST /warmup возвращает 202 если не warm, 200 если warm. |
 | R016 | differentiator | active | M041-4tw0w7/S04 | none | Section 5.3 T-HDR-6/7: первый запрос MISS, повторный тот же input HIT с latency < 5ms; /metrics показывает fd_cache_hits_total counter; cache eviction работает на > 10000 уникальных inputs. |
@@ -287,7 +288,7 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Coverage Summary
 
-- Active requirements: 12
-- Mapped to slices: 12
-- Validated: 13 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R023, R024, R025)
+- Active requirements: 11
+- Mapped to slices: 11
+- Validated: 14 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R023, R024, R025)
 - Unmapped active requirements: 0
