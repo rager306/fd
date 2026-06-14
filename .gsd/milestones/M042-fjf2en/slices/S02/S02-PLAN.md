@@ -26,7 +26,7 @@ S02 consumes S01 RCA. It leaves fd in a coherent TEI-only current posture and pr
 
 ## Tasks
 
-- [ ] **T01: Inventory ONNX active surfaces and define removal boundary** `est:45m`
+- [x] **T01: Mapped active ONNX source/config/docs/tooling surfaces and defined the TEI-only removal boundary.** `est:45m`
   Map active ONNX references across source, tests, Dockerfile, compose, docs, tools, CI, and requirements. Distinguish historical research artifacts from active runtime/build surfaces. Produce `documents/onnx-deactivation-inventory-m042.md` with a remove/keep table and risk notes. Do not edit code in this task.
   - Files: `documents/onnx-deactivation-inventory-m042.md`
   - Verify: Inventory artifact exists and lists active source/config/docs surfaces plus explicit keep/remove decisions.
