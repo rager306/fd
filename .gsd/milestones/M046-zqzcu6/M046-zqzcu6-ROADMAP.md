@@ -22,7 +22,7 @@
 - [x] **S03: Batch backend work shaping** `risk:high` `depends:[S02]`
   > After this: A mixed cache-miss batch triggers bounded TEI calls per chunk instead of one TEI call per input.
 
-- [ ] **S04: Exposure posture policy** `risk:high` `depends:[S01]`
+- [x] **S04: Exposure posture policy** `risk:high` `depends:[S01]`
   > After this: Default local compose remains usable for same-host development, while accidental non-loopback unauthenticated inference and sensitive diagnostics are blocked or explicitly opted in.
 
 - [ ] **S05: LocalCache correctness** `risk:medium` `depends:[S01]`

@@ -1,0 +1,147 @@
+{
+  "runId": "uat:M046-zqzcu6:S04:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M046-zqzcu6",
+  "sliceId": "S04",
+  "uatType": "runtime-executable",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-14T19:06:56.386Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Public probe endpoints remain unauthenticated without FD_API_KEY.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "3b80d6c3-11aa-41ff-bf6a-e72531677268",
+          "note": "Verified /live, /ready, /health, and /v1/healthcheck return 200 without auth.",
+          "tool": "gsd_uat_exec",
+          "executionId": "3b80d6c3-11aa-41ff-bf6a-e72531677268"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "Protected inference endpoint fails closed without FD_API_KEY.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "237f9c00-e72a-4a19-8fb3-7f907075c417",
+          "note": "Verified /v1/embeddings returns 401 unauthorized without FD_API_KEY.",
+          "tool": "gsd_uat_exec",
+          "executionId": "237f9c00-e72a-4a19-8fb3-7f907075c417"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "/metrics is protected without FD_API_KEY.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "85b9e147-57dc-4104-8e62-3bcbeea259a3",
+          "note": "Verified /metrics returns 401 unauthorized without FD_API_KEY.",
+          "tool": "gsd_uat_exec",
+          "executionId": "85b9e147-57dc-4104-8e62-3bcbeea259a3"
+        }
+      ]
+    },
+    {
+      "id": "UAT-04",
+      "description": "OpenAPI docs surface remains public without FD_API_KEY.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "9484221c-844c-4aa6-9569-e59dfec157c7",
+          "note": "Verified /openapi.json returns public OpenAPI JSON.",
+          "tool": "gsd_uat_exec",
+          "executionId": "9484221c-844c-4aa6-9569-e59dfec157c7"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S04 validates backend HTTP exposure posture, not browser UI."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Runtime UAT validates default no-key posture after API rebuild; unit/static tests validate proxy and limiter internals.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: public probes/docs remain open while protected inference and metrics fail closed without FD_API_KEY."
+}

@@ -21,8 +21,9 @@ const (
 	publicOpenAPI       = "/openapi.json"
 )
 
-// APIKeyAuthFromEnv returns auth middleware configured from FD_API_KEY.
-// When FD_API_KEY is empty, authentication is disabled for local/dev parity.
+// APIKeyAuthFromEnv returns fail-closed auth middleware configured from FD_API_KEY.
+// When FD_API_KEY is empty, protected endpoints reject requests instead of
+// silently disabling authentication. Public probe/docs endpoints stay open.
 func APIKeyAuthFromEnv() gin.HandlerFunc {
 	return APIKeyAuth(os.Getenv("FD_API_KEY"))
 }
@@ -31,8 +32,13 @@ func APIKeyAuthFromEnv() gin.HandlerFunc {
 // Public endpoints are limited to cheap liveness/metadata/docs surfaces.
 func APIKeyAuth(apiKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if apiKey == "" || isAuthPublicPath(c.Request.URL.Path) || c.Request.Method == "OPTIONS" {
+		if isAuthPublicPath(c.Request.URL.Path) || c.Request.Method == "OPTIONS" {
 			c.Next()
+			return
+		}
+		if strings.TrimSpace(apiKey) == "" {
+			handlers.WriteError(c, handlers.CodeUnauthorized, "authorization", "api key is not configured")
+			c.Abort()
 			return
 		}
 
@@ -57,7 +63,6 @@ func isAuthPublicPath(path string) bool {
 		path == publicReadyPath ||
 		path == publicHealthPath ||
 		path == publicV1Healthcheck ||
-		path == publicMetrics ||
 		path == publicOpenAPI ||
 		path == publicDocs ||
 		strings.HasPrefix(path, publicDocs+"/")

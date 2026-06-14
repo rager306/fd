@@ -2,15 +2,39 @@ package middleware
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"fd-api/embed"
 	"fd-api/handlers"
 
 	"github.com/gin-gonic/gin"
 )
+
+func TestRateLimiterPrunesExpiredBuckets(t *testing.T) {
+	limiter := NewRateLimiter(1)
+	now := time.Unix(1_700_000_000, 0)
+	limiter.now = func() time.Time { return now }
+
+	for i := 0; i < maxRateLimitKeys; i++ {
+		limiter.take(fmt.Sprintf("ip:%d", i))
+	}
+	if len(limiter.items) != maxRateLimitKeys {
+		t.Fatalf("setup len(items) = %d, want %d", len(limiter.items), maxRateLimitKeys)
+	}
+
+	now = now.Add(2 * rateLimitWindowSeconds * time.Second)
+	limiter.take("ip:fresh")
+	if len(limiter.items) > maxRateLimitKeys {
+		t.Fatalf("len(items) = %d, want <= %d after pruning expired buckets", len(limiter.items), maxRateLimitKeys)
+	}
+	if _, ok := limiter.items["ip:fresh"]; !ok {
+		t.Fatalf("fresh key was not retained after pruning")
+	}
+}
 
 func TestIPRateLimitRejectsRequestAfterLimit(t *testing.T) {
 	r := rateLimitTestRouter(IPRateLimit(true, 100), nil)

@@ -6,10 +6,31 @@ import (
 	"fd-api/lifecycle"
 	"io"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
+
+func TestRouterDoesNotTrustForwardedForByDefault(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	configureTrustedProxies(r)
+	r.GET("/client-ip", func(c *gin.Context) { c.String(http.StatusOK, c.ClientIP()) })
+
+	req := httptest.NewRequest(http.MethodGet, "/client-ip", http.NoBody)
+	req.RemoteAddr = "198.51.100.10:1234"
+	req.Header.Set("X-Forwarded-For", "203.0.113.99")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if got := w.Body.String(); got != "198.51.100.10" {
+		t.Fatalf("ClientIP = %q, want direct remote address", got)
+	}
+}
 
 type warmupModelFunc func(ctx context.Context, texts []string) ([][]float32, error)
 

@@ -40,6 +40,15 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
+func configureTrustedProxies(r *gin.Engine) {
+	// Fail closed for client identity: without an explicit trusted-proxy
+	// policy, Gin must not trust spoofable X-Forwarded-For headers for
+	// ClientIP(). This keeps rate limiting keyed to the direct peer by default.
+	if err := r.SetTrustedProxies(nil); err != nil {
+		panic("configure trusted proxies: " + err.Error())
+	}
+}
+
 func getEnvInt(key string, defaultValue int) int {
 	value := os.Getenv(key)
 	if value == "" {
@@ -216,6 +225,7 @@ func main() {
 	}
 
 	r := gin.New()
+	configureTrustedProxies(r)
 	r.HandleMethodNotAllowed = true // explicit; gin's v1.12 default may differ
 	// Wrap gin.Recovery so any panic returns an OpenAI-style error envelope
 	// (500 internal_error) instead of gin.Recovery's default plain-text

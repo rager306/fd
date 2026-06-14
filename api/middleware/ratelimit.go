@@ -18,6 +18,7 @@ const (
 	defaultIPRateLimitRPM   = 100
 	defaultUserRateLimitRPM = 1000
 	rateLimitWindowSeconds  = 60
+	maxRateLimitKeys        = 10_000
 
 	headerRateLimitLimit     = "X-RateLimit-Limit"
 	headerRateLimitRemaining = "X-RateLimit-Remaining"
@@ -108,6 +109,7 @@ func (l *RateLimiter) take(key string) (allowed bool, remaining, reset int) {
 	now := l.now()
 	bucket := l.items[key]
 	if bucket == nil {
+		l.makeRoomForNewKey(now)
 		bucket = &rateBucket{tokens: float64(l.limit), last: now}
 		l.items[key] = bucket
 	}
@@ -123,6 +125,42 @@ func (l *RateLimiter) take(key string) (allowed bool, remaining, reset int) {
 	remaining = int(math.Floor(bucket.tokens))
 	reset = int(math.Ceil((float64(l.limit) - bucket.tokens) / refillRate))
 	return true, remaining, reset
+}
+
+func (l *RateLimiter) makeRoomForNewKey(now time.Time) {
+	if len(l.items) < maxRateLimitKeys {
+		return
+	}
+	l.pruneExpired(now)
+	if len(l.items) < maxRateLimitKeys {
+		return
+	}
+	l.evictOldest()
+}
+
+func (l *RateLimiter) pruneExpired(now time.Time) {
+	expiry := time.Duration(rateLimitWindowSeconds) * time.Second
+	for key, bucket := range l.items {
+		if now.Sub(bucket.last) >= expiry {
+			delete(l.items, key)
+		}
+	}
+}
+
+func (l *RateLimiter) evictOldest() {
+	var oldestKey string
+	var oldestTime time.Time
+	first := true
+	for key, bucket := range l.items {
+		if first || bucket.last.Before(oldestTime) {
+			oldestKey = key
+			oldestTime = bucket.last
+			first = false
+		}
+	}
+	if oldestKey != "" {
+		delete(l.items, oldestKey)
+	}
 }
 
 func setRateLimitHeaders(c *gin.Context, limit, remaining, reset int) {

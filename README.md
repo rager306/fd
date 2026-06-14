@@ -219,7 +219,7 @@ Cache namespace isolation matters. When comparing runtime backends or changing m
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `FD_MAX_IN_FLIGHT` | `0` | Maximum concurrent embedding requests. `0` preserves unlimited behavior; positive values return `503 model_overloaded` when full. |
-| `FD_API_KEY` | unset | If set, requests must present the configured API key. Do not log or commit secret values. |
+| `FD_API_KEY` | unset | Required for protected endpoints. If unset, protected endpoints fail closed with `401 unauthorized`; `/live`, `/ready`, `/health`, `/v1/healthcheck`, docs, and OpenAPI stay public. Do not log or commit secret values. |
 | `FD_CORS_ORIGINS` | unset | Optional allowed CORS origins. |
 | `FD_RATE_LIMIT_ENABLED` | unset / false | Enables IP/user rate limiting when configured. |
 | `FD_TRACES_ENABLED` | unset / false | Enables `/v1/traces` diagnostic events. |

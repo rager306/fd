@@ -33,15 +33,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
-### R030 — Default exposure posture must be explicit and safe for the documented same-host contract, with no accidental public unauthenticated inference surface.
-- Class: compliance/security
-- Status: active
-- Description: Default exposure posture must be explicit and safe for the documented same-host contract, with no accidental public unauthenticated inference surface.
-- Why it matters: Issue #3 identifies a P0/P1 cluster where empty `FD_API_KEY`, public host port binding, and public diagnostics can expose free inference or telemetry outside same-host assumptions.
-- Source: GitHub issue #3 audit
-- Primary owning slice: M046-zqzcu6
-- Validation: Compose and startup tests prove default bind/auth posture is safe; health/readiness remain usable for local operators; protected endpoints require auth or explicit local-only exposure.
-
 ### R031 — L1 cache implementation must have bounded growth, race-safe size/accounting, and deterministic shutdown behavior.
 - Class: quality-attribute
 - Status: active
@@ -298,6 +289,16 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Validated by M046-zqzcu6/S02 and S03. S02 proved body, rate-limit, lifecycle, and input guardrails before backend work. S03 proved batch endpoints now batch cache misses into bounded TEI calls, preserve response ordering, backfill cache, and retain valid runtime behavior.
 - Notes: S02 closes issue #3 P0 #2/#3. S03 closes issue #3 P1 #4/#5. S03 explicitly leaves P1 #6 for later triage because it concerns `/v1/embeddings` Redis peek sequencing, not the batch endpoint N+1 paths.
 
+### R030 — Default exposure posture must be explicit and safe for the documented same-host contract, with no accidental public unauthenticated inference surface.
+- Class: compliance/security
+- Status: validated
+- Description: Default exposure posture must be explicit and safe for the documented same-host contract, with no accidental public unauthenticated inference surface.
+- Why it matters: Issue #3 identifies a P0/P1 cluster where empty `FD_API_KEY`, public host port binding, and public diagnostics can expose free inference or telemetry outside same-host assumptions.
+- Source: GitHub issue #3 audit
+- Primary owning slice: M046-zqzcu6
+- Validation: Validated by M046-zqzcu6/S04. Evidence: `benchmark-results/m046-s04-exposure-posture.md`; targeted auth/rate-limit/proxy tests pass; `go test ./...` passes with 279 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verifies probes public, `/v1/embeddings` protected without `FD_API_KEY`, `/metrics` protected, and OpenAPI public.
+- Notes: S04 closes issue #3 P0 #1 and P1 #7/#8. Health/readiness endpoints remain unauthenticated by prior explicit decision.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -355,12 +356,12 @@ This file is the explicit capability and coverage contract for the project.
 | R027 | constraint | validated | M042-fjf2en/S02 | none | M042 S02 evidence validates TEI-only current posture: `api/main.go` rejects non-TEI `EMBEDDING_BACKEND`; ONNX Go embedder/build-tag files, `Dockerfile.onnx`, and ONNX packaging workflow are removed; `api/go.mod`/`go.sum` no longer include ONNX/runtime tokenizer deps; docs/compose describe TEI-only current runtime; final gates passed in `benchmark-results/m042-s02-*`. |
 | R028 | operability | validated | none | none | M045 S03 local snapshot proof validates bounded TEI startup posture: TEI command uses cached local USER-bge-m3 snapshot path under `/data`, reached Docker health healthy at 2026-06-14T12:15:15 after container start 2026-06-14T12:12:14, fd `/health` and `/ready` passed, fd `/v1/embeddings` and direct TEI `/embeddings` returned 1024-dimensional embeddings. Evidence: `benchmark-results/m045-tei-local-path-startup-proof.md`. |
 | R029 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S02 and S03. S02 proved body, rate-limit, lifecycle, and input guardrails before backend work. S03 proved batch endpoints now batch cache misses into bounded TEI calls, preserve response ordering, backfill cache, and retain valid runtime behavior. |
-| R030 | compliance/security | active | M046-zqzcu6 | none | Compose and startup tests prove default bind/auth posture is safe; health/readiness remain usable for local operators; protected endpoints require auth or explicit local-only exposure. |
+| R030 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S04. Evidence: `benchmark-results/m046-s04-exposure-posture.md`; targeted auth/rate-limit/proxy tests pass; `go test ./...` passes with 279 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verifies probes public, `/v1/embeddings` protected without `FD_API_KEY`, `/metrics` protected, and OpenAPI public. |
 | R031 | quality-attribute | active | M046-zqzcu6 | none | Race-enabled tests and capacity tests prove no size drift beyond maxSize, eviction remains bounded, and Close/shutdown stops background eviction. |
 
 ## Coverage Summary
 
-- Active requirements: 5
+- Active requirements: 4
 - Mapped to slices: 2
-- Validated: 24 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029)
+- Validated: 25 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030)
 - Unmapped active requirements: 1
