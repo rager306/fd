@@ -6,6 +6,7 @@ CLAUDE.md
 # GSD local runtime artifacts
 .bg-shell/
 .gsd/STATE.md
+.gsd/CODEBASE.md
 .gsd/audit/
 .gsd/event-log.jsonl
 .gsd/exec/
