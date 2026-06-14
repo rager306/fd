@@ -1,0 +1,155 @@
+{
+  "runId": "uat:M045-d0e5xq:S02:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M045-d0e5xq",
+  "sliceId": "S02",
+  "uatType": "runtime-executable",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-14T11:38:28.335Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Mitigation artifact records cache completeness and selected offline candidate.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "a25a25c0-371a-4a11-9de5-f30f7d330344",
+          "note": "Verified mitigation artifact has cache and candidate findings.",
+          "tool": "gsd_uat_exec",
+          "executionId": "a25a25c0-371a-4a11-9de5-f30f7d330344"
+        }
+      ],
+      "notes": "Artifact path: documents/tei-startup-mitigation-m045.md."
+    },
+    {
+      "id": "UAT-02",
+      "description": "Compose candidate includes TEI offline cache environment.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "226151ba-ead1-4f52-9fb5-d78c157cf60e",
+          "note": "Verified docker compose config includes HF_HUB_OFFLINE=1 and HUGGINGFACE_HUB_CACHE=/data.",
+          "tool": "gsd_uat_exec",
+          "executionId": "226151ba-ead1-4f52-9fb5-d78c157cf60e"
+        }
+      ],
+      "notes": "Candidate is staged but not applied to the running container."
+    },
+    {
+      "id": "UAT-03",
+      "description": "Current fd runtime remains healthy and TEI-only after docs/compose changes.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "92f7bd31-41c2-447b-8091-814dd295bba9",
+          "note": "fd health and embedding smoke passed with TEI 1024 runtime.",
+          "tool": "gsd_uat_exec",
+          "executionId": "92f7bd31-41c2-447b-8091-814dd295bba9"
+        }
+      ],
+      "notes": "No runtime restart occurred."
+    },
+    {
+      "id": "UAT-04",
+      "description": "Running TEI container is unchanged and does not yet have offline env.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "03edc3bc-0a5b-42fb-8798-a02ee267b323",
+          "note": "Verified running container does not have HF_HUB_OFFLINE env yet.",
+          "tool": "gsd_uat_exec",
+          "executionId": "03edc3bc-0a5b-42fb-8798-a02ee267b323"
+        }
+      ],
+      "notes": "Confirms S02 only staged candidate config; S03 must prove it."
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "docker restart",
+        "reason": "Out of S02; S03 is controlled proof."
+      },
+      {
+        "name": "docker compose restart",
+        "reason": "Out of S02; S03 is controlled proof."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "S02 UAT verifies candidate staging without runtime application.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S02 selected and staged `HF_HUB_OFFLINE=1` candidate while preserving current running TEI service."
+}

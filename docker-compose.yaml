@@ -9,6 +9,11 @@ services:
       - tei_data:/data
     environment:
       HF_HOME: /data
+      HUGGINGFACE_HUB_CACHE: /data
+      # M045: startup mitigation candidate. The USER-bge-m3 files are
+      # cached in tei_data; offline mode should make missing ONNX probes
+      # fail fast instead of spending minutes on remote Hub requests.
+      HF_HUB_OFFLINE: "1"
     command: --model-id deepvk/USER-bge-m3 --max-batch-tokens 8192
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]

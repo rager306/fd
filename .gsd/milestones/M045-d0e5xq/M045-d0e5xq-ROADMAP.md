@@ -15,7 +15,7 @@
 - [x] **S01: Non destructive TEI startup recon** `risk:medium` `depends:[]`
   > After this: A recon artifact shows current TEI image command env model cache layout and startup log timeline, plus candidate knobs to test.
 
-- [ ] **S02: Select safe TEI startup mitigation** `risk:high` `depends:[S01]`
+- [x] **S02: Select safe TEI startup mitigation** `risk:high` `depends:[S01]`
   > After this: A selected mitigation is encoded as compose/docs changes or a documented no change decision with rationale.
 
 - [ ] **S03: Controlled startup proof** `risk:high` `depends:[S02]`

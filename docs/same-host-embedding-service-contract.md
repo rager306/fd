@@ -158,6 +158,7 @@ The service enforces a TEI-only current runtime:
 2. **No per-request backend fallback.** A running instance does not switch runtimes mid-flight. A request either goes to TEI or returns an error.
 3. **TEI internal fallback is not fd behavior.** TEI's own CPU/Candle fallback warnings (logged by TEI itself) are a TEI runtime concern, not an fd-level fallback. fd sends a request to the configured TEI URL and reports any TEI error as a `500`.
 4. **Cache miss path is not fallback.** Fetching from L2 or L1 on a cache miss is a cache behavior detail, not a backend or model fallback.
+5. **TEI offline cache mode is startup mitigation only.** `HF_HUB_OFFLINE=1` on the TEI container is intended to avoid slow remote Hub probes for missing ONNX artifacts when the required safetensors/tokenizer files are already cached. It does not add an fd fallback backend and must be validated by a controlled restart proof.
 
 Any change to `EMBEDDING_BACKEND` requires a service restart.
 
@@ -247,6 +248,7 @@ The following are explicitly **out of scope** for the `fd` same-host embedding s
 | Retry on | Transport errors, HTTP 503 |
 | Do not retry on | HTTP 400, HTTP 500 |
 | Cache compatibility | Verify `runtime.cache_namespace` matches your expected namespace |
+| TEI startup cache | Compose sets `HF_HUB_OFFLINE=1` for TEI after M045 cache inventory; validate restart behavior before relying on it operationally |
 | Future backend research | Use a separate milestone and isolated `EMBEDDING_CACHE_VERSION`; current product builds are TEI-only |
 | Logging | Set `LOG_LEVEL=debug` to see cache hit/miss events (short key hashes only, no raw text) |
 
