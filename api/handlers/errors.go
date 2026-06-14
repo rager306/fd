@@ -97,6 +97,7 @@ func WriteError(c *gin.Context, code, param, message string) {
 		entry = errorCodeRegistry[CodeInternalError]
 		code = CodeInternalError
 	}
+	c.Set(ContextKeyErrorCode, code)
 	c.AbortWithStatusJSON(entry.HTTPStatus, ErrorResponse{
 		Error: ErrorDetail{
 			Code:    code,
@@ -138,8 +139,13 @@ func AllErrorCodes() []string {
 	}
 }
 
-// ContextKeyValidatedRequest is the gin context key the validation
-// middleware uses to pass the parsed embed.EmbeddingsRequest downstream.
-// Lives in handlers (not middleware) to avoid a middleware→handlers import
-// cycle from the /v1/embeddings handler that needs to look it up.
-const ContextKeyValidatedRequest = "fd_validated_embeddings_request"
+const (
+	// ContextKeyValidatedRequest is the gin context key the validation
+	// middleware uses to pass the parsed embed.EmbeddingsRequest downstream.
+	// Lives in handlers (not middleware) to avoid a middleware→handlers import
+	// cycle from the /v1/embeddings handler that needs to look it up.
+	ContextKeyValidatedRequest = "fd_validated_embeddings_request"
+	// ContextKeyErrorCode stores the canonical fd error code emitted by
+	// WriteError so observability middleware can increment fd_errors_total.
+	ContextKeyErrorCode = "fd_error_code"
+)

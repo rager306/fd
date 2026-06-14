@@ -22,6 +22,7 @@ import (
 	"fd-api/handlers"
 	"fd-api/lifecycle"
 	"fd-api/middleware"
+	"fd-api/observability"
 
 	"github.com/gin-gonic/gin"
 )
@@ -408,7 +409,9 @@ func main() {
 	// (500 internal_error) instead of gin.Recovery's default plain-text
 	// 500. Without this, T-E-15 fails — panic-induced 500s would leak
 	// server internals and lack the code/type envelope.
+	metrics := observability.NewMetrics()
 	r.Use(handlers.RecoveryMiddleware(logger))
+	r.Use(metrics.Middleware())
 
 	// 404/405 envelopes for paths/methods that don't match a registered
 	// route. Without these, gin returns text/plain "404 page not found"
@@ -425,6 +428,7 @@ func main() {
 	r.GET("/ready", handlers.NewReadyHandler(lifecycleState))
 	r.GET("/version", handlers.NewVersionHandler(buildInfo))
 	r.GET("/info", handlers.NewInfoHandler(buildInfo, runtimeHealth, lifecycleState))
+	r.GET("/metrics", metrics.Handler())
 	r.GET("/health", healthHandler)
 	r.GET("/v1/healthcheck", healthHandler)
 	// /v1/embeddings: validation middleware runs BEFORE the handler so

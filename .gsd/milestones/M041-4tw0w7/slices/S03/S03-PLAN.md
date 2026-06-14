@@ -47,7 +47,7 @@ Metrics middleware инкрементит counters/histograms на каждом 
   - Files: `api/handlers/health.go`, `api/handlers/health_test.go`
   - Verify: Unit tests: status=ok 200, status=degraded 503, status=down 503. last_inference_at обновляется после inference. T-H-7 pass.
 
-- [ ] **T04: /metrics endpoint с Prometheus counters/histograms** `est:3h`
+- [x] **T04: Added Prometheus /metrics endpoint and request metrics middleware with counters, histograms, gauges, and error-code labels.** `est:3h`
   api/observability/metrics.go: использовать prometheus/client_golang. Metrics: fd_requests_total{status=success|error|timeout} counter, fd_request_duration_seconds histogram (le=0.05/0.1/0.5/1.0/+Inf), fd_batch_size histogram (le=1/10/32/+Inf), fd_errors_total{code=...} counter, fd_model_loaded gauge, fd_cache_hits_total{result=hit|miss} counter (используется в S04). GET /metrics handler использует promhttp.Handler() (text/plain). Middleware MetricsMiddleware оборачивает все requests и инкрементит counters/observations.
   - Files: `api/observability/metrics.go`, `api/observability/metrics_test.go`
   - Verify: Unit tests: после серии requests counter и histogram обновляются корректно. /metrics text/plain содержит все требуемые counter/histogram/gauge. T-H-1..T-H-5 (Section 5.5 existence) pass.

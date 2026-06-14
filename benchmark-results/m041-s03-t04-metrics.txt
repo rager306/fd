@@ -1,0 +1,8 @@
+=== RUN   TestMetricsHandlerExposesPrometheusText
+--- PASS: TestMetricsHandlerExposesPrometheusText (0.00s)
+=== RUN   TestMetricsMiddlewareRecordsRequestsErrorsAndBatchSize
+--- PASS: TestMetricsMiddlewareRecordsRequestsErrorsAndBatchSize (0.00s)
+=== RUN   TestMetricsModelLoadedAndCacheResult
+--- PASS: TestMetricsModelLoadedAndCacheResult (0.00s)
+PASS
+ok  	fd-api/observability	0.015s
