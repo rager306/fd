@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T10:26:02Z","fingerprint":"a6dc6d47b7a779c349fce104bd0fea5ba4937147","fileCount":314,"truncated":false} -->
+Generated: 2026-06-14T12:46:46Z | Files: 318 | Described: 0/318
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T12:46:46Z","fingerprint":"d686ce4930d77bfc344f3a83c17241ee269860c7","fileCount":318,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -10,12 +10,13 @@ Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
 - `CHANGELOG.md`
 - `docker-compose.override.yaml`
 - `docker-compose.yaml`
-- `Dockerfile.onnx`
 - `README.md`
+
+### .artifacts/browser/2026-06-14T12-23-36-082Z-session/
+- `.artifacts/browser/2026-06-14T12-23-36-082Z-session/m045-s03-browser-health-timeline.json`
 
 ### .github/workflows/
 - `.github/workflows/go-quality.yml`
-- `.github/workflows/onnx-packaging.yml`
 
 ### api/
 - `api/.dockerignore`
@@ -26,6 +27,7 @@ Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
 - `api/fd_v2_observability_integration_test.go`
 - `api/go.mod`
 - `api/go.sum`
+- `api/main_env_test.go`
 - `api/main_test.go`
 - `api/main.go`
 
@@ -36,6 +38,7 @@ Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
 ### api/cache/
 - `api/cache/local_test.go`
 - `api/cache/local.go`
+- `api/cache/lru_rapid_test.go`
 - `api/cache/lru_test.go`
 - `api/cache/lru.go`
 - `api/cache/redis_bench_test.go`
@@ -43,31 +46,24 @@ Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
 - `api/cache/redis_test.go`
 - `api/cache/redis.go`
 - `api/cache/tiered_cache_test.go`
+- `api/cache/tiered_constructor_test.go`
 - `api/cache/tiered_test.go`
 - `api/cache/tiered.go`
 
 ### api/embed/
+- `api/embed/codec_rapid_test.go`
 - `api/embed/codec.go`
 - `api/embed/dimensions_test.go`
-- `api/embed/hf_tokenizer_native_test.go`
-- `api/embed/hf_tokenizer_native.go`
-- `api/embed/onnx_disabled.go`
-- `api/embed/onnx_manifest_test.go`
-- `api/embed/onnx_manifest.go`
-- `api/embed/onnx_test.go`
-- `api/embed/onnx_token_types.go`
-- `api/embed/onnx_tokenizer_default.go`
-- `api/embed/onnx_tokenizer_hf.go`
-- `api/embed/onnx_types.go`
-- `api/embed/onnx.go`
+- `api/embed/tei_test.go`
 - `api/embed/tei.go`
 - `api/embed/types_test.go`
 - `api/embed/types.go`
 
 ### api/handlers/
-- *(22 files: 22 .go)*
+- *(23 files: 23 .go)*
 
 ### api/lifecycle/
+- `api/lifecycle/default_state_test.go`
 - `api/lifecycle/shutdown_test.go`
 - `api/lifecycle/shutdown.go`
 - `api/lifecycle/state_test.go`
@@ -82,6 +78,7 @@ Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
 - `api/middleware/cache_headers.go`
 - `api/middleware/cors_test.go`
 - `api/middleware/cors.go`
+- `api/middleware/env_constructors_test.go`
 - `api/middleware/headers_test.go`
 - `api/middleware/headers.go`
 - `api/middleware/lifecycle_test.go`
@@ -102,7 +99,7 @@ Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
 - `api/openapi/spec.go`
 
 ### benchmark-results/
-- *(180 files: 173 .txt, 7 .md)*
+- *(186 files: 177 .txt, 9 .md)*
 
 ### docs/
 - `docs/fd-v2.md`
@@ -129,6 +126,8 @@ Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
 - `documents/onnx-deactivation-inventory-m042.md`
 - `documents/te-perf-root-cause-m042.md`
 - `documents/te-perf-snapshot-m042-s01.md`
+- `documents/tei-startup-mitigation-m045.md`
+- `documents/tei-startup-recon-m045.md`
 
 ### tests/
 - `tests/44-FZ-2026-articles.jsonl`
