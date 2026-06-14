@@ -33,6 +33,24 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
+### R029 — Batch endpoints must enforce the same bounded request, lifecycle, capacity, and abuse-control posture as `/v1/embeddings`.
+- Class: compliance/security
+- Status: active
+- Description: Batch endpoints must enforce the same bounded request, lifecycle, capacity, and abuse-control posture as `/v1/embeddings`.
+- Why it matters: Issue #3 reports P0 DoS risk because `/v1/batch` and `/embeddings/batch` bypass parts of validation/rate-limit/body/input caps and can drive unbounded TEI/cache work.
+- Source: GitHub issue #3 audit
+- Primary owning slice: M046-zqzcu6
+- Validation: Tests demonstrate oversized body/input/length requests are rejected before backend work; lifecycle/capacity gates apply; embedding smoke still passes.
+
+### R030 — Default exposure posture must be explicit and safe for the documented same-host contract, with no accidental public unauthenticated inference surface.
+- Class: compliance/security
+- Status: active
+- Description: Default exposure posture must be explicit and safe for the documented same-host contract, with no accidental public unauthenticated inference surface.
+- Why it matters: Issue #3 identifies a P0/P1 cluster where empty `FD_API_KEY`, public host port binding, and public diagnostics can expose free inference or telemetry outside same-host assumptions.
+- Source: GitHub issue #3 audit
+- Primary owning slice: M046-zqzcu6
+- Validation: Compose and startup tests prove default bind/auth posture is safe; health/readiness remain usable for local operators; protected endpoints require auth or explicit local-only exposure.
+
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -326,10 +344,12 @@ This file is the explicit capability and coverage contract for the project.
 | R026 | integration | active | none | none | `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass. |
 | R027 | constraint | validated | M042-fjf2en/S02 | none | M042 S02 evidence validates TEI-only current posture: `api/main.go` rejects non-TEI `EMBEDDING_BACKEND`; ONNX Go embedder/build-tag files, `Dockerfile.onnx`, and ONNX packaging workflow are removed; `api/go.mod`/`go.sum` no longer include ONNX/runtime tokenizer deps; docs/compose describe TEI-only current runtime; final gates passed in `benchmark-results/m042-s02-*`. |
 | R028 | operability | validated | none | none | M045 S03 local snapshot proof validates bounded TEI startup posture: TEI command uses cached local USER-bge-m3 snapshot path under `/data`, reached Docker health healthy at 2026-06-14T12:15:15 after container start 2026-06-14T12:12:14, fd `/health` and `/ready` passed, fd `/v1/embeddings` and direct TEI `/embeddings` returned 1024-dimensional embeddings. Evidence: `benchmark-results/m045-tei-local-path-startup-proof.md`. |
+| R029 | compliance/security | active | M046-zqzcu6 | none | Tests demonstrate oversized body/input/length requests are rejected before backend work; lifecycle/capacity gates apply; embedding smoke still passes. |
+| R030 | compliance/security | active | M046-zqzcu6 | none | Compose and startup tests prove default bind/auth posture is safe; health/readiness remain usable for local operators; protected endpoints require auth or explicit local-only exposure. |
 
 ## Coverage Summary
 
-- Active requirements: 3
+- Active requirements: 5
 - Mapped to slices: 2
 - Validated: 23 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028)
 - Unmapped active requirements: 1
