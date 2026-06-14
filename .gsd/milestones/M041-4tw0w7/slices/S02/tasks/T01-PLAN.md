@@ -4,7 +4,7 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T01: Lifecycle state package
+# T01: Added lifecycle State package with warmup/readiness/shutdown flags, in-flight request tracking, drain timeout, last error, and context helpers.
 
 api/lifecycle/state.go: type State struct { warmupDone atomic.Bool; shuttingDown atomic.Bool; inflight sync.WaitGroup; lastError atomic.Value }. Methods: MarkWarmupDone(), IsReady() bool, BeginShutdown(), IsShuttingDown() bool, TrackRequest(start, done), WaitDrain(timeout) error. State синглтон, передаётся в handlers через context.
 

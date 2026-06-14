@@ -1,7 +1,7 @@
 # S02: Lifecycle warmup readiness and graceful shutdown
 
 **Goal:** Lifecycle management: pre-warm model при старте, /live (cheap) и /ready (200 only after warmup), 503+Retry-After для model_not_loaded/model_overloaded/shutting_down, SIGTERM handler с in-flight drain за ≤30s. Закрывает R-P0-3, R-P0-4, R-P0-5.
-**Demo:** After this, fd pre-warms model при старте, /live отвечает 200 сразу, /ready отвечает 200 только после warmup, deep /health отвечает 503 status=down до warmup и 200 status=ok после, SIGTERM приводит к 503 shutting_down для новых запросов и корректному drain in-flight за ≤30s.
+**Demo:** After this, fd pre-warms model at startup, /live is cheap, /ready transitions 503 to 200 after warmup, shutdown gates new requests with 503+Retry-After, and the slice passes M043 gates: go test ./..., golangci-lint 18 linters, no reachable govulncheck findings.
 
 ## Must-Haves
 
@@ -27,7 +27,7 @@ Lifecycle state (warmupDone, shuttingDown, inflight) атомики исполь
 
 ## Tasks
 
-- [ ] **T01: Lifecycle state package** `est:2h`
+- [x] **T01: Added lifecycle State package with warmup/readiness/shutdown flags, in-flight request tracking, drain timeout, last error, and context helpers.** `est:2h`
   api/lifecycle/state.go: type State struct { warmupDone atomic.Bool; shuttingDown atomic.Bool; inflight sync.WaitGroup; lastError atomic.Value }. Methods: MarkWarmupDone(), IsReady() bool, BeginShutdown(), IsShuttingDown() bool, TrackRequest(start, done), WaitDrain(timeout) error. State синглтон, передаётся в handlers через context.
   - Files: `api/lifecycle/state.go`, `api/lifecycle/state_test.go`
   - Verify: Unit tests: MarkWarmupDone → IsReady true. BeginShutdown → IsShuttingDown true. TrackRequest properly tracks inflight, WaitDrain(0) returns immediately when empty, WaitDrain(100ms) blocks. Test concurrent shutdown while requests inflight.
