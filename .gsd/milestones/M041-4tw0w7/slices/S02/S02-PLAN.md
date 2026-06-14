@@ -32,7 +32,7 @@ Lifecycle state (warmupDone, shuttingDown, inflight) атомики исполь
   - Files: `api/lifecycle/state.go`, `api/lifecycle/state_test.go`
   - Verify: Unit tests: MarkWarmupDone → IsReady true. BeginShutdown → IsShuttingDown true. TrackRequest properly tracks inflight, WaitDrain(0) returns immediately when empty, WaitDrain(100ms) blocks. Test concurrent shutdown while requests inflight.
 
-- [ ] **T02: Pre-warm model при старте** `est:3h`
+- [x] **T02: Added async model pre-warm: server startup no longer blocks on warmup, lifecycle state flips ready only after successful dummy embedding.** `est:3h`
   api/lifecycle/warmup.go: функция PreWarm(ctx, model) error которая вызывает model.Encode с 1 dummy input и логирует latency. Запускается из main.go после server start но ДО readiness=ready. Server start НЕ блокируется — http.Server.Serve() стартует сразу, lifecycle state warmupDone=false, /ready отвечает 503, /live отвечает 200 (process alive). Горутина warmup: loadModel → PreWarm → MarkWarmupDone. На любую ошибку — логируем, НО warmupDone остаётся false (server не ready, /ready=503, /health deep показывает error).
   - Files: `api/lifecycle/warmup.go`, `api/lifecycle/warmup_test.go`, `api/main.go`
   - Verify: Integration test: запустить fd binary, в течение 100ms после start curl /live → 200, curl /ready → 503, через 30s (после warmup) curl /ready → 200. Проверить логи: model loading, warmup started, warmup done.

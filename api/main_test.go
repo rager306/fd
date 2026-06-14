@@ -1,16 +1,68 @@
 package main
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"fd-api/embed"
+	"fd-api/lifecycle"
 )
+
+type warmupModelFunc func(ctx context.Context, texts []string) ([][]float32, error)
+
+func (f warmupModelFunc) Embed(ctx context.Context, texts []string) ([][]float32, error) {
+	return f(ctx, texts)
+}
+
+func TestStartModelWarmupMarksStateReady(t *testing.T) {
+	state := lifecycle.NewState()
+	model := warmupModelFunc(func(_ context.Context, _ []string) ([][]float32, error) {
+		return [][]float32{{1}}, nil
+	})
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	startModelWarmup(logger, state, model, time.Second)
+	waitForCondition(t, time.Second, state.IsReady)
+}
+
+func TestStartModelWarmupStoresError(t *testing.T) {
+	state := lifecycle.NewState()
+	boom := errors.New("boom")
+	model := warmupModelFunc(func(_ context.Context, _ []string) ([][]float32, error) {
+		return nil, boom
+	})
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	startModelWarmup(logger, state, model, time.Second)
+	waitForCondition(t, time.Second, func() bool {
+		return errors.Is(state.LastError(), boom)
+	})
+	if state.IsReady() {
+		t.Fatal("state should not be ready after warmup failure")
+	}
+}
+
+func waitForCondition(t *testing.T, timeout time.Duration, condition func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if condition() {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatalf("condition not met within %s", timeout)
+}
 
 func TestGetEnvIntReturnsDefaultWhenUnset(t *testing.T) {
 	t.Setenv("FD_TEST_INT", "")

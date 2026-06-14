@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T05:19:02Z | Files: 165 | Described: 0/165
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T05:19:02Z","fingerprint":"47d3d5dd77a045fcf37b140fab4c61782b7b3e60","fileCount":165,"truncated":false} -->
+Generated: 2026-06-14T05:49:27Z | Files: 170 | Described: 0/170
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T05:49:27Z","fingerprint":"62eb2eb4144c5d8227645ae9a217969c468a6534","fileCount":170,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -68,12 +68,16 @@ Generated: 2026-06-14T05:19:02Z | Files: 165 | Described: 0/165
 - `api/handlers/recovery_test.go`
 - `api/handlers/recovery.go`
 
+### api/lifecycle/
+- `api/lifecycle/state_test.go`
+- `api/lifecycle/state.go`
+
 ### api/middleware/
 - `api/middleware/validation_test.go`
 - `api/middleware/validation.go`
 
 ### benchmark-results/
-- *(79 files: 75 .txt, 4 .md)*
+- *(82 files: 78 .txt, 4 .md)*
 
 ### docs/
 - `docs/fd-v2.md`

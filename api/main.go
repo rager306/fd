@@ -19,6 +19,7 @@ import (
 	"fd-api/cache"
 	"fd-api/embed"
 	"fd-api/handlers"
+	"fd-api/lifecycle"
 	"fd-api/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -233,6 +234,8 @@ func loadEmbeddingRuntimeConfig() (*embeddingRuntimeConfig, error) {
 	}
 }
 
+const defaultWarmupTimeout = 30 * time.Second
+
 func logRuntimePreflight(logger *slog.Logger, runtimeConfig *embeddingRuntimeConfig) {
 	if runtimeConfig.Backend != embeddingBackendONNX || runtimeConfig.ONNXArtifact == nil {
 		return
@@ -248,6 +251,24 @@ func logRuntimePreflight(logger *slog.Logger, runtimeConfig *embeddingRuntimeCon
 		"runtime_library_verified", runtimeConfig.ONNXRuntimeLibraryVerified,
 		"provider", runtimeConfig.ONNXProvider,
 	)
+}
+
+func startModelWarmup(logger *slog.Logger, state *lifecycle.State, model lifecycle.WarmupModel, timeout time.Duration) {
+	go func() {
+		started := time.Now()
+		logger.Info("model warmup started", "timeout", timeout.String())
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		if err := lifecycle.PreWarm(ctx, model); err != nil {
+			state.SetLastError(err)
+			logger.Error("model warmup failed", "error", err, "latency_ms", time.Since(started).Milliseconds())
+			return
+		}
+
+		state.MarkWarmupDone()
+		logger.Info("model warmup done", "latency_ms", time.Since(started).Milliseconds())
+	}()
 }
 
 func main() {
@@ -313,6 +334,8 @@ func main() {
 			IdleConnTimeout:     90 * time.Second,
 		},
 	}
+
+	lifecycleState := lifecycle.DefaultState()
 
 	var embeddingClient handlers.Embedder
 	if runtimeConfig.Backend == embeddingBackendONNX {
@@ -402,6 +425,8 @@ func main() {
 			os.Exit(1)
 		}
 	}()
+
+	startModelWarmup(logger, lifecycleState, embeddingClient, defaultWarmupTimeout)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
