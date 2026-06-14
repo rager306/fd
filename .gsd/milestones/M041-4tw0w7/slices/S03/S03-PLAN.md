@@ -57,7 +57,7 @@ Metrics middleware инкрементит counters/histograms на каждом 
   - Files: `api/middleware/headers.go`, `api/middleware/headers_test.go`
   - Verify: Unit tests: T-HDR-1 (Server: fd/2.0.0), T-HDR-2/3 (X-Request-Id echo vs generated), T-HDR-4/5 (X-Model-Id + X-Dimensions на /v1/embeddings), T-HDR-8 (Retry-After на 503), T-HDR-9 (Connection: keep-alive).
 
-- [ ] **T06: /warmup endpoints (GET status, POST trigger)** `est:2h`
+- [x] **T06: Added /warmup status and trigger endpoints with background pre-warm execution.** `est:2h`
   api/handlers/warmup.go: GET /warmup — { status: ready|warming_up, progress: 0..1 }. POST /warmup — если ready, 200 { status: ready, message: already warm }; если нет, 202 { status: warming_up, message: warmup started } и trigger background warmup (sync.WaitGroup не блокирует).
   - Files: `api/handlers/warmup.go`, `api/handlers/warmup_test.go`
   - Verify: Unit tests: GET /warmup → 200 status:ready после warmup, GET → 200 status:warming_up, progress:<fraction> во время. POST /warmup → 200 если ready, 202 если warming.

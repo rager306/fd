@@ -1,0 +1,12 @@
+=== RUN   TestWarmupStatusReadyAfterWarmup
+--- PASS: TestWarmupStatusReadyAfterWarmup (0.00s)
+=== RUN   TestWarmupStatusWarmingUpProgress
+--- PASS: TestWarmupStatusWarmingUpProgress (0.00s)
+=== RUN   TestWarmupTriggerReturnsOKWhenReady
+--- PASS: TestWarmupTriggerReturnsOKWhenReady (0.00s)
+=== RUN   TestWarmupTriggerStartsBackgroundWarmup
+--- PASS: TestWarmupTriggerStartsBackgroundWarmup (0.00s)
+=== RUN   TestWarmupTriggerStoresError
+--- PASS: TestWarmupTriggerStoresError (0.00s)
+PASS
+ok  	fd-api/handlers	0.015s

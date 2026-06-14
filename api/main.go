@@ -429,7 +429,10 @@ func main() {
 	r.GET("/ready", handlers.NewReadyHandler(lifecycleState))
 	r.GET("/version", handlers.NewVersionHandler(buildInfo))
 	r.GET("/info", handlers.NewInfoHandler(buildInfo, runtimeHealth, lifecycleState))
+	warmupHandler := handlers.NewWarmupHandler(lifecycleState, embeddingClient, defaultWarmupTimeout)
 	r.GET("/metrics", metrics.Handler())
+	r.GET("/warmup", warmupHandler.Status)
+	r.POST("/warmup", warmupHandler.Trigger)
 	r.GET("/health", healthHandler)
 	r.GET("/v1/healthcheck", healthHandler)
 	// /v1/embeddings: validation middleware runs BEFORE the handler so

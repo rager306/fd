@@ -4,7 +4,7 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T06: /warmup endpoints (GET status, POST trigger)
+# T06: Added /warmup status and trigger endpoints with background pre-warm execution.
 
 api/handlers/warmup.go: GET /warmup — { status: ready|warming_up, progress: 0..1 }. POST /warmup — если ready, 200 { status: ready, message: already warm }; если нет, 202 { status: warming_up, message: warmup started } и trigger background warmup (sync.WaitGroup не блокирует).
 
