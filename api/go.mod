@@ -8,6 +8,7 @@ require (
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/sync v0.20.0
+	pgregory.net/rapid v1.3.0
 )
 
 require (

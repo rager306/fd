@@ -66,3 +66,25 @@ func TestEmbeddingsResponse_Marshal(t *testing.T) {
 		t.Errorf("expected index=0, got %d", back.Data[0].Index)
 	}
 }
+
+func TestEmbeddingObjSetters(t *testing.T) {
+	obj := EmbeddingObj{}
+	vec := []float32{1, 2, 3}
+	obj.SetVector(vec)
+	gotVec, ok := obj.Embedding.([]float32)
+	if !ok {
+		t.Fatalf("Embedding type = %T, want []float32", obj.Embedding)
+	}
+	if len(gotVec) != len(vec) || gotVec[2] != vec[2] {
+		t.Fatalf("Embedding vector = %#v, want %#v", gotVec, vec)
+	}
+
+	obj.SetBase64("AAAA")
+	gotString, ok := obj.Embedding.(string)
+	if !ok {
+		t.Fatalf("Embedding type = %T, want string", obj.Embedding)
+	}
+	if gotString != "AAAA" {
+		t.Fatalf("Embedding base64 = %q, want AAAA", gotString)
+	}
+}
