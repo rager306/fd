@@ -1,26 +1,29 @@
 ---
 estimated_steps: 1
-estimated_files: 2
+estimated_files: 4
 skills_used: []
 ---
 
-# T05: Run regression suite for M041 acceptance in async mode
+# T05: Final TEI-only gates and milestone scope decision
 
-Run the M041 acceptance/regression suite with FD_ASYNC_CHUNKS=false and true. Confirm error envelopes, validation behavior, cache-hit path, headers, and lifecycle assumptions are unchanged. Final completion evidence must include go test ./..., golangci-lint 18 linters, and govulncheck 0 reachable vulnerabilities.
+Run mandatory M043 gates and final TEI-only checks: `go test ./...`, golangci-lint v2.12.2, govulncheck, and a small runtime/config smoke if Docker service is healthy. Record whether R021 async chunking is deferred or implemented separately. Validate R027. Write final S02 evidence artifacts.
 
 ## Inputs
 
-- `.gsd/milestones/M041-4tw0w7/slices/S01/S01-SUMMARY.md`
-- `docs/static-analysis-recommendation.md`
+- `api/`
+- `documents/onnx-deactivation-inventory-m042.md`
 
 ## Expected Output
 
-- `benchmark-results/fd-v2-async-regression-m042.md`
+- `benchmark-results/m042-s02-go-test.txt`
+- `benchmark-results/m042-s02-lint.txt`
+- `benchmark-results/m042-s02-govulncheck.txt`
+- `benchmark-results/m042-s02-tei-only-check.txt`
 
 ## Verification
 
-cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./... && go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+All mandatory gates pass; R027 validated; R021 either validated with evidence or deferred with explicit rationale.
 
 ## Observability Impact
 
-Regression artifact records async/sync mode and cache behavior evidence.
+Final evidence proves TEI-only active posture.

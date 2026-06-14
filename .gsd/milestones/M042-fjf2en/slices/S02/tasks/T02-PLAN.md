@@ -1,28 +1,26 @@
 ---
 estimated_steps: 1
-estimated_files: 4
+estimated_files: 3
 skills_used: []
 ---
 
-# T02: Wire FD_ASYNC_CHUNKS env into handler and main config
+# T02: Remove ONNX runtime selection from active API startup path
 
-Add FD_ASYNC_CHUNKS configuration with default false and wire it into EmbeddingsHandler without changing default TEI behavior. Keep config parsing small and testable; use contextual errors for invalid env values if any. Ensure the handler path is explicit enough for future agents to see sync vs async behavior, and keep public config comments/godoc aligned with revive:exported requirements if new exported symbols are introduced.
+Edit active Go runtime startup/config so fd no longer accepts ONNX as a current backend selector. Remove or neutralize ONNX env parsing/config branches, update tests accordingly, and ensure invalid ONNX env usage fails closed with a clear TEI-only error or is ignored only if documented. Keep TEI behavior unchanged.
 
 ## Inputs
 
-- `.golangci.yml`
-- `docs/static-analysis-recommendation.md`
+- `documents/onnx-deactivation-inventory-m042.md`
 
 ## Expected Output
 
 - `api/main.go`
-- `api/handlers/embeddings.go`
 - `api/main_test.go`
 
 ## Verification
 
-cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./...
+Targeted Go tests for runtime config pass; TEI startup config still passes; ONNX selector is absent or fails closed as TEI-only.
 
 ## Observability Impact
 
-Config should be visible in startup logs without logging secrets.
+Runtime health should report TEI without ONNX ambiguity.

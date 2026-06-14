@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T08:39:26Z | Files: 308 | Described: 0/308
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T08:39:26Z","fingerprint":"2fb8278f22e73e3566b62250fb4b85684589b341","fileCount":308,"truncated":false} -->
+Generated: 2026-06-14T10:09:44Z | Files: 309 | Described: 0/309
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T10:09:44Z","fingerprint":"b42023a1f6baf93d7c3b72cbe82bea7c206c66e2","fileCount":309,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -124,6 +124,9 @@ Generated: 2026-06-14T08:39:26Z | Files: 308 | Described: 0/308
 ### docs/superpowers/specs/
 - `docs/superpowers/specs/2026-05-14-fd-embedding-service-v2-design.md`
 - `docs/superpowers/specs/2026-05-14-fd-embedding-service-v2-legal-design.md`
+
+### documents/
+- `documents/te-perf-snapshot-m042-s01.md`
 
 ### tests/
 - `tests/44-FZ-2026-articles.jsonl`

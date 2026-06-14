@@ -1,0 +1,12 @@
+SCENARIO sequential_batch32_control started_at=2026-06-14T08:56:12+00:00 batch=32 requests=4 concurrency=1
+SCENARIO parallel_4_batch32 started_at=2026-06-14T08:56:27+00:00 batch=32 requests=4 concurrency=4
+SCENARIO parallel_16_batch1 started_at=2026-06-14T08:56:47+00:00 batch=1 requests=16 concurrency=16
+Sleeping 30s before idle single batch=32 scenario
+SCENARIO idle_30s_batch32 started_at=2026-06-14T08:57:20+00:00 batch=32 requests=1 concurrency=1
+Restarting compose service tei at 2026-06-14T08:57:26+00:00
+ Container fd_tei  Restarting
+ Container fd_tei  Started
+Traceback (most recent call last):
+  File "<stdin>", line 171, in <module>
+  File "<stdin>", line 136, in wait_for_tei
+RuntimeError: TEI did not become healthy within 240s; last_error=ConnectionResetError: [Errno 104] Connection reset by peer

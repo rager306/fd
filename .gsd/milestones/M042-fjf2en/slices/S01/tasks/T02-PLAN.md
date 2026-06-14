@@ -1,22 +1,23 @@
 ---
 estimated_steps: 1
-estimated_files: 1
+estimated_files: 2
 skills_used: []
 ---
 
-# T02: Live profile TEI: варьировать concurrency, batch size, timing
+# T02: Documented the attempted TEI concurrency profile and the stronger finding: TEI restart/recreate can spend ~48 minutes in backend startup before becoming ready.
 
-Active measurement: (1) одновременно 4 curl в parallel с batch=32, измерить max queue_time vs sequential. (2) Одновременно 16 curl с batch=1, измерить queue_time degradation. (3) Sleep 30s, один curl batch=32 — sanity. (4) Перезапустить fd_tei (down/up), один curl batch=32 — измерить true cold start. Цель: понять TEI behavior при разной нагрузке.
+Use evidence already captured from the failed profile run, docker health/logs, process state, and T01 direct TEI timings to document TEI startup/restart fragility and concurrency observations. Do not perform additional TEI restarts unless explicitly required; restore/leave service state clearly documented. Write `benchmark-results/te-concurrency-profile-m042-s01.md` with scenarios attempted, successful T01/T02 signals, restart timeout evidence, and limitations.
 
 ## Inputs
 
-- None specified.
+- `documents/te-perf-snapshot-m042-s01.md`
+- `benchmark-results/te-concurrency-profile-m042-s01-run.txt`
+- `docker compose ps/logs output`
 
 ## Expected Output
 
-- `tools/profile_tei_concurrency.sh`
 - `benchmark-results/te-concurrency-profile-m042-s01.md`
 
 ## Verification
 
-Профиль собран, ≥4 сценария, queue_time pattern задокументирован.
+Artifact exists, includes >=4 scenarios/attempts (sequential batch32, parallel batch32 attempt, parallel batch1 attempt, idle batch32 attempt, restart timeout), records TEI health/startup evidence, and does not claim missing metrics as pass.

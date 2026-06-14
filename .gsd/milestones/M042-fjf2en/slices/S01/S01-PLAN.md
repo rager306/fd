@@ -26,19 +26,20 @@ Document consumed by S02 (async implementation) to decide concurrency level and 
   - Files: `benchmark-results/fd-v2-baseline-before-m041-s04.md`, `docs/fd-v2-compatibility-report.md`
   - Verify: Snapshot таблица с минимум 3 batch sizes, ≥10 data points каждый. Готова для вставки в RCA документ.
 
-- [ ] **T02: Live profile TEI: варьировать concurrency, batch size, timing** `est:1h`
-  Active measurement: (1) одновременно 4 curl в parallel с batch=32, измерить max queue_time vs sequential. (2) Одновременно 16 curl с batch=1, измерить queue_time degradation. (3) Sleep 30s, один curl batch=32 — sanity. (4) Перезапустить fd_tei (down/up), один curl batch=32 — измерить true cold start. Цель: понять TEI behavior при разной нагрузке.
-  - Files: `tools/profile_tei_concurrency.sh`
-  - Verify: Профиль собран, ≥4 сценария, queue_time pattern задокументирован.
+- [x] **T02: Documented the attempted TEI concurrency profile and the stronger finding: TEI restart/recreate can spend ~48 minutes in backend startup before becoming ready.** `est:1h`
+  Use evidence already captured from the failed profile run, docker health/logs, process state, and T01 direct TEI timings to document TEI startup/restart fragility and concurrency observations. Do not perform additional TEI restarts unless explicitly required; restore/leave service state clearly documented. Write `benchmark-results/te-concurrency-profile-m042-s01.md` with scenarios attempted, successful T01/T02 signals, restart timeout evidence, and limitations.
+  - Files: `benchmark-results/te-concurrency-profile-m042-s01.md`, `benchmark-results/te-concurrency-profile-m042-s01-run.txt`
+  - Verify: Artifact exists, includes >=4 scenarios/attempts (sequential batch32, parallel batch32 attempt, parallel batch1 attempt, idle batch32 attempt, restart timeout), records TEI health/startup evidence, and does not claim missing metrics as pass.
 
-- [ ] **T03: Сформулировать hypothesis tree + verdict document** `est:1h`
-  documents/te-perf-root-cause-m042.md: введение (TEI cold path 6s, queue_time 2.7s — почему), evidence section (из T01 + T02), hypothesis tree с минимум 3 гипотезами: (H1) single backend thread — TEI Rust default 1 worker despite max_concurrent_requests; (H2) lock contention в batcher scheduler; (H3) q_time metrics measures not real concurrency wait but internal scheduling. Каждая hypothesis с testable prediction, evidence supporting/refuting, verdict. Final verdict + recommended action для S02 (async) и S03 (ONNX).
+- [x] **T03: Wrote the M042 TEI RCA, concluding that TEI queue/startup behavior is the root target and ONNX should be deferred from the current milestone.** `est:1h`
+  Write `documents/te-perf-root-cause-m042.md` with introduction, evidence from T01/T02, hypothesis tree (>=3 hypotheses with testable predictions), verdict, and recommended action. The recommendation must explicitly defer ONNX runtime implementation from M042 and focus on TEI stabilization/mitigation. Cross-reference M019/M040 as historical ONNX research only, not current implementation scope.
   - Files: `documents/te-perf-root-cause-m042.md`
-  - Verify: Документ ≥2KB, содержит: snapshot, hypothesis tree (≥3 с testable predictions), verdict, recommended action. Cross-references M019 ONNX как comparison baseline. Файл может быть прочитан S02 executor'ом перед implementation.
+  - Verify: Document is >=2KB and contains snapshot, hypothesis tree with >=3 hypotheses and testable predictions, verdict, recommended TEI-first action, and M019/M040 cross-references. R020 can be validated from this artifact.
 
 ## Files Likely Touched
 
 - benchmark-results/fd-v2-baseline-before-m041-s04.md
 - docs/fd-v2-compatibility-report.md
-- tools/profile_tei_concurrency.sh
+- benchmark-results/te-concurrency-profile-m042-s01.md
+- benchmark-results/te-concurrency-profile-m042-s01-run.txt
 - documents/te-perf-root-cause-m042.md

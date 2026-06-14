@@ -24,15 +24,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: D045 фиксирует cache-hot трактовку T-P-1..T-P-5. `tools/verify_fd_v2_perf.sh` prewarm-ит measured payload через real inference и затем требует `X-Cache: HIT` для latency cases. Evidence: `benchmark-results/fd-v2-perf-validation-m041-s04.md` PASS (batch=1 p95 2.236ms, batch=10 p95 3.468ms, batch=32 p95 7.595ms, sequential/concurrent/cache HIT pass) плюс non-blocking cache-miss diagnostics.
 - Notes: Real cache-miss TEI CPU latency is intentionally diagnostic only for M041 S04; backend remediation was explicitly descoped by the user.
 
-### R020 — Письменный root cause analysis объясняет почему TEI queue_time=2.7s несмотря на max_concurrent_requests=512. Документ содержит hypothesis, evidence (TEI logs, /info metrics, профилирование), и рекомендации. Возможные выводы: (a) TEI single backend thread — fixed by source change (out of fd scope), (b) ONNX fallback, (c) async pipeline.
-- Class: quality-attribute
-- Status: active
-- Description: Письменный root cause analysis объясняет почему TEI queue_time=2.7s несмотря на max_concurrent_requests=512. Документ содержит hypothesis, evidence (TEI logs, /info metrics, профилирование), и рекомендации. Возможные выводы: (a) TEI single backend thread — fixed by source change (out of fd scope), (b) ONNX fallback, (c) async pipeline.
-- Why it matters: M041 perf measurements показали TEI cold path 6s per chunk — bottleneck для fd v2 latency target. Без RCA дальнейшие fixes (async/ONNX) могут не решить root problem. Документ нужен чтобы: (1) объяснить stakeholders почему current perf так себе, (2) обосновать выбор mitigation strategy, (3) capture знание для future M0xx milestones.
-- Source: M041-4tw0w7 perf measurement (2026-06-13 18:59) + M042 CONTEXT
-- Primary owning slice: M042-fjf2en/S01
-- Validation: documents/te-perf-root-cause-m042.md существует, содержит: (a) TEI cold telemetry snapshot, (b) hypothesis tree (1+ hypotheses with testable predictions), (c) evidence collected (TEI logs, /info, request patterns), (d) verdict + recommended action, (e) links to M019 ONNX measurements as comparison baseline.
-
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
 - Class: quality-attribute
 - Status: active
@@ -42,15 +33,6 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M042-fjf2en/S02
 - Validation: tools/verify_fd_async_perf.sh: FD_ASYNC_CHUNKS=true vs false perf comparison. Cold path batch=128 ≤10s (was 25s sequential). Cold path batch=32 ≤4s (was 6s sequential). Cache hit path не regressed (≤5ms per request). Benchmark artifact в benchmark-results/fd-v2-async-perf-m042.md.
 
-### R022 — Opt-in ONNX mode (FD_BACKEND=onnx, requires onnx build tag) — fd serves embeddings из Go ONNX runtime вместо TEI HTTP. Per M019: cold latency 8.3ms, warm 1.19ms, throughput 858 req/s. Опционально через env, default off (TEI остаётся production per R001/M015). fd binary должен билдиться с onnx tag без regression: все M041 acceptance criteria должны pass в обоих режимах.
-- Class: quality-attribute
-- Status: active
-- Description: Opt-in ONNX mode (FD_BACKEND=onnx, requires onnx build tag) — fd serves embeddings из Go ONNX runtime вместо TEI HTTP. Per M019: cold latency 8.3ms, warm 1.19ms, throughput 858 req/s. Опционально через env, default off (TEI остаётся production per R001/M015). fd binary должен билдиться с onnx tag без regression: все M041 acceptance criteria должны pass в обоих режимах.
-- Why it matters: M019 measurements показывают ONNX Go runtime на 100-700x быстрее TEI на warm path. Даже с ограничениями legal-quality gate (M015/M016), opt-in mode даёт операторам speed-first option для workloads где legal quality менее критична (например, прототипирование, non-legal embeddings). Production default остаётся TEI.
-- Source: M019 ONNX 1024 perf benchmark; M015/M016 legal quality gate (stays as blocking concern for production); M042 CONTEXT decision on opt-in
-- Primary owning slice: M042-fjf2en/S03
-- Validation: (1) ONNX binary builds clean с -tags onnx, (2) FD_BACKEND=onnx switches runtime, (3) cold path batch=32 ≤500ms (was 6s TEI), (4) warm path batch=1 ≤10ms (was 1.6ms TEI — comparable), (5) regression suite (all M041 acceptance tests) pass в обоих режимах, (6) legal quality gate deferred — documented в ONNX mode docs с reference to M015/M016.
-
 ### R026 — Upgrade fd `/openapi.json` and `/docs` contract from OpenAPI 3.1.0 to OAS 3.2.0, including verifier and validation evidence.
 - Class: integration
 - Status: active
@@ -59,6 +41,16 @@ This file is the explicit capability and coverage contract for the project.
 - Source: User follow-up after reviewing https://spec.openapis.org/oas/v3.2.0.html#openapi-specification
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
+
+### R027 — Current fd product/runtime scope is TEI-first: ONNX runtime branch must be disabled or removed from active build, CI, docs, and runtime selection paths; ONNX may remain only as future research history/artifacts.
+- Class: constraint
+- Status: active
+- Description: Current fd product/runtime scope is TEI-first: ONNX runtime branch must be disabled or removed from active build, CI, docs, and runtime selection paths; ONNX may remain only as future research history/artifacts.
+- Why it matters: ONNX has not passed operational readiness and adds build/runtime/artifact complexity. The project should advance the working TEI path without ONNX code paths, binary/dependency noise, or confusing operator choices.
+- Source: User directive during M042 TEI perf investigation
+- Primary owning slice: M042-fjf2en/S02
+- Validation: Default build, Docker image, docs, and runtime config expose only TEI as current backend; ONNX build/runtime selectors are absent or fail closed as explicitly research-only; `go test ./...`, golangci-lint v2.12.2, and govulncheck pass.
+- Notes: This supersedes M042/S03 ONNX implementation scope; R022 is deferred.
 
 ## Validated
 
@@ -241,6 +233,16 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `benchmark-results/fd-v2-validation-m041.md` 45/45 PASS validates `/openapi.json` (T010/T043), `/docs` (T011), `/v1/batch` (T038-T040), ETag/Cache-Control and 304 (T024-T026), `/v1/traces` (T012/T042), and cache-hot performance checks (T044-T045). T03/T05/T06/T07 task evidence covers rate limiting, cache validators, traces, OpenAPI validator, and docs unit tests.
 - Notes: SSE streaming remains optional and was not implemented in M041 S05; core R-P2 surfaces were validated.
 
+### R020 — Письменный root cause analysis объясняет почему TEI queue_time=2.7s несмотря на max_concurrent_requests=512. Документ содержит hypothesis, evidence (TEI logs, /info metrics, профилирование), и рекомендации. Возможные выводы: (a) TEI single backend thread — fixed by source change (out of fd scope), (b) ONNX fallback, (c) async pipeline.
+- Class: quality-attribute
+- Status: validated
+- Description: Письменный root cause analysis объясняет почему TEI queue_time=2.7s несмотря на max_concurrent_requests=512. Документ содержит hypothesis, evidence (TEI logs, /info metrics, профилирование), и рекомендации. Возможные выводы: (a) TEI single backend thread — fixed by source change (out of fd scope), (b) ONNX fallback, (c) async pipeline.
+- Why it matters: M041 perf measurements показали TEI cold path 6s per chunk — bottleneck для fd v2 latency target. Без RCA дальнейшие fixes (async/ONNX) могут не решить root problem. Документ нужен чтобы: (1) объяснить stakeholders почему current perf так себе, (2) обосновать выбор mitigation strategy, (3) capture знание для future M0xx milestones.
+- Source: M041-4tw0w7 perf measurement (2026-06-13 18:59) + M042 CONTEXT
+- Primary owning slice: M042-fjf2en/S01
+- Validation: `documents/te-perf-root-cause-m042.md` explains TEI queue/startup behavior with T01/T02 evidence: direct TEI batch=32 queue p50 ~2434.795ms despite `max_concurrent_requests=512`, and restart/recreate spent ~48 minutes from `Starting model backend` to `Ready` after delayed missing-ONNX ORT fallback. The RCA includes hypothesis tree, verdict, and TEI-first recommendation.
+- Notes: RCA rejects ONNX as M042 mitigation and defers ONNX implementation per D047/R022.
+
 ### R023 — Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
 - Class: quality-attribute
 - Status: validated
@@ -270,6 +272,16 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Deferred
 
+### R022 — Opt-in ONNX mode (FD_BACKEND=onnx, requires onnx build tag) — fd serves embeddings из Go ONNX runtime вместо TEI HTTP. Per M019: cold latency 8.3ms, warm 1.19ms, throughput 858 req/s. Опционально через env, default off (TEI остаётся production per R001/M015). fd binary должен билдиться с onnx tag без regression: все M041 acceptance criteria должны pass в обоих режимах.
+- Class: quality-attribute
+- Status: deferred
+- Description: Opt-in ONNX mode (FD_BACKEND=onnx, requires onnx build tag) — fd serves embeddings из Go ONNX runtime вместо TEI HTTP. Per M019: cold latency 8.3ms, warm 1.19ms, throughput 858 req/s. Опционально через env, default off (TEI остаётся production per R001/M015). fd binary должен билдиться с onnx tag без regression: все M041 acceptance criteria должны pass в обоих режимах.
+- Why it matters: M019 measurements показывают ONNX Go runtime на 100-700x быстрее TEI на warm path. Даже с ограничениями legal-quality gate (M015/M016), opt-in mode даёт операторам speed-first option для workloads где legal quality менее критична (например, прототипирование, non-legal embeddings). Production default остаётся TEI.
+- Source: M019 ONNX 1024 perf benchmark; M015/M016 legal quality gate (stays as blocking concern for production); M042 CONTEXT decision on opt-in
+- Primary owning slice: M042-fjf2en/S03
+- Validation: Deferred by user decision during M042: ONNX will not be implemented as current opt-in runtime. Prior M019 evidence remains research-only, not production readiness proof.
+- Notes: Replace M042/S03 ONNX implementation work with TEI-first stabilization and/or ONNX branch deactivation. Future ONNX work requires a separate research milestone and explicit packaging/readiness gates.
+
 ## Out of Scope
 
 ## Traceability
@@ -295,17 +307,18 @@ This file is the explicit capability and coverage contract for the project.
 | R017 | differentiator | validated | M041-4tw0w7/S05 | none | `benchmark-results/fd-v2-validation-m041.md` 45/45 PASS: T019 validates `encoding_format=base64`; T020 validates `priority=high`; T021 validates `user`; T033 validates invalid `encoding_format` returns `encoding_format_invalid`; T034 validates invalid priority returns `priority_invalid`. Unit evidence in `benchmark-results/m041-s05-t01-go-test.txt`. |
 | R018 | compliance/security | validated | M041-4tw0w7/S05 | none | Unit evidence in `benchmark-results/m041-s05-t02-go-test.txt` validates FD_API_KEY bearer auth: missing/wrong token -> 401 unauthorized, correct token -> 200, public endpoints skipped. `benchmark-results/fd-v2-validation-m041.md` validates CORS preflight (T027) and docs/openapi public surfaces. |
 | R019 | quality-attribute | validated | M041-4tw0w7/S05 | none | `benchmark-results/fd-v2-validation-m041.md` 45/45 PASS validates `/openapi.json` (T010/T043), `/docs` (T011), `/v1/batch` (T038-T040), ETag/Cache-Control and 304 (T024-T026), `/v1/traces` (T012/T042), and cache-hot performance checks (T044-T045). T03/T05/T06/T07 task evidence covers rate limiting, cache validators, traces, OpenAPI validator, and docs unit tests. |
-| R020 | quality-attribute | active | M042-fjf2en/S01 | none | documents/te-perf-root-cause-m042.md существует, содержит: (a) TEI cold telemetry snapshot, (b) hypothesis tree (1+ hypotheses with testable predictions), (c) evidence collected (TEI logs, /info, request patterns), (d) verdict + recommended action, (e) links to M019 ONNX measurements as comparison baseline. |
+| R020 | quality-attribute | validated | M042-fjf2en/S01 | none | `documents/te-perf-root-cause-m042.md` explains TEI queue/startup behavior with T01/T02 evidence: direct TEI batch=32 queue p50 ~2434.795ms despite `max_concurrent_requests=512`, and restart/recreate spent ~48 minutes from `Starting model backend` to `Ready` after delayed missing-ONNX ORT fallback. The RCA includes hypothesis tree, verdict, and TEI-first recommendation. |
 | R021 | quality-attribute | active | M042-fjf2en/S02 | none | tools/verify_fd_async_perf.sh: FD_ASYNC_CHUNKS=true vs false perf comparison. Cold path batch=128 ≤10s (was 25s sequential). Cold path batch=32 ≤4s (was 6s sequential). Cache hit path не regressed (≤5ms per request). Benchmark artifact в benchmark-results/fd-v2-async-perf-m042.md. |
-| R022 | quality-attribute | active | M042-fjf2en/S03 | none | (1) ONNX binary builds clean с -tags onnx, (2) FD_BACKEND=onnx switches runtime, (3) cold path batch=32 ≤500ms (was 6s TEI), (4) warm path batch=1 ≤10ms (was 1.6ms TEI — comparable), (5) regression suite (all M041 acceptance tests) pass в обоих режимах, (6) legal quality gate deferred — documented в ONNX mode docs с reference to M015/M016. |
+| R022 | quality-attribute | deferred | M042-fjf2en/S03 | none | Deferred by user decision during M042: ONNX will not be implemented as current opt-in runtime. Prior M019 evidence remains research-only, not production readiness proof. |
 | R023 | quality-attribute | validated | M043-dpr0cq/S01 | none | M043 S01: Tier 1 linters enabled and fixed; final lint 0 issues. Evidence: docs/static-analysis-phase1-report-m043.md, benchmark-results/m043-tier1-baseline.txt. |
 | R024 | quality-attribute | validated | M043-dpr0cq/S02 | none | M043 S02: Tier 2 linters enabled; 17 baseline issues fixed; final lint 0 issues. Evidence: docs/static-analysis-phase2-report-m043.md, benchmark-results/m043-s02-final-lint.txt. |
 | R025 | quality-attribute | validated | M043-dpr0cq/S03 | none | M043 S03: govulncheck CI step added and local govulncheck exits 0 with 0 reachable vulnerabilities; docs finalized. Evidence: benchmark-results/m043-s03-govulncheck-final.txt, docs/static-analysis-recommendation.md. |
 | R026 | integration | active | none | none | `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass. |
+| R027 | constraint | active | M042-fjf2en/S02 | none | Default build, Docker image, docs, and runtime config expose only TEI as current backend; ONNX build/runtime selectors are absent or fail closed as explicitly research-only; `go test ./...`, golangci-lint v2.12.2, and govulncheck pass. |
 
 ## Coverage Summary
 
-- Active requirements: 6
-- Mapped to slices: 5
-- Validated: 20 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R023, R024, R025)
+- Active requirements: 5
+- Mapped to slices: 4
+- Validated: 21 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025)
 - Unmapped active requirements: 1

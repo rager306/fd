@@ -1,0 +1,147 @@
+{
+  "runId": "uat:M042-fjf2en:S01:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M042-fjf2en",
+  "sliceId": "S01",
+  "uatType": "runtime-executable",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-14T10:19:39.090Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Direct TEI runtime timings captured for batch 1, 8, and 32.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "27eba803-8b8e-42dd-999b-553faebdaaca",
+          "note": "Verified snapshot artifact exists and contains direct TEI runtime timing evidence.",
+          "tool": "gsd_uat_exec",
+          "executionId": "27eba803-8b8e-42dd-999b-553faebdaaca"
+        }
+      ],
+      "notes": "Snapshot summarized in documents/te-perf-snapshot-m042-s01.md."
+    },
+    {
+      "id": "UAT-02",
+      "description": "TEI restart/runtime diagnostic captured.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "264fd92f-0473-46be-b0ce-11bda62d8add",
+          "note": "Verified restart diagnostic artifact contains attempted scenarios and TEI startup evidence.",
+          "tool": "gsd_uat_exec",
+          "executionId": "264fd92f-0473-46be-b0ce-11bda62d8add"
+        }
+      ],
+      "notes": "Profiler restart exposed operationally significant startup delay."
+    },
+    {
+      "id": "UAT-03",
+      "description": "RCA includes hypothesis tree, verdict, and recommended TEI-first action.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "82ebdd5c-15a6-4f3c-9610-f018ead7624d",
+          "note": "Verified RCA structure, required hypotheses, verdict, recommendation, and cross-references.",
+          "tool": "gsd_uat_exec",
+          "executionId": "82ebdd5c-15a6-4f3c-9610-f018ead7624d"
+        }
+      ],
+      "notes": "R020 validated from RCA."
+    },
+    {
+      "id": "UAT-04",
+      "description": "ONNX scope is deferred in GSD state.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "1e65e736-629e-4814-a674-62bed935a206",
+          "note": "Verified D047, R022 deferred, R027, and skipped S03 are present in GSD state.",
+          "tool": "gsd_uat_exec",
+          "executionId": "1e65e736-629e-4814-a674-62bed935a206"
+        }
+      ],
+      "notes": "S03 was skipped."
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "S01 UAT is runtime-executable through direct TEI HTTP checks and Docker runtime health/log evidence; no browser UI is involved.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S01 runtime diagnostics and RCA are complete; ONNX is deferred from M042."
+}

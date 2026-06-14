@@ -1,62 +1,74 @@
-# S02: Async parallel chunked TEI calls in handler
+# S02: TEI active-path cleanup and safe mitigation
 
-**Goal:** Async parallel chunked TEI calls in handler with M043 lint/security gates built into the design: bounded concurrency, context propagation, small helper functions, observability, perf proof, and regression coverage.
-**Demo:** After this, FD_ASYNC_CHUNKS=true enables parallel chunking: cold path for batch=128 падает с 25s до ≤10s, batch=32 с 6s до ≤4s. Cache hit path не regressed. New X-Concurrent-Chunks header в response для observability.
+**Goal:** Make fd TEI-first by removing or disabling active ONNX runtime/build/config/docs surfaces, then decide whether TEI async chunking remains worth implementing from fresh evidence. ONNX stays future research only.
+**Demo:** After this, active build/config/docs no longer present ONNX as a current runtime path; TEI remains the only current backend, and any TEI request-shaping mitigation has fresh safe evidence or is explicitly deferred.
 
 ## Must-Haves
 
-- FD_ASYNC_CHUNKS=true enables bounded parallel chunking with max concurrency 4.
-- Cold path batch=128 improves to <=10s without cache-hit regression.
-- X-Concurrent-Chunks header or equivalent metric exposes concurrency count in async mode.
-- Production functions introduced/modified by this slice stay at gocyclo <=15 or have explicit justified exceptions.
-- `go test ./...`, 18-linter golangci-lint, and govulncheck all exit 0.
+- Active production/runtime config exposes TEI as the only current backend; ONNX runtime selector/build path is removed or fails closed as research-only.
+- Default build/test/Docker path no longer depends on ONNX runtime/tokenizer artifacts.
+- README/docs/compose comments no longer tell operators to pursue ONNX as current optimization.
+- R027 is validated with code/docs evidence.
+- R021 is either validated by a safe TEI mitigation proof or explicitly deferred with rationale.
+- `go test ./...`, golangci-lint v2.12.2, and govulncheck pass after final changes.
 
 ## Proof Level
 
-- This slice proves: Perf proof + integration/regression proof + M043 static-analysis gates.
+- This slice proves: Code, docs, runtime/config verification, and mandatory Go gates.
 
 ## Integration Closure
 
-Async mode remains opt-in. Default sync TEI path is unchanged and regression-tested. M041 acceptance behavior remains valid in both FD_ASYNC_CHUNKS=false and true modes.
+S02 consumes S01 RCA. It leaves fd in a coherent TEI-only current posture and prepares milestone closure without requiring ONNX S03.
 
 ## Verification
 
-- Adds async chunk count and error/cancellation visibility; must avoid high-cardinality metric labels and noisy global state.
+- Remove ONNX-related ambiguity from runtime health/docs. Preserve TEI runtime metadata and diagnostic evidence paths.
 
 ## Tasks
 
-- [ ] **T01: Implement lint-aware async chunked orchestrator** `est:3h`
-  Implement bounded parallel TEI chunk orchestration for batches larger than TEI's per-request limit. Keep production functions below gocyclo 15 by extracting small helpers for chunk planning, worker execution, ordered result assembly, and error aggregation. Propagate request context into every goroutine/call so contextcheck stays clean; ensure goroutines stop on cancellation and do not leak. Avoid exported APIs unless required; any exported helper/type needs meaningful godoc because revive:exported is now enforced.
-  - Files: `api/handlers/embeddings.go`, `api/handlers/embeddings_integration_test.go`
-  - Verify: cd api && go test ./handlers ./middleware && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./handlers ./middleware
+- [ ] **T01: Inventory ONNX active surfaces and define removal boundary** `est:45m`
+  Map active ONNX references across source, tests, Dockerfile, compose, docs, tools, CI, and requirements. Distinguish historical research artifacts from active runtime/build surfaces. Produce `documents/onnx-deactivation-inventory-m042.md` with a remove/keep table and risk notes. Do not edit code in this task.
+  - Files: `documents/onnx-deactivation-inventory-m042.md`
+  - Verify: Inventory artifact exists and lists active source/config/docs surfaces plus explicit keep/remove decisions.
 
-- [ ] **T02: Wire FD_ASYNC_CHUNKS env into handler and main config** `est:1h`
-  Add FD_ASYNC_CHUNKS configuration with default false and wire it into EmbeddingsHandler without changing default TEI behavior. Keep config parsing small and testable; use contextual errors for invalid env values if any. Ensure the handler path is explicit enough for future agents to see sync vs async behavior, and keep public config comments/godoc aligned with revive:exported requirements if new exported symbols are introduced.
-  - Files: `api/main.go`, `api/handlers/embeddings.go`, `api/main_test.go`, `api/handlers/embeddings_integration_test.go`
-  - Verify: cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./...
+- [ ] **T02: Remove ONNX runtime selection from active API startup path** `est:1h`
+  Edit active Go runtime startup/config so fd no longer accepts ONNX as a current backend selector. Remove or neutralize ONNX env parsing/config branches, update tests accordingly, and ensure invalid ONNX env usage fails closed with a clear TEI-only error or is ignored only if documented. Keep TEI behavior unchanged.
+  - Files: `api/main.go`, `api/main_test.go`, `api/embed/`
+  - Verify: Targeted Go tests for runtime config pass; TEI startup config still passes; ONNX selector is absent or fails closed as TEI-only.
 
-- [ ] **T03: Add async observability header and metrics** `est:1h`
-  Add X-Concurrent-Chunks response header in async mode and metrics/log surfaces that make the chunk count, miss count, and cancellation/error paths observable. Do not introduce noisy globals or unbounded labels. Ensure header/middleware interactions remain compatible with M041 S03 headers work and that new observability code passes gocritic/contextcheck.
-  - Files: `api/handlers/embeddings.go`, `api/handlers/embeddings_integration_test.go`
-  - Verify: cd api && go test ./handlers && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./handlers
+- [ ] **T03: Remove ONNX build dependency and artifact surfaces from active module** `est:1.5h`
+  Remove ONNX-only build artifacts, Dockerfile paths, module dependencies, and tests that are no longer part of active product scope, or quarantine them in documentation-only research artifacts if deletion is unsafe. Run `go mod tidy` if dependencies are removed. Preserve historical benchmark/docs files.
+  - Files: `api/go.mod`, `api/go.sum`, `Dockerfile.onnx`, `api/embed/onnx*.go`, `api/embed/*onnx*_test.go`, `tools/*onnx*`
+  - Verify: Default `go test ./...` works without ONNX runtime/toolchain dependencies; `go list -deps ./...` no longer includes ONNX runtime packages unless justified.
 
-- [ ] **T04: Benchmark async versus sync cold and warm paths** `est:2h`
-  Create or update perf benchmark tooling to compare FD_ASYNC_CHUNKS=false versus true for cold batch=32, cold batch=128, and cache-hit path. Record before/after numbers in benchmark-results/fd-v2-async-perf-m042.md. Include the expanded M043 gate in the verification transcript so perf work cannot regress lint/test/security gates.
-  - Files: `tools/verify_fd_async_perf.sh`, `benchmark-results/fd-v2-async-perf-m042.md`, `benchmark.py`
-  - Verify: cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./... && go run golang.org/x/vuln/cmd/govulncheck@latest ./... && ../tools/verify_fd_async_perf.sh
+- [ ] **T04: Update docs and operator contract to TEI-only current posture** `est:1h`
+  Update README, same-host contract, fd-v2 docs, and relevant operations docs to state TEI is the only current runtime. Mark ONNX as historical/future research, not an operator option. Remove outdated compose comments suggesting ONNX export as current optimization. Update R021/R027/R022 statuses if evidence supports it.
+  - Files: `README.md`, `docs/same-host-embedding-service-contract.md`, `docs/fd-v2.md`, `docker-compose.yaml`, `.gsd/REQUIREMENTS.md`
+  - Verify: Docs contain TEI-only current posture and no active ONNX operator instructions outside historical/future research notes.
 
-- [ ] **T05: Run regression suite for M041 acceptance in async mode** `est:1h`
-  Run the M041 acceptance/regression suite with FD_ASYNC_CHUNKS=false and true. Confirm error envelopes, validation behavior, cache-hit path, headers, and lifecycle assumptions are unchanged. Final completion evidence must include go test ./..., golangci-lint 18 linters, and govulncheck 0 reachable vulnerabilities.
-  - Files: `benchmark-results/fd-v2-async-regression-m042.md`, `api/handlers/embeddings_integration_test.go`
-  - Verify: cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./... && go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+- [ ] **T05: Final TEI-only gates and milestone scope decision** `est:1h`
+  Run mandatory M043 gates and final TEI-only checks: `go test ./...`, golangci-lint v2.12.2, govulncheck, and a small runtime/config smoke if Docker service is healthy. Record whether R021 async chunking is deferred or implemented separately. Validate R027. Write final S02 evidence artifacts.
+  - Files: `benchmark-results/m042-s02-go-test.txt`, `benchmark-results/m042-s02-lint.txt`, `benchmark-results/m042-s02-govulncheck.txt`, `benchmark-results/m042-s02-tei-only-check.txt`
+  - Verify: All mandatory gates pass; R027 validated; R021 either validated with evidence or deferred with explicit rationale.
 
 ## Files Likely Touched
 
-- api/handlers/embeddings.go
-- api/handlers/embeddings_integration_test.go
+- documents/onnx-deactivation-inventory-m042.md
 - api/main.go
 - api/main_test.go
-- tools/verify_fd_async_perf.sh
-- benchmark-results/fd-v2-async-perf-m042.md
-- benchmark.py
-- benchmark-results/fd-v2-async-regression-m042.md
+- api/embed/
+- api/go.mod
+- api/go.sum
+- Dockerfile.onnx
+- api/embed/onnx*.go
+- api/embed/*onnx*_test.go
+- tools/*onnx*
+- README.md
+- docs/same-host-embedding-service-contract.md
+- docs/fd-v2.md
+- docker-compose.yaml
+- .gsd/REQUIREMENTS.md
+- benchmark-results/m042-s02-go-test.txt
+- benchmark-results/m042-s02-lint.txt
+- benchmark-results/m042-s02-govulncheck.txt
+- benchmark-results/m042-s02-tei-only-check.txt
