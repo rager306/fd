@@ -415,6 +415,7 @@ func main() {
 	r.Use(middleware.HeadersMiddleware(buildInfo, modelID))
 	r.Use(metrics.Middleware())
 	r.Use(middleware.APIKeyAuthFromEnv())
+	r.Use(middleware.IPRateLimitFromEnv())
 
 	// 404/405 envelopes for paths/methods that don't match a registered
 	// route. Without these, gin returns text/plain "404 page not found"
@@ -441,7 +442,7 @@ func main() {
 	// 4xx/5xx (400 input_required, 413 input_too_long, 413 batch_too_large,
 	// 413 payload_too_large) are returned without burning inference
 	// capacity. The handler reads the parsed request from gin context.
-	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), embedHandler.CreateEmbedding)
+	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), middleware.UserRateLimitFromEnv(), middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), embedHandler.CreateEmbedding)
 	r.POST("/embeddings/batch", batchHandler.CreateBatchEmbeddings)
 
 	addr := bindHost + ":" + port

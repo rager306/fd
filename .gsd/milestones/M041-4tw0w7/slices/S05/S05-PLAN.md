@@ -42,7 +42,7 @@
   - Files: `api/middleware/auth.go`, `api/middleware/cors.go`, `api/middleware/auth_test.go`, `api/middleware/cors_test.go`
   - Verify: Unit tests: T-E-9 (с FD_API_KEY=test, без Authorization → 401 unauthorized, с правильным Bearer → 200). OPTIONS preflight → 204 с правильными CORS headers.
 
-- [ ] **T03: Rate limiting (per-IP, per-user)** `est:3h`
+- [x] **T03: Added opt-in per-IP and per-user rate limiting with X-RateLimit headers and 429 retry envelopes.** `est:3h`
   api/middleware/ratelimit.go: token bucket per IP (100 req/min default) и per user (1000 req/min default если user field задан). Env FD_RATE_LIMIT_IP_RPM, FD_RATE_LIMIT_USER_RPM для конфигурации. Headers X-RateLimit-Limit/Remaining/Reset на каждом response. На превышение → 429 rate_limit_exceeded + Retry-After: 60. Опционально через FD_RATE_LIMIT_ENABLED=true (default false для обратной совместимости).
   - Files: `api/middleware/ratelimit.go`, `api/middleware/ratelimit_test.go`
   - Verify: Unit tests: с включённым rate limit, 101-й запрос за минуту → 429 с X-RateLimit-* headers и Retry-After: 60. Per-user limit отдельно от per-IP.
