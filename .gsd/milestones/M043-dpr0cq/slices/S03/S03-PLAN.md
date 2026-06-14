@@ -21,17 +21,17 @@ Builds on S01+S02 lint stack hardened. Adds govulncheck as final security layer.
 
 ## Tasks
 
-- [ ] **T01: Initial govulncheck scan + resolution** `est:1h`
+- [x] **T01: Initial govulncheck scan completed: 0 reachable vulnerabilities, exit 0** `est:1h`
   Initial govulncheck scan на main branch: `go run golang.org/x/vuln/cmd/govulncheck@latest ./...` (или pinned version). Записать output: vuln count, affected deps, severity. Если 0 vulns → proceed к T02. Если vulns found: (a) try upgrade dep to fix version, (b) если breaking — pin to last safe version, (c) если pin impossible — document why with team sign-off. Loop until exit 0.
   - Files: `api/go.mod (если upgrades needed)`, `api/go.sum (если upgrades needed)`
   - Verify: govulncheck exit 0 на main после resolution. ИЛИ documented exclusion с team sign-off. Записать final scan output.
 
-- [ ] **T02: CI integration: govulncheck step в go-quality.yml** `est:30min`
+- [x] **T02: CI govulncheck step added after golangci-lint in go-quality workflow** `est:30min`
   .github/workflows/go-quality.yml: добавить step "Run govulncheck" между "Run GolangCI-Lint" и финальным job completion. Использовать `go run golang.org/x/vuln/cmd/govulncheck@latest` для reproducibility (не требует manual install). Поместить после lint step чтобы vuln scan запускается только если lint passed. Failure on any reported vuln. Verify CI workflow YAML valid.
   - Files: `.github/workflows/go-quality.yml`
   - Verify: CI workflow YAML valid (parseable). Step добавлен в правильное место. В локальном dry-run (если возможно) показывает step.
 
-- [ ] **T03: docs finalization: M043 outcome section в static-analysis-recommendation.md** `est:1h`
+- [x] **T03: Static analysis recommendation finalized with M043 outcome, measurements, suppressions, and future work** `est:1h`
   docs/static-analysis-recommendation.md: добавить M043 outcome section (append в конце файла). Содержание: (1) Tier 1 implemented (gosec, bodyclose, prealloc, errorlint, revive) с issue count (baseline vs fixed), (2) Tier 2 implemented (gocyclo, gocritic, durationcheck, unparam, contextcheck, nilnil) с complexity refactor highlights, (3) Tier 3 deferred opt-in (gofumpt, structslop, maligned, aligncheck, dupl, nakedret, wsl, goimports, lll) с reason (style preference or premature optimization), (4) govulncheck CI step active, (5) false positive rate per linter (baseline measurement from S01/S02), (6) exclusions table (//nolint: <linter> с commit reference и justification), (7) future work (pre-commit hooks, custom Semgrep rules, IDE integration, semver dep upgrades). Final artifact: документ становится as-implemented record + roadmap для future M0xx milestones.
   - Files: `docs/static-analysis-recommendation.md`
   - Verify: Документ обновлён, M043 outcome section присутствует (≥2KB added content). Final .golangci.yml consolidated (Tier 3 linters НЕ добавлены, explicit comment в YAML объясняет). Все M041 + S01 + S02 acceptance pass.

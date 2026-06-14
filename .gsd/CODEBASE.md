@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-28T12:59:41Z | Files: 141 | Described: 0/141
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-28T12:59:41Z","fingerprint":"0e6474fd681e17df6d3474bf02efac1e349ff354","fileCount":141,"truncated":false} -->
+Generated: 2026-06-14T05:17:25Z | Files: 160 | Described: 0/160
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T05:17:25Z","fingerprint":"dca37ff0b45e6add88965743d82a46545d573669","fileCount":160,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -38,6 +38,7 @@ Generated: 2026-05-28T12:59:41Z | Files: 141 | Described: 0/141
 - `api/cache/tiered.go`
 
 ### api/embed/
+- `api/embed/codec.go`
 - `api/embed/dimensions_test.go`
 - `api/embed/hf_tokenizer_native_test.go`
 - `api/embed/hf_tokenizer_native.go`
@@ -59,14 +60,27 @@ Generated: 2026-05-28T12:59:41Z | Files: 141 | Described: 0/141
 - `api/handlers/constants.go`
 - `api/handlers/embeddings_integration_test.go`
 - `api/handlers/embeddings.go`
+- `api/handlers/errors_test.go`
+- `api/handlers/errors.go`
 - `api/handlers/health_test.go`
 - `api/handlers/health.go`
+- `api/handlers/notfound.go`
+- `api/handlers/recovery_test.go`
+- `api/handlers/recovery.go`
+
+### api/middleware/
+- `api/middleware/validation_test.go`
+- `api/middleware/validation.go`
 
 ### benchmark-results/
-- *(67 files: 64 .txt, 3 .md)*
+- *(74 files: 70 .txt, 4 .md)*
 
 ### docs/
+- `docs/fd-v2.md`
 - `docs/same-host-embedding-service-contract.md`
+- `docs/static-analysis-phase1-report-m043.md`
+- `docs/static-analysis-phase2-report-m043.md`
+- `docs/static-analysis-recommendation.md`
 
 ### docs/onnx-artifacts/
 - `docs/onnx-artifacts/hf-tokenizers-linux-amd64.json`

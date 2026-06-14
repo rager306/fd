@@ -122,24 +122,6 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M042-fjf2en/S03
 - Validation: (1) ONNX binary builds clean с -tags onnx, (2) FD_BACKEND=onnx switches runtime, (3) cold path batch=32 ≤500ms (was 6s TEI), (4) warm path batch=1 ≤10ms (was 1.6ms TEI — comparable), (5) regression suite (all M041 acceptance tests) pass в обоих режимах, (6) legal quality gate deferred — documented в ONNX mode docs с reference to M015/M016.
 
-### R023 — Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
-- Class: quality-attribute
-- Status: active
-- Description: Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
-- Why it matters: fd имеет консервативный baseline из 7 linters (errcheck, govet, ineffassign, staticcheck, unused, goconst, misspell). Без gosec, bodyclose, prealloc, errorlint, revive: (a) security issues не ловятся (gosec G107/G110), (b) HTTP body leaks могут проскочить (bodyclose), (c) slice allocations regressions возможны (prealloc), (d) error wrapping regressions возможны (errorlint), (e) code documentation quality не enforced (revive). 2026 Go community consensus: golangci-lint + staticcheck + targeted security/optim linters — стандарт де-факто.
-- Source: https://github.com/dpolivaev/static-analysis Go section + 2026 community consensus (Reddit r/golang, analysis-tools.dev); M041-4tw0w7 baseline (7 linters)
-- Primary owning slice: M043-dpr0cq/S01
-- Validation: golangci-lint run --config .golangci.yml exit 0 на всём fd repo. Каждый Tier 1 линтер в fail mode (не warn). Новые linters, в отличие от baseline 7, integrated. CI go-quality.yml runs full lint and fails on issues. Документ docs/static-analysis-phase1-report-m043.md фиксирует baseline issues count, fix list, exclusions rationale.
-
-### R024 — Добавить Tier 2 linters: gocyclo (cyclomatic complexity, custom threshold для fd), gocritic (selective enabled-tags: diagnostic, performance, style), durationcheck (time.Duration conversions), unparam (unused parameters), contextcheck (context propagation), nilnil (nil error returns). Каждый в warn mode первым проходом, потом fail mode. Fix issues в существующем коде (особенно gocyclo в CreateEmbedding handler в M041 S01, M042 S02 async orchestrator).
-- Class: quality-attribute
-- Status: active
-- Description: Добавить Tier 2 linters: gocyclo (cyclomatic complexity, custom threshold для fd), gocritic (selective enabled-tags: diagnostic, performance, style), durationcheck (time.Duration conversions), unparam (unused parameters), contextcheck (context propagation), nilnil (nil error returns). Каждый в warn mode первым проходом, потом fail mode. Fix issues в существующем коде (особенно gocyclo в CreateEmbedding handler в M041 S01, M042 S02 async orchestrator).
-- Why it matters: Phase 1 закрывает critical gaps (security, body leaks, allocations, error wrapping, docs). Phase 2 покрывает medium-value checks: complexity (CreateEmbedding уже ~150 LOC с nested loops после M041 S04 chunking), quality (unused params, context), style (naming, structure). 2026 best practice: gocyclo с threshold=15-20 для service code, gocritic selective to avoid noise.
-- Source: https://github.com/dpolivaev/static-analysis Go section + 2026 community consensus; fd complexity analysis (M041 S04 chunked handler ~150 LOC)
-- Primary owning slice: M043-dpr0cq/S02
-- Validation: golangci-lint run --config .golangci.yml exit 0 в Tier 2 fail mode. Все Tier 1 + Tier 2 linters active. gocyclo threshold явно установлен. Issue count reduction vs Phase 1 (fewer issues, complex code refactored). docs/static-analysis-phase2-report-m043.md с complexity metrics, before/after LOC distribution.
-
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -241,6 +223,33 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M040-pbp9z1 S01 contract and health metadata establish runtime identity and no-silent-fallback rules; /v1/embeddings request model is compatibility metadata, not a selector. S04 final stance and verifier require no request-level fallback and a smoke embedding readiness check beyond /health.
 - Notes: Validated for current service semantics: runtime fallback or model switching must be an operator-level restart/reconfiguration path, not hidden per-request behavior.
 
+### R023 — Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
+- Class: quality-attribute
+- Status: validated
+- Description: Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
+- Why it matters: fd имеет консервативный baseline из 7 linters (errcheck, govet, ineffassign, staticcheck, unused, goconst, misspell). Без gosec, bodyclose, prealloc, errorlint, revive: (a) security issues не ловятся (gosec G107/G110), (b) HTTP body leaks могут проскочить (bodyclose), (c) slice allocations regressions возможны (prealloc), (d) error wrapping regressions возможны (errorlint), (e) code documentation quality не enforced (revive). 2026 Go community consensus: golangci-lint + staticcheck + targeted security/optim linters — стандарт де-факто.
+- Source: https://github.com/dpolivaev/static-analysis Go section + 2026 community consensus (Reddit r/golang, analysis-tools.dev); M041-4tw0w7 baseline (7 linters)
+- Primary owning slice: M043-dpr0cq/S01
+- Validation: M043 S01: Tier 1 linters enabled and fixed; final lint 0 issues. Evidence: docs/static-analysis-phase1-report-m043.md, benchmark-results/m043-tier1-baseline.txt.
+
+### R024 — Добавить Tier 2 linters: gocyclo (cyclomatic complexity, custom threshold для fd), gocritic (selective enabled-tags: diagnostic, performance, style), durationcheck (time.Duration conversions), unparam (unused parameters), contextcheck (context propagation), nilnil (nil error returns). Каждый в warn mode первым проходом, потом fail mode. Fix issues в существующем коде (особенно gocyclo в CreateEmbedding handler в M041 S01, M042 S02 async orchestrator).
+- Class: quality-attribute
+- Status: validated
+- Description: Добавить Tier 2 linters: gocyclo (cyclomatic complexity, custom threshold для fd), gocritic (selective enabled-tags: diagnostic, performance, style), durationcheck (time.Duration conversions), unparam (unused parameters), contextcheck (context propagation), nilnil (nil error returns). Каждый в warn mode первым проходом, потом fail mode. Fix issues в существующем коде (особенно gocyclo в CreateEmbedding handler в M041 S01, M042 S02 async orchestrator).
+- Why it matters: Phase 1 закрывает critical gaps (security, body leaks, allocations, error wrapping, docs). Phase 2 покрывает medium-value checks: complexity (CreateEmbedding уже ~150 LOC с nested loops после M041 S04 chunking), quality (unused params, context), style (naming, structure). 2026 best practice: gocyclo с threshold=15-20 для service code, gocritic selective to avoid noise.
+- Source: https://github.com/dpolivaev/static-analysis Go section + 2026 community consensus; fd complexity analysis (M041 S04 chunked handler ~150 LOC)
+- Primary owning slice: M043-dpr0cq/S02
+- Validation: M043 S02: Tier 2 linters enabled; 17 baseline issues fixed; final lint 0 issues. Evidence: docs/static-analysis-phase2-report-m043.md, benchmark-results/m043-s02-final-lint.txt.
+
+### R025 — Standalone govulncheck (golang.org/x/vuln) integrated в CI go-quality.yml. Команда: go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./... Scan dependencies (api/go.mod) + stdlib usage в fd. Включить как required CI step (fail on known vulnerabilities). Также: docs/static-analysis-recommendation.md обновить с финальной M043 phased plan: что реализовано (Phase 1, 2, 3), что deferred (govulncheck always-on после CI integration, future tiers), Phase 3 opt-in linters (gofumpt, structslop, etc).
+- Class: quality-attribute
+- Status: validated
+- Description: Standalone govulncheck (golang.org/x/vuln) integrated в CI go-quality.yml. Команда: go install golang.org/x/vuln/cmd/govulncheck@latest && govulncheck ./... Scan dependencies (api/go.mod) + stdlib usage в fd. Включить как required CI step (fail on known vulnerabilities). Также: docs/static-analysis-recommendation.md обновить с финальной M043 phased plan: что реализовано (Phase 1, 2, 3), что deferred (govulncheck always-on после CI integration, future tiers), Phase 3 opt-in linters (gofumpt, structslop, etc).
+- Why it matters: govulncheck — официальный Go vuln scanner (golang.org/x/vuln). Catches known vulnerabilities в stdlib и зависимостях. golangci-lint НЕ покрывает эту функциональность (отдельный tool). 2026 best practice: govulncheck как required CI step. Phase 3 закрывает оставшиеся gaps из analysis (govulncheck CI integration + documentation finalization).
+- Source: https://github.com/dpolivaev/static-analysis Go section (govulncheck); 2026 Go security best practice; M041 fd depends on gin, redis/go-redis, onnxruntime, etc.
+- Primary owning slice: M043-dpr0cq/S03
+- Validation: M043 S03: govulncheck CI step added and local govulncheck exits 0 with 0 reachable vulnerabilities; docs finalized. Evidence: benchmark-results/m043-s03-govulncheck-final.txt, docs/static-analysis-recommendation.md.
+
 ## Deferred
 
 ## Out of Scope
@@ -271,12 +280,13 @@ This file is the explicit capability and coverage contract for the project.
 | R020 | quality-attribute | active | M042-fjf2en/S01 | none | documents/te-perf-root-cause-m042.md существует, содержит: (a) TEI cold telemetry snapshot, (b) hypothesis tree (1+ hypotheses with testable predictions), (c) evidence collected (TEI logs, /info, request patterns), (d) verdict + recommended action, (e) links to M019 ONNX measurements as comparison baseline. |
 | R021 | quality-attribute | active | M042-fjf2en/S02 | none | tools/verify_fd_async_perf.sh: FD_ASYNC_CHUNKS=true vs false perf comparison. Cold path batch=128 ≤10s (was 25s sequential). Cold path batch=32 ≤4s (was 6s sequential). Cache hit path не regressed (≤5ms per request). Benchmark artifact в benchmark-results/fd-v2-async-perf-m042.md. |
 | R022 | quality-attribute | active | M042-fjf2en/S03 | none | (1) ONNX binary builds clean с -tags onnx, (2) FD_BACKEND=onnx switches runtime, (3) cold path batch=32 ≤500ms (was 6s TEI), (4) warm path batch=1 ≤10ms (was 1.6ms TEI — comparable), (5) regression suite (all M041 acceptance tests) pass в обоих режимах, (6) legal quality gate deferred — documented в ONNX mode docs с reference to M015/M016. |
-| R023 | quality-attribute | active | M043-dpr0cq/S01 | none | golangci-lint run --config .golangci.yml exit 0 на всём fd repo. Каждый Tier 1 линтер в fail mode (не warn). Новые linters, в отличие от baseline 7, integrated. CI go-quality.yml runs full lint and fails on issues. Документ docs/static-analysis-phase1-report-m043.md фиксирует baseline issues count, fix list, exclusions rationale. |
-| R024 | quality-attribute | active | M043-dpr0cq/S02 | none | golangci-lint run --config .golangci.yml exit 0 в Tier 2 fail mode. Все Tier 1 + Tier 2 linters active. gocyclo threshold явно установлен. Issue count reduction vs Phase 1 (fewer issues, complex code refactored). docs/static-analysis-phase2-report-m043.md с complexity metrics, before/after LOC distribution. |
+| R023 | quality-attribute | validated | M043-dpr0cq/S01 | none | M043 S01: Tier 1 linters enabled and fixed; final lint 0 issues. Evidence: docs/static-analysis-phase1-report-m043.md, benchmark-results/m043-tier1-baseline.txt. |
+| R024 | quality-attribute | validated | M043-dpr0cq/S02 | none | M043 S02: Tier 2 linters enabled; 17 baseline issues fixed; final lint 0 issues. Evidence: docs/static-analysis-phase2-report-m043.md, benchmark-results/m043-s02-final-lint.txt. |
+| R025 | quality-attribute | validated | M043-dpr0cq/S03 | none | M043 S03: govulncheck CI step added and local govulncheck exits 0 with 0 reachable vulnerabilities; docs finalized. Evidence: benchmark-results/m043-s03-govulncheck-final.txt, docs/static-analysis-recommendation.md. |
 
 ## Coverage Summary
 
-- Active requirements: 15
-- Mapped to slices: 15
-- Validated: 9 (R001, R002, R003, R004, R005, R006, R007, R008, R009)
+- Active requirements: 13
+- Mapped to slices: 13
+- Validated: 12 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R023, R024, R025)
 - Unmapped active requirements: 0

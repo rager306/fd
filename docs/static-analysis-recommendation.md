@@ -13,12 +13,13 @@ related: M041-4tw0w7 (fd v2 quality baseline)
 
 ## 1. Current state
 
-`fd` uses `golangci-lint v2.12.2` (pinned in CI) with **7 enabled linters**:
+As of **M043 S03**, `fd` uses `golangci-lint v2.12.2` (pinned in CI) with **18 enabled linters** in fail mode:
 
 ```yaml
 # .golangci.yml
 linters:
   enable:
+    # M040 baseline (7)
     - errcheck
     - govet
     - ineffassign
@@ -26,11 +27,24 @@ linters:
     - unused
     - goconst
     - misspell
+    # M043 S01 Tier 1 (5)
+    - gosec
+    - bodyclose
+    - prealloc
+    - errorlint
+    - revive
+    # M043 S02 Tier 2 (6)
+    - gocyclo
+    - gocritic
+    - durationcheck
+    - unparam
+    - contextcheck
+    - nilnil
 ```
 
-CI: `.github/workflows/go-quality.yml` runs `go test ./... -short` + `golangci-lint run` on push to master and PRs. Go version: 1.22.2 locally, 1.25.x in CI.
+CI: `.github/workflows/go-quality.yml` runs `go test ./... -short`, ONNX artifact metadata checks, binary-tracking guard, `golangci-lint run`, and standalone `govulncheck` on push to master and PRs. Go version: `1.25.x` in CI.
 
-`go.mod` has zero dev-tooling deps (no staticcheck, gosec, etc. as direct imports).
+`govulncheck` is run with `go run golang.org/x/vuln/cmd/govulncheck@latest ./...`; it is intentionally separate from golangci-lint because it reasons about reachable vulnerabilities rather than style/static lint findings.
 
 ## 2. Gap analysis vs curated awesome list
 
@@ -190,24 +204,70 @@ Or pin in CI via `go run golang.org/x/vuln/cmd/govulncheck@latest`.
 
 M041 S01 introduced `api/handlers/{errors,recovery,notfound}.go` + `api/middleware/validation.go` + `api/embed/codec.go` — all new code that should pass the new linters cleanly. Phase 1 step 1.3 should fix issues in this new code first (it's the most recently added and most-likely-to-have-style-issues).
 
-## 7. M043 proposal (formal milestone)
+## 7. M043 outcome (implemented)
 
-If user wants this as a formal GSD milestone, the structure would be:
+M043 was executed as a formal GSD milestone with three slices:
 
-- **M043: Static analysis quality hardening** (3 slices):
-  - **S01: Tier 1 lint adoption** (gosec, bodyclose, prealloc, errorlint, revive + govulncheck). ~4h. Fix existing issues, integrate CI.
-  - **S02: Tier 2 lint adoption** (gocyclo, gocritic, durationcheck, unparam, contextcheck, nilnil). ~4h.
-  - **S03: Baseline + final `.golangci.yml` consolidation** + per-linter exclusion doc. ~2h.
+- **S01: Tier 1 lint adoption** — complete.
+  - Added `gosec`, `bodyclose`, `prealloc`, `errorlint`, `revive`.
+  - Fixed 11 baseline issues including `errors.Is(redis.Nil)`, `ReadHeaderTimeout`, `uint16(dim)` bounds, justified G304 suppressions, dead constants, package comments, and test constants.
+  - Evidence: `docs/static-analysis-phase1-report-m043.md`, `benchmark-results/m043-tier1-baseline.txt`.
+- **S02: Tier 2 lint adoption and complexity refactor** — complete.
+  - Added `gocyclo`, `gocritic`, `durationcheck`, `unparam`, `contextcheck`, `nilnil`.
+  - Completed `revive:exported` godoc pass: 44 exported-symbol gaps → 0.
+  - Fixed 17 Tier 2 issues: gocritic style/diagnostic findings, gocyclo production complexity splits, unparam test helper cleanup.
+  - Evidence: `docs/static-analysis-phase2-report-m043.md`, `benchmark-results/m043-s02-*`.
+- **S03: govulncheck CI integration and final docs** — complete.
+  - Added CI step `Run govulncheck` using `go run golang.org/x/vuln/cmd/govulncheck@latest ./...`.
+  - Baseline: direct reachable vulnerabilities = 0, exit 0.
+  - Note: govulncheck reports imported/required package vulnerabilities that fd does not call; those do not fail the scan because they are not reachable.
 
-Total: ~10h. Blocks: none. Predecessor: M041 S01 (for new code review).
+Final local verification:
 
-Alternative: do this as **quick task** (no milestone) — just update `.golangci.yml`, add govulncheck to CI, fix issues.
+```bash
+cd api
+go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./...
+go test ./...
+go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+```
 
-## 8. Concrete next steps (recommended)
+Expected state: all commands exit 0.
 
-1. **Quick task approach** (no formal milestone): update `.golangci.yml` with Tier 1, run `golangci-lint run` locally, fix issues (~2h).
-2. Add `govulncheck` step to CI (~30min).
-3. Document in `docs/static-analysis-recommendation.md` (this file).
-4. Re-run mutation testing from M041 S04 to confirm new linters don't suppress critical coverage.
+## 8. Remaining recommendations
 
-If user prefers formal GSD ceremony: propose M043 with the 3-slice plan above.
+1. Keep Tier 3 style/deep linters (`gofumpt`, `dupl`, `wsl`, `structslop`, etc.) opt-in only; do not add them to CI without a separate noise pass.
+2. Keep `govulncheck` as a standalone CI step, not a golangci-lint plugin.
+3. When adding new exported APIs, `revive:exported` now requires useful godoc; prefer comments that explain runtime contract or failure semantics, not restating names.
+4. If `gocyclo` flags tests, prefer refactoring production code; for dense table-driven integration matrices, a narrow `//nolint:gocyclo` with rationale is acceptable.
+
+## 9. M043 measurement details
+
+### False-positive / noise notes
+
+| Linter | Baseline finding | Resolution | Noise assessment |
+|---|---|---|---|
+| `gosec` | G112/G115 real; G304 operator-controlled paths | Fixed real issues; justified G304/G107 exclusions | Low after config-level env/path policy |
+| `errorlint` | `err == redis.Nil` | Fixed with `errors.Is` | True positive |
+| `revive` | 44 `exported` findings after enabling rule | Godoc pass completed | Medium initial doc churn; now useful gate |
+| `gocritic` | 12 style/diagnostic findings | Fixed named returns, param combine, http.NoBody, exitAfterDefer | Mostly true positives; exitAfterDefer was high-value |
+| `gocyclo` | 4 findings | Refactored 3 production funcs + main; one test-only suppression | Useful for production complexity; tests need judgement |
+| `unparam` | 1 test helper finding | Removed always-constant method arg | True positive |
+| `durationcheck`, `contextcheck`, `nilnil`, `bodyclose`, `prealloc` | 0 after rollout | No action needed | Low/no noise in current code |
+| `govulncheck` | 0 reachable vulnerabilities; 2 imported package vulns and 19 required-module vulns not called | CI passes because no reachable vulnerable symbols | Expected behavior; monitor over time |
+
+### Exclusions and suppressions
+
+| Location | Linter/rule | Justification |
+|---|---|---|
+| `.golangci.yml` | `gosec` G107 | fd URLs (`TEI_URL`, `REDIS_HOST`, model/config URLs) are operator-controlled env/config values, not request input. |
+| `.golangci.yml` | `gosec` G304 | fd file paths are operator-controlled env/manifest values, not request input; per-call comments remain on sensitive open sites. |
+| `api/cache/redis.go` | `//nolint:gosec` G115 | `dim` is explicitly checked against `maxUint16` immediately before `uint16(dim)`. |
+| `api/main.go`, `api/embed/onnx_manifest.go` | `//nolint:gosec` G304 | Runtime/manifest paths are operator-controlled and validated during startup, not user-controlled request values. |
+| `api/handlers/embeddings_integration_test.go` | `//nolint:gocyclo` | Dense table-driven integration matrix intentionally covers many request/error/cache paths in one place; production code was refactored instead. |
+
+### Future work
+
+- Pre-commit hooks remain out of scope for M043; revisit only if local feedback latency becomes a problem.
+- Custom Semgrep rules remain Tier 3/out-of-scope until there is a repeated fd-specific bug pattern worth encoding.
+- Dependency upgrades should be handled as a separate milestone/quick task when `govulncheck` reports reachable vulnerabilities or CI starts failing.
+- IDE integration can reuse `.golangci.yml`; no project-specific editor config is required yet.

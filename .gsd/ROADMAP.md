@@ -47,4 +47,4 @@
 - ✅ **M040-pbp9z1: Same-host embedding service readiness** (`depends:[—]`)
 - 🔄 **M041-4tw0w7: fd v2 service hardening and observability** (`depends:[M040-pbp9z1]`)
 - 🔄 **M042-fjf2en: TEI perf investigation and mitigation** (`depends:[—]`)
-- 🔄 **M043-dpr0cq: Static analysis quality hardening** (`depends:[—]`)
+- ✅ **M043-dpr0cq: Static analysis quality hardening** (`depends:[—]`)

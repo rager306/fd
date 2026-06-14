@@ -4,7 +4,7 @@ estimated_files: 1
 skills_used: []
 ---
 
-# T02: CI integration: govulncheck step в go-quality.yml
+# T02: CI govulncheck step added after golangci-lint in go-quality workflow
 
 .github/workflows/go-quality.yml: добавить step "Run govulncheck" между "Run GolangCI-Lint" и финальным job completion. Использовать `go run golang.org/x/vuln/cmd/govulncheck@latest` для reproducibility (не требует manual install). Поместить после lint step чтобы vuln scan запускается только если lint passed. Failure on any reported vuln. Verify CI workflow YAML valid.
 

@@ -21,7 +21,7 @@
 - [x] **S02: Tier 2 lint adoption and complexity refactor** `risk:medium` `depends:[S01]`
   > After this: After this, .golangci.yml имеет 18 linters (12 from S01 + 6 Tier 2: gocyclo, gocritic, durationcheck, unparam, contextcheck, nilnil). gocyclo.min-complexity=15. golangci-lint run exit 0. CreateEmbedding handler refactored если gocyclo exceeds threshold. docs/static-analysis-phase2-report-m043.md с before/after complexity metrics.
 
-- [ ] **S03: govulncheck CI integration and docs finalization** `risk:low` `depends:[S01,S02]`
+- [x] **S03: govulncheck CI integration and docs finalization** `risk:low` `depends:[S01,S02]`
   > After this: After this, .github/workflows/go-quality.yml имеет step "Run govulncheck" который fails on known vulnerabilities в dependencies или stdlib usage. docs/static-analysis-recommendation.md обновлён с M043 outcome: Tier 1+2 implemented, Tier 3 opt-in, future work. Final artifact: docs/static-analysis-recommendation.md с полной M043 section.
 
 ## Boundary Map
