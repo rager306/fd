@@ -173,6 +173,9 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 			},
 			wantStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder, embedder *mockEmbedder) {
+				if got := w.Header().Get(HeaderCache); got != cacheHit {
+					t.Fatalf("X-Cache = %q, want %q", got, cacheHit)
+				}
 				if embedder.calls != 0 {
 					t.Fatalf("embedder calls=%d, want 0", embedder.calls)
 				}

@@ -37,7 +37,7 @@ Cache слой между validation (S01) и model inference. Cache key = SHA25
   - Files: `api/cache/lru.go`, `api/cache/lru_test.go`
   - Verify: Unit tests: Get/Put корректны. Eviction на size limit. TTL expiration. Concurrent access safe (race detector). fd_cache_hits_total increments on hit.
 
-- [ ] **T03: Cache middleware integration** `est:3h`
+- [x] **T03: Integrated cache HIT/MISS behavior into /v1/embeddings with X-Cache headers, LRU EmbeddingCache adapter methods, and metrics verification.** `est:3h`
   api/middleware/cache.go: gin middleware который проверяет cache перед вызовом model. На HIT — return cached embedding + X-Cache: HIT. На MISS — call model, store result в cache + return + X-Cache: MISS. Должен сидеть ПОСЛЕ validation (S01) и lifecycle gate (S02), ДО model call. Кэш key учитывает dimensions.
   - Files: `api/middleware/cache.go`, `api/middleware/cache_test.go`
   - Verify: Unit tests: первый запрос → X-Cache: MISS, повторный → X-Cache: HIT. Cache HIT latency < 5ms. fd_cache_hits_total{result=hit} increments.

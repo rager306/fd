@@ -13,6 +13,13 @@ import (
 	"log/slog"
 )
 
+const (
+	// HeaderCache reports whether /v1/embeddings used cache HIT or MISS.
+	HeaderCache = "X-Cache"
+	cacheHit    = "HIT"
+	cacheMiss   = "MISS"
+)
+
 // Embedder is the minimal inference interface shared by TEI and ONNX backends.
 type Embedder interface {
 	Embed(ctx context.Context, texts []string) ([][]float32, error)
@@ -67,10 +74,11 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
 	defer cancel()
 
-	embeddings, promptTokens, ok := h.embeddingsFromCacheOrModel(ctx, req.Input, dims, c)
+	embeddings, promptTokens, cacheStatus, ok := h.embeddingsFromCacheOrModel(ctx, req.Input, dims, c)
 	if !ok {
 		return
 	}
+	c.Header(HeaderCache, cacheStatus)
 
 	if state, ok := lifecycle.FromContext(c.Request.Context()); ok {
 		state.MarkInferenceSuccess()
@@ -145,7 +153,7 @@ func embeddingDefaults(req *embed.EmbeddingsRequest) (dims int, encodingFormat s
 	return dims, encodingFormat
 }
 
-func (h *EmbeddingsHandler) embeddingsFromCacheOrModel(ctx context.Context, texts []string, dims int, c *gin.Context) (embeddings [][]float32, promptTokens int, ok bool) {
+func (h *EmbeddingsHandler) embeddingsFromCacheOrModel(ctx context.Context, texts []string, dims int, c *gin.Context) (embeddings [][]float32, promptTokens int, cacheStatus string, ok bool) {
 	// TEI sub-batch chunking: TEI max_client_batch_size=32 (verified via
 	// /info 2026-06-13). When caller sends >32 inputs, split into chunks
 	// of 32 and make ONE sequential TEI call per chunk. This avoids the
@@ -154,22 +162,26 @@ func (h *EmbeddingsHandler) embeddingsFromCacheOrModel(ctx context.Context, text
 	const teiSubBatchSize = 32
 
 	embeddings = make([][]float32, len(texts))
+	cacheStatus = cacheHit
 	for chunkStart := 0; chunkStart < len(texts); chunkStart += teiSubBatchSize {
 		chunkEnd := min(chunkStart+teiSubBatchSize, len(texts))
-		chunkTokens, ok := h.fillEmbeddingChunk(ctx, texts, embeddings, chunkStart, chunkEnd, dims, c)
+		chunkTokens, chunkCacheMiss, ok := h.fillEmbeddingChunk(ctx, texts, embeddings, chunkStart, chunkEnd, dims, c)
 		if !ok {
-			return nil, 0, false
+			return nil, 0, "", false
+		}
+		if chunkCacheMiss {
+			cacheStatus = cacheMiss
 		}
 		promptTokens += chunkTokens
 	}
-	return embeddings, promptTokens, true
+	return embeddings, promptTokens, cacheStatus, true
 }
 
-func (h *EmbeddingsHandler) fillEmbeddingChunk(ctx context.Context, texts []string, embeddings [][]float32, chunkStart, chunkEnd, dims int, c *gin.Context) (promptTokens int, ok bool) {
+func (h *EmbeddingsHandler) fillEmbeddingChunk(ctx context.Context, texts []string, embeddings [][]float32, chunkStart, chunkEnd, dims int, c *gin.Context) (promptTokens int, cacheMissed, ok bool) {
 	chunk := texts[chunkStart:chunkEnd]
 	missIdx, missTexts, promptTokens := h.collectCacheMisses(ctx, chunk, embeddings, chunkStart, dims)
 	if len(missTexts) == 0 {
-		return promptTokens, true
+		return promptTokens, false, true
 	}
 
 	embs, err := h.teiClient.Embed(ctx, missTexts)
@@ -177,16 +189,16 @@ func (h *EmbeddingsHandler) fillEmbeddingChunk(ctx context.Context, texts []stri
 		h.logger.Error("embedding error", "error", err,
 			"chunk_start", chunkStart, "chunk_end", chunkEnd, "miss_count", len(missTexts))
 		WriteError(c, CodeInternalError, "", "embedding generation failed")
-		return 0, false
+		return 0, true, false
 	}
 	if len(embs) != len(missTexts) {
 		h.logger.Error("embedding count mismatch", "expected", len(missTexts), "got", len(embs))
 		WriteError(c, CodeInternalError, "", "embedding generation failed: model returned wrong count")
-		return 0, false
+		return 0, true, false
 	}
 
 	promptTokens += h.backfillMisses(ctx, missIdx, missTexts, embs, embeddings, chunkStart, dims)
-	return promptTokens, true
+	return promptTokens, true, true
 }
 
 func (h *EmbeddingsHandler) collectCacheMisses(ctx context.Context, chunk []string, embeddings [][]float32, chunkStart, dims int) (missIdx []int, missTexts []string, promptTokens int) {

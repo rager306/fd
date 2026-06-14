@@ -2,6 +2,7 @@ package cache
 
 import (
 	"container/list"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"os"
@@ -100,6 +101,29 @@ func (c *LRUCache) Put(input string, dimensions int, value []float32) {
 	entry := &lruCacheEntry{key: key, value: append([]float32(nil), value...), expiresAt: c.expiry()}
 	c.entries[key] = c.order.PushFront(entry)
 	c.evictOverflow()
+}
+
+// GetIfPresent returns a cached embedding copy without invoking a loader.
+func (c *LRUCache) GetIfPresent(_ context.Context, key string, dimensions int) ([]float32, bool) {
+	return c.Get(key, dimensions)
+}
+
+// Set stores an embedding copy under key/dimensions.
+func (c *LRUCache) Set(_ context.Context, key string, dimensions int, value []float32) {
+	c.Put(key, dimensions, value)
+}
+
+// GetOrLoad returns a cached embedding or stores the loader result on miss.
+func (c *LRUCache) GetOrLoad(ctx context.Context, key string, dimensions int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
+	if value, ok := c.Get(key, dimensions); ok {
+		return value, nil
+	}
+	value, err := loader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c.Put(key, dimensions, value)
+	return append([]float32(nil), value...), nil
 }
 
 // Len returns the current number of stored entries, including entries that may

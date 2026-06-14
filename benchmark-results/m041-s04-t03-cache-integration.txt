@@ -1,0 +1,4 @@
+=== RUN   TestFdV2CacheMissThenHit
+--- PASS: TestFdV2CacheMissThenHit (0.00s)
+PASS
+ok  	fd-api	0.015s
