@@ -4,7 +4,7 @@ estimated_files: 4
 skills_used: []
 ---
 
-# T07: OpenAPI 3.1 schema generation и Swagger UI
+# T07: Added programmatic OpenAPI 3.1 JSON schema and Swagger UI docs endpoints.
 
 api/openapi/spec.go: генерирует OpenAPI 3.1 spec программно (на основе реальных routes и типов). Включает все endpoints: /health, /live, /ready, /warmup, /version, /info, /metrics, /v1/embeddings, /v1/batch, /v1/healthcheck, /v1/traces, /openapi.json, /docs. Все request/response schemas, headers, error envelope. GET /openapi.json → 200 application/json. GET /docs → 200 text/html с Swagger UI (swagger-ui-dist или CDN). Валидация через openapi-spec-validator.
 

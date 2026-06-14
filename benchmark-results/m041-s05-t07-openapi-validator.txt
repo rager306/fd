@@ -1,0 +1,2 @@
+Installed 20 packages in 22ms
+/tmp/fd-openapi.json: OK

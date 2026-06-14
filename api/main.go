@@ -436,6 +436,8 @@ func main() {
 	r.GET("/ready", handlers.NewReadyHandler(lifecycleState))
 	r.GET("/version", handlers.NewVersionHandler(buildInfo))
 	r.GET("/info", handlers.NewInfoHandler(buildInfo, runtimeHealth, lifecycleState))
+	r.GET("/openapi.json", handlers.NewOpenAPIHandler())
+	r.GET("/docs", handlers.NewDocsHandler())
 	warmupHandler := handlers.NewWarmupHandler(lifecycleState, embeddingClient, defaultWarmupTimeout)
 	r.GET("/metrics", metrics.Handler())
 	r.GET("/v1/traces", traces.Handler())

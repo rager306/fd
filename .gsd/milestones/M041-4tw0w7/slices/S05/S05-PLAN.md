@@ -62,7 +62,7 @@
   - Files: `api/observability/traces.go`, `api/observability/traces_test.go`
   - Verify: Unit tests: после 5 requests GET /v1/traces → 200 с 5 entries. Каждая entry содержит timestamp, latency_ms, status, model_id, request_id, path.
 
-- [ ] **T07: OpenAPI 3.1 schema generation и Swagger UI** `est:4h`
+- [x] **T07: Added programmatic OpenAPI 3.1 JSON schema and Swagger UI docs endpoints.** `est:4h`
   api/openapi/spec.go: генерирует OpenAPI 3.1 spec программно (на основе реальных routes и типов). Включает все endpoints: /health, /live, /ready, /warmup, /version, /info, /metrics, /v1/embeddings, /v1/batch, /v1/healthcheck, /v1/traces, /openapi.json, /docs. Все request/response schemas, headers, error envelope. GET /openapi.json → 200 application/json. GET /docs → 200 text/html с Swagger UI (swagger-ui-dist или CDN). Валидация через openapi-spec-validator.
   - Files: `api/openapi/spec.go`, `api/openapi/spec_test.go`, `api/handlers/openapi.go`, `api/handlers/docs.go`
   - Verify: Unit tests: /openapi.json возвращает валидный OpenAPI 3.1 (validate через openapi-spec-validator). /docs возвращает HTML с swagger-ui в body. Integration test: curl /openapi.json | openapi-spec-validator — exit 0.
