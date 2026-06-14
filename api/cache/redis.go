@@ -187,7 +187,7 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + fmt.Sprintf("%d", dim)
+	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
 // marshalEmbedding encodes [dim:uint16][float32*dim] — 2+4*dim bytes.
