@@ -57,7 +57,7 @@
   - Files: `api/middleware/cache_headers.go`, `api/middleware/cache_headers_test.go`
   - Verify: Unit tests: первый request → ETag: <hash>, Cache-Control: public, max-age=86400. Повторный с If-None-Match: <hash> → 304.
 
-- [ ] **T06: /v1/traces debug endpoint** `est:2h`
+- [x] **T06: Added `/v1/traces` in-memory request trace ring buffer and endpoint.** `est:2h`
   api/observability/traces.go: in-memory ring buffer (последние 100 requests) с timestamp, latency, status, model_id, request_id, path, dimensions. GET /v1/traces возвращает JSON массив. Использует request_id из headers middleware (S03). Опционально через FD_TRACES_ENABLED=true (default true).
   - Files: `api/observability/traces.go`, `api/observability/traces_test.go`
   - Verify: Unit tests: после 5 requests GET /v1/traces → 200 с 5 entries. Каждая entry содержит timestamp, latency_ms, status, model_id, request_id, path.

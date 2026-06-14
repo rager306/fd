@@ -410,9 +410,11 @@ func main() {
 	// 500. Without this, T-E-15 fails — panic-induced 500s would leak
 	// server internals and lack the code/type envelope.
 	metrics := observability.NewMetrics()
+	traces := observability.NewTraceStoreFromEnv()
 	r.Use(handlers.RecoveryMiddleware(logger))
 	r.Use(middleware.CORSFromEnv())
 	r.Use(middleware.HeadersMiddleware(buildInfo, modelID))
+	r.Use(traces.Middleware(modelID))
 	r.Use(metrics.Middleware())
 	r.Use(middleware.APIKeyAuthFromEnv())
 	r.Use(middleware.IPRateLimitFromEnv())
@@ -436,6 +438,7 @@ func main() {
 	r.GET("/info", handlers.NewInfoHandler(buildInfo, runtimeHealth, lifecycleState))
 	warmupHandler := handlers.NewWarmupHandler(lifecycleState, embeddingClient, defaultWarmupTimeout)
 	r.GET("/metrics", metrics.Handler())
+	r.GET("/v1/traces", traces.Handler())
 	r.GET("/warmup", warmupHandler.Status)
 	r.POST("/warmup", warmupHandler.Trigger)
 	r.GET("/health", healthHandler)
