@@ -4,7 +4,7 @@ estimated_files: 3
 skills_used: []
 ---
 
-# T02: Remove ONNX runtime selection from active API startup path
+# T02: Removed ONNX as an accepted active runtime backend from fd startup config; startup now supports TEI only.
 
 Edit active Go runtime startup/config so fd no longer accepts ONNX as a current backend selector. Remove or neutralize ONNX env parsing/config branches, update tests accordingly, and ensure invalid ONNX env usage fails closed with a clear TEI-only error or is ignored only if documented. Keep TEI behavior unchanged.
 

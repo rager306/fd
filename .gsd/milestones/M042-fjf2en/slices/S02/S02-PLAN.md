@@ -31,7 +31,7 @@ S02 consumes S01 RCA. It leaves fd in a coherent TEI-only current posture and pr
   - Files: `documents/onnx-deactivation-inventory-m042.md`
   - Verify: Inventory artifact exists and lists active source/config/docs surfaces plus explicit keep/remove decisions.
 
-- [ ] **T02: Remove ONNX runtime selection from active API startup path** `est:1h`
+- [x] **T02: Removed ONNX as an accepted active runtime backend from fd startup config; startup now supports TEI only.** `est:1h`
   Edit active Go runtime startup/config so fd no longer accepts ONNX as a current backend selector. Remove or neutralize ONNX env parsing/config branches, update tests accordingly, and ensure invalid ONNX env usage fails closed with a clear TEI-only error or is ignored only if documented. Keep TEI behavior unchanged.
   - Files: `api/main.go`, `api/main_test.go`, `api/embed/`
   - Verify: Targeted Go tests for runtime config pass; TEI startup config still passes; ONNX selector is absent or fails closed as TEI-only.

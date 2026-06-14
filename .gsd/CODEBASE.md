@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T10:09:44Z | Files: 309 | Described: 0/309
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T10:09:44Z","fingerprint":"b42023a1f6baf93d7c3b72cbe82bea7c206c66e2","fileCount":309,"truncated":false} -->
+Generated: 2026-06-14T10:26:02Z | Files: 314 | Described: 0/314
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T10:26:02Z","fingerprint":"a6dc6d47b7a779c349fce104bd0fea5ba4937147","fileCount":314,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -102,7 +102,7 @@ Generated: 2026-06-14T10:09:44Z | Files: 309 | Described: 0/309
 - `api/openapi/spec.go`
 
 ### benchmark-results/
-- *(178 files: 172 .txt, 6 .md)*
+- *(180 files: 173 .txt, 7 .md)*
 
 ### docs/
 - `docs/fd-v2.md`
@@ -126,6 +126,8 @@ Generated: 2026-06-14T10:09:44Z | Files: 309 | Described: 0/309
 - `docs/superpowers/specs/2026-05-14-fd-embedding-service-v2-legal-design.md`
 
 ### documents/
+- `documents/onnx-deactivation-inventory-m042.md`
+- `documents/te-perf-root-cause-m042.md`
 - `documents/te-perf-snapshot-m042-s01.md`
 
 ### tests/
@@ -144,6 +146,7 @@ Generated: 2026-06-14T10:09:44Z | Files: 309 | Described: 0/309
 - `tools/evaluate_legal_retrieval.py`
 - `tools/export_user_bge_m3_dense_onnx.py`
 - `tools/profile_legal_divergence.py`
+- `tools/profile_tei_concurrency.sh`
 - `tools/provision_onnx_artifacts.py`
 - `tools/run_m040_s02_docker_restart_proof.sh`
 - `tools/verify_fd_v2_contract.py`
