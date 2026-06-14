@@ -1,0 +1,14 @@
+=== RUN   TestHeadersMiddlewareSetsServerAndConnection
+--- PASS: TestHeadersMiddlewareSetsServerAndConnection (0.00s)
+=== RUN   TestHeadersMiddlewareEchoesRequestID
+--- PASS: TestHeadersMiddlewareEchoesRequestID (0.00s)
+=== RUN   TestHeadersMiddlewareGeneratesRequestID
+--- PASS: TestHeadersMiddlewareGeneratesRequestID (0.00s)
+=== RUN   TestHeadersMiddlewareSetsEmbeddingModelAndDimensions
+--- PASS: TestHeadersMiddlewareSetsEmbeddingModelAndDimensions (0.00s)
+=== RUN   TestHeadersMiddlewareSetsDefaultEmbeddingDimensions
+--- PASS: TestHeadersMiddlewareSetsDefaultEmbeddingDimensions (0.00s)
+=== RUN   TestHeadersMiddlewarePreservesRetryAfterOn503
+--- PASS: TestHeadersMiddlewarePreservesRetryAfterOn503 (0.00s)
+PASS
+ok  	fd-api/middleware	0.012s

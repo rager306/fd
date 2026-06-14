@@ -411,6 +411,7 @@ func main() {
 	// server internals and lack the code/type envelope.
 	metrics := observability.NewMetrics()
 	r.Use(handlers.RecoveryMiddleware(logger))
+	r.Use(middleware.HeadersMiddleware(buildInfo, modelID))
 	r.Use(metrics.Middleware())
 
 	// 404/405 envelopes for paths/methods that don't match a registered

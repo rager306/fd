@@ -52,7 +52,7 @@ Metrics middleware инкрементит counters/histograms на каждом 
   - Files: `api/observability/metrics.go`, `api/observability/metrics_test.go`
   - Verify: Unit tests: после серии requests counter и histogram обновляются корректно. /metrics text/plain содержит все требуемые counter/histogram/gauge. T-H-1..T-H-5 (Section 5.5 existence) pass.
 
-- [ ] **T05: Headers middleware: X-Request-Id, Server, X-Model-Id, X-Dimensions, Connection** `est:3h`
+- [x] **T05: Added response headers middleware for request IDs, server/version, connection, and embedding model/dimensions headers.** `est:3h`
   api/middleware/headers.go: gin middleware. Server: fd/<version> (из buildinfo). X-Request-Id: echo caller-passed X-Request-Id header (любой case), иначе generate UUIDv4. На error pathе — обязательно сохранить X-Request-Id (recovery middleware из S01 должен его прочитать). Connection: keep-alive (default для HTTP/1.1, но explicit). X-Model-Id и X-Dimensions — выставляются на /v1/embeddings responses (model=<deepvk/USER-bge-m3>, dimensions=actual). Retry-After на 429/503 responses.
   - Files: `api/middleware/headers.go`, `api/middleware/headers_test.go`
   - Verify: Unit tests: T-HDR-1 (Server: fd/2.0.0), T-HDR-2/3 (X-Request-Id echo vs generated), T-HDR-4/5 (X-Model-Id + X-Dimensions на /v1/embeddings), T-HDR-8 (Retry-After на 503), T-HDR-9 (Connection: keep-alive).

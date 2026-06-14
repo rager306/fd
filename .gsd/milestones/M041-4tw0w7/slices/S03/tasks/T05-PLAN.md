@@ -4,7 +4,7 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T05: Headers middleware: X-Request-Id, Server, X-Model-Id, X-Dimensions, Connection
+# T05: Added response headers middleware for request IDs, server/version, connection, and embedding model/dimensions headers.
 
 api/middleware/headers.go: gin middleware. Server: fd/<version> (из buildinfo). X-Request-Id: echo caller-passed X-Request-Id header (любой case), иначе generate UUIDv4. На error pathе — обязательно сохранить X-Request-Id (recovery middleware из S01 должен его прочитать). Connection: keep-alive (default для HTTP/1.1, но explicit). X-Model-Id и X-Dimensions — выставляются на /v1/embeddings responses (model=<deepvk/USER-bge-m3>, dimensions=actual). Retry-After на 429/503 responses.
 
