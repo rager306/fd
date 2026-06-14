@@ -1,0 +1,4 @@
+=== RUN   TestLRUCacheConcurrentAccess
+--- PASS: TestLRUCacheConcurrentAccess (0.01s)
+PASS
+ok  	fd-api/cache	(cached)

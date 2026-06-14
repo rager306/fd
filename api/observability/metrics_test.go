@@ -35,6 +35,7 @@ func TestMetricsHandlerExposesPrometheusText(t *testing.T) {
 		"fd_errors_total",
 		"fd_model_loaded",
 		"fd_cache_hits_total",
+		"fd_cache_evictions_total",
 	} {
 		if !strings.Contains(body, metricName) {
 			t.Fatalf("metrics output missing %s:\n%s", metricName, body)
@@ -83,6 +84,7 @@ func TestMetricsModelLoadedAndCacheResult(t *testing.T) {
 	metrics.SetModelLoaded(true)
 	metrics.ObserveCacheResult("hit")
 	metrics.ObserveCacheResult("miss")
+	metrics.ObserveCacheEviction()
 	r := gin.New()
 	r.GET("/metrics", metrics.Handler())
 
@@ -92,6 +94,7 @@ func TestMetricsModelLoadedAndCacheResult(t *testing.T) {
 		"fd_model_loaded 1",
 		`fd_cache_hits_total{result="hit"}`,
 		`fd_cache_hits_total{result="miss"}`,
+		"fd_cache_evictions_total 1",
 	} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("metrics output missing %s:\n%s", want, body)

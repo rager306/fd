@@ -4,7 +4,7 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T02: LRU cache implementation
+# T02: Added goroutine-safe in-memory LRU vector cache with TTL, env configuration, SHA256 keys, and cache metrics hooks.
 
 api/cache/lru.go: in-memory LRU cache на (string, int) → []float32. TTL 24h, size 10000, configurable через env FD_CACHE_SIZE, FD_CACHE_TTL_HOURS. Использовать hashicorp/golang-lru или свою реализацию с sync.RWMutex. Метрики: fd_cache_hits_total{result=hit|miss} counter, fd_cache_evictions_total counter. Cache key = SHA256(input_text + | + str(dimensions)).
 

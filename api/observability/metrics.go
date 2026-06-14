@@ -23,13 +23,14 @@ const (
 
 // Metrics owns fd's Prometheus collectors and registry.
 type Metrics struct {
-	registry        *prometheus.Registry
-	requestsTotal   *prometheus.CounterVec
-	requestDuration prometheus.Histogram
-	batchSize       prometheus.Histogram
-	errorsTotal     *prometheus.CounterVec
-	modelLoaded     prometheus.Gauge
-	cacheHitsTotal  *prometheus.CounterVec
+	registry            *prometheus.Registry
+	requestsTotal       *prometheus.CounterVec
+	requestDuration     prometheus.Histogram
+	batchSize           prometheus.Histogram
+	errorsTotal         *prometheus.CounterVec
+	modelLoaded         prometheus.Gauge
+	cacheHitsTotal      *prometheus.CounterVec
+	cacheEvictionsTotal prometheus.Counter
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
@@ -62,6 +63,10 @@ func NewMetrics() *Metrics {
 			Name: "fd_cache_hits_total",
 			Help: "Total fd cache lookups by result.",
 		}, []string{"result"}),
+		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "fd_cache_evictions_total",
+			Help: "Total fd in-memory cache evictions.",
+		}),
 	}
 	metrics.registry.MustRegister(
 		metrics.requestsTotal,
@@ -70,6 +75,7 @@ func NewMetrics() *Metrics {
 		metrics.errorsTotal,
 		metrics.modelLoaded,
 		metrics.cacheHitsTotal,
+		metrics.cacheEvictionsTotal,
 	)
 	metrics.initLabelSeries()
 	return metrics
@@ -123,6 +129,11 @@ func (m *Metrics) SetModelLoaded(loaded bool) {
 // ObserveCacheResult increments fd_cache_hits_total for future cache middleware.
 func (m *Metrics) ObserveCacheResult(result string) {
 	m.cacheHitsTotal.WithLabelValues(result).Inc()
+}
+
+// ObserveCacheEviction increments fd_cache_evictions_total.
+func (m *Metrics) ObserveCacheEviction() {
+	m.cacheEvictionsTotal.Inc()
 }
 
 func (m *Metrics) observeBatchSize(c *gin.Context) {

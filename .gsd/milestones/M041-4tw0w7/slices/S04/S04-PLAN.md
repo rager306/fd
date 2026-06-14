@@ -1,7 +1,7 @@
 # S04: Performance baseline and LRU cache
 
 **Goal:** Performance baseline (1<50ms, 10<200ms, 32<1000ms p95, 100 sequential zero errors, 4×8 concurrent < 2s) + in-memory LRU cache (10000 entries, 24h TTL) с X-Cache header и fd_cache_hits_total metric. Закрывает R-P0-6 и R-P1-4.
-**Demo:** After this, fd достигает perf baseline на warm model (1<50ms, 10<200ms, 32<1000ms p95, 100 sequential zero errors, 4×8 concurrent < 2s), in-memory LRU cache 10000 entries/24h TTL сокращает повторные inference до < 5ms, и cache status репортится через X-Cache header и fd_cache_hits_total metric.
+**Demo:** After this, cache/perf validation includes warm/cold baseline plus M043 gates; cache code must keep context propagation, gocyclo <=15 for production functions, and no new static-analysis suppressions without justification.
 
 ## Must-Haves
 
@@ -32,7 +32,7 @@ Cache слой между validation (S01) и model inference. Cache key = SHA25
   - Files: `tools/measure_fd_baseline.sh`, `benchmark-results/fd-v2-baseline-before-m041-s04.md`
   - Verify: Baseline artifact содержит: p50/p95/p99 для batch=1/10/32, error rate, throughput. Можно сравнить с target values (50/200/1000ms).
 
-- [ ] **T02: LRU cache implementation** `est:3h`
+- [x] **T02: Added goroutine-safe in-memory LRU vector cache with TTL, env configuration, SHA256 keys, and cache metrics hooks.** `est:3h`
   api/cache/lru.go: in-memory LRU cache на (string, int) → []float32. TTL 24h, size 10000, configurable через env FD_CACHE_SIZE, FD_CACHE_TTL_HOURS. Использовать hashicorp/golang-lru или свою реализацию с sync.RWMutex. Метрики: fd_cache_hits_total{result=hit|miss} counter, fd_cache_evictions_total counter. Cache key = SHA256(input_text + | + str(dimensions)).
   - Files: `api/cache/lru.go`, `api/cache/lru_test.go`
   - Verify: Unit tests: Get/Put корректны. Eviction на size limit. TTL expiration. Concurrent access safe (race detector). fd_cache_hits_total increments on hit.

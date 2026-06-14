@@ -1,0 +1,24 @@
+=== RUN   TestLRUCacheGetPutCopiesValues
+--- PASS: TestLRUCacheGetPutCopiesValues (0.00s)
+=== RUN   TestLRUCacheMissAndDimensionKey
+--- PASS: TestLRUCacheMissAndDimensionKey (0.00s)
+=== RUN   TestLRUCacheEvictsLeastRecentlyUsed
+--- PASS: TestLRUCacheEvictsLeastRecentlyUsed (0.00s)
+=== RUN   TestLRUCacheExpiresEntries
+--- PASS: TestLRUCacheExpiresEntries (0.00s)
+=== RUN   TestLRUCacheFromEnv
+--- PASS: TestLRUCacheFromEnv (0.00s)
+=== RUN   TestEmbeddingCacheKeyStableAndDimensionAware
+--- PASS: TestEmbeddingCacheKeyStableAndDimensionAware (0.00s)
+=== RUN   TestLRUCacheConcurrentAccess
+--- PASS: TestLRUCacheConcurrentAccess (0.00s)
+PASS
+ok  	fd-api/cache	(cached)
+=== RUN   TestMetricsHandlerExposesPrometheusText
+--- PASS: TestMetricsHandlerExposesPrometheusText (0.00s)
+=== RUN   TestMetricsMiddlewareRecordsRequestsErrorsAndBatchSize
+--- PASS: TestMetricsMiddlewareRecordsRequestsErrorsAndBatchSize (0.00s)
+=== RUN   TestMetricsModelLoadedAndCacheResult
+--- PASS: TestMetricsModelLoadedAndCacheResult (0.00s)
+PASS
+ok  	fd-api/observability	(cached)
