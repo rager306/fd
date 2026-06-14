@@ -425,6 +425,7 @@ func main() {
 
 	embedHandler := handlers.NewEmbeddingsHandler(embeddingClient, tiered, modelID, logger)
 	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
+	v1BatchHandler := handlers.NewV1BatchHandler(embeddingClient, tiered, logger)
 
 	runtimeHealth := runtimeConfig.Health(modelID, redisOptions.Namespace.String())
 	healthHandler := handlers.NewHealthHandlerWithState(runtimeHealth, lifecycleState)
@@ -443,6 +444,7 @@ func main() {
 	// 413 payload_too_large) are returned without burning inference
 	// capacity. The handler reads the parsed request from gin context.
 	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), middleware.UserRateLimitFromEnv(), middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), embedHandler.CreateEmbedding)
+	r.POST("/v1/batch", middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), v1BatchHandler.CreateBatch)
 	r.POST("/embeddings/batch", batchHandler.CreateBatchEmbeddings)
 
 	addr := bindHost + ":" + port

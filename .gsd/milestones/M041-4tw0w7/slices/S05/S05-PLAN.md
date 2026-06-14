@@ -47,7 +47,7 @@
   - Files: `api/middleware/ratelimit.go`, `api/middleware/ratelimit_test.go`
   - Verify: Unit tests: с включённым rate limit, 101-й запрос за минуту → 429 с X-RateLimit-* headers и Retry-After: 60. Per-user limit отдельно от per-IP.
 
-- [ ] **T04: /v1/batch endpoint** `est:3h`
+- [x] **T04: Added `/v1/batch` endpoint for multiple inner batches with validation, cache/model execution, and tests.** `est:3h`
   api/handlers/v1batch.go: POST /v1/batch принимает {"batches": [[s1, s2, ...], [s1, s2, ...], ...]} (каждый inner array ≤ 32 strings, total ≤ 100 batches). Возвращает {"batches": [[e1, e2, ...], [e1, e2, ...], ...]}. Validation аналогично /v1/embeddings. Каждый inner batch обрабатывается через тот же pipeline (validation → lifecycle → cache → model).
   - Files: `api/handlers/v1batch.go`, `api/handlers/v1batch_test.go`
   - Verify: Unit tests: 2 batches × 4 strings → 200 с 2 batches × 4 embeddings. Oversized inner batch → 413. Empty batches → 400 input_required.
