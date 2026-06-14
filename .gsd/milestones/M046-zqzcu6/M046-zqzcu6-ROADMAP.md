@@ -19,7 +19,7 @@
 - [x] **S02: Batch endpoint guardrails** `risk:medium` `depends:[S01]`
   > After this: Oversized or malformed requests to `/v1/batch` and `/embeddings/batch` are rejected before backend work, while valid batch smoke still passes.
 
-- [ ] **S03: Batch backend work shaping** `risk:high` `depends:[S02]`
+- [x] **S03: Batch backend work shaping** `risk:high` `depends:[S02]`
   > After this: A mixed cache-miss batch triggers bounded TEI calls per chunk instead of one TEI call per input.
 
 - [ ] **S04: Exposure posture policy** `risk:high` `depends:[S01]`

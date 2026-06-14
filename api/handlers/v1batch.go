@@ -16,8 +16,6 @@ const (
 	maxV1BatchInputs = 32
 )
 
-var errEmptyV1BatchEmbeddingResponse = errors.New("embedding backend returned no vectors")
-
 // V1BatchHandler serves the OpenAI-compatible fd extension POST /v1/batch.
 type V1BatchHandler struct {
 	embedder Embedder
@@ -98,24 +96,11 @@ func validateV1BatchRequest(c *gin.Context, batches [][]string) bool {
 }
 
 func (h *V1BatchHandler) embedBatch(ctx context.Context, c *gin.Context, batchIndex int, batch []string) ([][]float32, bool) {
-	vectors := make([][]float32, len(batch))
-	for textIndex, text := range batch {
-		vector, err := h.cache.GetOrLoad(ctx, text, 1024, func(ctx context.Context) ([]float32, error) {
-			vectors, err := h.embedder.Embed(ctx, []string{text})
-			if err != nil {
-				return nil, err
-			}
-			if len(vectors) == 0 {
-				return nil, errEmptyV1BatchEmbeddingResponse
-			}
-			return vectors[0], nil
-		})
-		if err != nil {
-			h.logger.Error("v1 batch embedding error", "error", err, "batch", batchIndex, "index", textIndex)
-			WriteError(c, CodeInternalError, "", "embedding generation failed")
-			return nil, false
-		}
-		vectors[textIndex] = vector
+	vectors, err := loadBatchEmbeddings(ctx, h.cache, h.embedder, batch, 1024, maxV1BatchInputs)
+	if err != nil {
+		h.logger.Error("v1 batch embedding error", "error", err, "batch", batchIndex, "input_count", len(batch))
+		WriteError(c, CodeInternalError, "", "embedding generation failed")
+		return nil, false
 	}
 	return vectors, true
 }

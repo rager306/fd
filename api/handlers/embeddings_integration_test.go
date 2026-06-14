@@ -11,6 +11,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"fd-api/embed"
@@ -341,6 +342,45 @@ func TestCreateBatchEmbeddings_Validation(t *testing.T) {
 				t.Fatalf("expected status %d, got %d. body: %s", tt.wantStatus, w.Code, w.Body.String())
 			}
 		})
+	}
+}
+
+func TestCreateBatchEmbeddingsUsesSingleEmbedCallForMisses(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var seen [][]string
+	embedder := &mockEmbedder{embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
+		seen = append(seen, append([]string(nil), texts...))
+		vectors := make([][]float32, len(texts))
+		for i, text := range texts {
+			vec := make([]float32, 1024)
+			vec[0] = float32(len(text))
+			vec[1] = float32(i)
+			vectors[i] = vec
+		}
+		return vectors, nil
+	}}
+	handler := NewBatchHandler(embedder, &mockEmbeddingCache{}, "test-model", testLogger())
+	router := gin.New()
+	router.POST("/embeddings/batch", handler.CreateBatchEmbeddings)
+
+	w := postJSON(router, "/embeddings/batch", `{"inputs":["a","b","c","d"]}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body=%s", w.Code, w.Body.String())
+	}
+	if embedder.calls != 1 {
+		t.Fatalf("embedder calls = %d, want 1", embedder.calls)
+	}
+	wantSeen := [][]string{{"a", "b", "c", "d"}}
+	if !reflect.DeepEqual(seen, wantSeen) {
+		t.Fatalf("embedder texts = %#v, want %#v", seen, wantSeen)
+	}
+
+	w = postJSON(router, "/embeddings/batch", `{"inputs":["a","b","c","d"]}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("second status = %d, want 200; body=%s", w.Code, w.Body.String())
+	}
+	if embedder.calls != 1 {
+		t.Fatalf("embedder calls after cache hit = %d, want 1", embedder.calls)
 	}
 }
 

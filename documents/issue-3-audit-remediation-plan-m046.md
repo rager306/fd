@@ -50,7 +50,7 @@ Corrective direction:
 |---|---|---|---|
 | 1 | S01 Audit validation map | Confirms P0/P1 and root decisions | This document plus `benchmark-results/m046-s01-audit-validation.md` |
 | 2 | S02 Batch endpoint guardrails | P0 #2, P0 #3 | DONE: `benchmark-results/m046-s02-batch-guardrails.md` proves both batch routes now include body, rate-limit, and lifecycle guardrails; too-long inputs reject before embedder work. |
-| 3 | S03 Batch backend work shaping | P1 #4, P1 #5, maybe P1 #6 | Tests proving bounded TEI call counts and preserved response order |
+| 3 | S03 Batch backend work shaping | P1 #4, P1 #5 | DONE: `benchmark-results/m046-s03-batch-backend-chunking.md` proves `/embeddings/batch` and `/v1/batch` now batch cache misses into bounded TEI calls and preserve response order/cache hits. P1 #6 remains for later triage because it concerns `/v1/embeddings` Redis peek sequencing, not batch endpoint N+1. |
 | 4 | S04 Exposure posture policy | P0 #1, P1 #7, P1 #8 and related exposure items | Auth/compose policy tests and docs |
 | 5 | S05 LocalCache correctness | P1 #10 | Race/capacity/lifecycle tests |
 | 6 | S06 Audit closure | Remaining P1 plus P2/P3 triage | Closure matrix and future requirements/non-goals |

@@ -59,27 +59,16 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 120*time.Second)
 	defer cancel()
 
-	embeddings := make([]string, len(req.Inputs))
-	for i, text := range req.Inputs {
-		emb, err := h.cache.GetOrLoad(ctx, text, dims, func(ctx context.Context) ([]float32, error) {
-			embs, err := h.teiClient.Embed(ctx, []string{text})
-			if err != nil {
-				return nil, err
-			}
-			return embs[0], nil
-		})
-		if err != nil {
-			h.logger.Error("batch embedding error", "error", err, "index", i)
-			WriteError(c, CodeInternalError, "", "embedding generation failed")
-			return
-		}
+	vectors, err := loadBatchEmbeddings(ctx, h.cache, h.teiClient, req.Inputs, dims, batchTEISubBatchSize)
+	if err != nil {
+		h.logger.Error("batch embedding error", "error", err, "input_count", len(req.Inputs))
+		WriteError(c, CodeInternalError, "", "embedding generation failed")
+		return
+	}
 
-		fullEmb := emb
-		if dims == 512 && len(fullEmb) >= 512 {
-			fullEmb = fullEmb[:512]
-		}
-
-		embeddings[i] = embed.EncodeEmbedding(fullEmb, defaultBatchEncoding(req.EncodingFormat))
+	embeddings := make([]string, len(vectors))
+	for i, vector := range vectors {
+		embeddings[i] = embed.EncodeEmbedding(vector, defaultBatchEncoding(req.EncodingFormat))
 	}
 
 	c.JSON(http.StatusOK, embed.BatchEmbeddingsResponse{

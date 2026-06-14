@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -43,6 +44,45 @@ func TestV1BatchHandlerCreatesEmbeddingsForBatches(t *testing.T) {
 				t.Fatalf("batch %d embedding %d length = %d, want 2", i, j, len(vector))
 			}
 		}
+	}
+}
+
+func TestV1BatchUsesSingleEmbedCallPerInnerBatch(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	var seen [][]string
+	embedder := &mockEmbedder{embedFunc: func(_ context.Context, texts []string) ([][]float32, error) {
+		seen = append(seen, append([]string(nil), texts...))
+		vectors := make([][]float32, len(texts))
+		for i, text := range texts {
+			vec := make([]float32, 1024)
+			vec[0] = float32(len(text))
+			vec[1] = float32(i)
+			vectors[i] = vec
+		}
+		return vectors, nil
+	}}
+	router := gin.New()
+	handler := NewV1BatchHandler(embedder, &mockEmbeddingCache{}, testLogger())
+	router.POST("/v1/batch", handler.CreateBatch)
+
+	w := postJSON(router, "/v1/batch", `{"batches":[["a","b","c","d"],["e","f","g","h"]]}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body=%s", w.Code, w.Body.String())
+	}
+	if embedder.calls != 2 {
+		t.Fatalf("embedder calls = %d, want 2", embedder.calls)
+	}
+	wantSeen := [][]string{{"a", "b", "c", "d"}, {"e", "f", "g", "h"}}
+	if !reflect.DeepEqual(seen, wantSeen) {
+		t.Fatalf("embedder texts = %#v, want %#v", seen, wantSeen)
+	}
+
+	w = postJSON(router, "/v1/batch", `{"batches":[["a","b","c","d"],["e","f","g","h"]]}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("second status = %d, want 200; body=%s", w.Code, w.Body.String())
+	}
+	if embedder.calls != 2 {
+		t.Fatalf("embedder calls after cache hit = %d, want 2", embedder.calls)
 	}
 }
 

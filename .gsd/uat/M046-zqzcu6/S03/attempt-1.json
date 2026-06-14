@@ -1,0 +1,147 @@
+{
+  "runId": "uat:M046-zqzcu6:S03:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M046-zqzcu6",
+  "sliceId": "S03",
+  "uatType": "runtime-executable",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-14T16:25:33.563Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Rebuilt API is ready and reports TEI runtime after S03 changes.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "cb8a0f47-c9f4-4daa-ba02-b68152bb85ac",
+          "note": "Verified /ready and /health runtime metadata after rebuild.",
+          "tool": "gsd_uat_exec",
+          "executionId": "cb8a0f47-c9f4-4daa-ba02-b68152bb85ac"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "/v1/batch valid nested request still works and preserves shape.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "db1bbf65-af81-41ea-b67c-bcb1f74c6efc",
+          "note": "Verified two nested batches preserve [3,2] shape with 1024-d vectors.",
+          "tool": "gsd_uat_exec",
+          "executionId": "db1bbf65-af81-41ea-b67c-bcb1f74c6efc"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "/embeddings/batch valid request still works and preserves legacy shape.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "e48a4774-94ed-4d02-9ab2-cffba624437e",
+          "note": "Verified count 3, dimensions 1024, and three encoded embeddings.",
+          "tool": "gsd_uat_exec",
+          "executionId": "e48a4774-94ed-4d02-9ab2-cffba624437e"
+        }
+      ]
+    },
+    {
+      "id": "UAT-04",
+      "description": "S02 too-long rejection behavior remains intact after S03 backend chunking.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "ba43c8b5-9581-4d65-99ee-6d00f568b4b0",
+          "note": "Verified both batch endpoints still return 413 input_too_long for 2049-char input.",
+          "tool": "gsd_uat_exec",
+          "executionId": "ba43c8b5-9581-4d65-99ee-6d00f568b4b0"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S03 validates backend HTTP behavior, not a browser UI."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Unit tests prove TEI call-count reduction; runtime UAT proves rebuilt API behavior and S02 regression safety.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S03 runtime behavior remains healthy and unit/static evidence closes issue #3 P1 #4/#5."
+}
