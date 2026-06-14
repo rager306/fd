@@ -24,33 +24,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: D045 фиксирует cache-hot трактовку T-P-1..T-P-5. `tools/verify_fd_v2_perf.sh` prewarm-ит measured payload через real inference и затем требует `X-Cache: HIT` для latency cases. Evidence: `benchmark-results/fd-v2-perf-validation-m041-s04.md` PASS (batch=1 p95 2.236ms, batch=10 p95 3.468ms, batch=32 p95 7.595ms, sequential/concurrent/cache HIT pass) плюс non-blocking cache-miss diagnostics.
 - Notes: Real cache-miss TEI CPU latency is intentionally diagnostic only for M041 S04; backend remediation was explicitly descoped by the user.
 
-### R017 — Расширить /v1/embeddings request schema: encoding_format: float|base64 (~30% bandwidth savings), user field (для abuse tracking и per-user rate limits), priority: low|normal|high. Реализует R-P1-5, R-P1-6, R-P1-7.
-- Class: differentiator
-- Status: active
-- Description: Расширить /v1/embeddings request schema: encoding_format: float|base64 (~30% bandwidth savings), user field (для abuse tracking и per-user rate limits), priority: low|normal|high. Реализует R-P1-5, R-P1-6, R-P1-7.
-- Why it matters: Daily-archive scripts используют urllib и не используют headers, но более толстые callers (например, web UI) выиграют от base64 и user-based rate limits.
-- Source: /root/fd-v2.md Section 2.6 P1 R-P1-5/6/7 + Section 4 OpenAPI spec
-- Primary owning slice: M041-4tw0w7/S05
-- Validation: T-H-5: encoding_format=base64 возвращает base64 string; T-H-6: priority=high принимается; user field принимается и логируется; невалидный encoding_format → 400 dimensions_invalid (или новый code).
-
-### R018 — Если env FD_API_KEY задан, все endpoints кроме /live, /metrics, /docs требуют Authorization: Bearer <key>, иначе 401 unauthorized. CORS headers (Access-Control-Allow-Origin/Methods/Headers) для web clients. Реализует R-P1-8, R-P1-9.
-- Class: compliance/security
-- Status: active
-- Description: Если env FD_API_KEY задан, все endpoints кроме /live, /metrics, /docs требуют Authorization: Bearer <key>, иначе 401 unauthorized. CORS headers (Access-Control-Allow-Origin/Methods/Headers) для web clients. Реализует R-P1-8, R-P1-9.
-- Why it matters: Локальный сервис, но если exposed через reverse proxy — нужна хоть какая-то auth; CORS нужен для будущих web UI.
-- Source: /root/fd-v2.md Section 2.6 P1 R-P1-8/9
-- Primary owning slice: M041-4tw0w7/S05
-- Validation: С FD_API_KEY=test: запрос без Authorization → 401 unauthorized; запрос с правильным Bearer → 200; OPTIONS preflight с правильным Origin → 200 с CORS headers.
-
-### R019 — GET /openapi.json (OpenAPI 3.1 spec), GET /docs (Swagger UI), POST /v1/batch (batches:[[..],[..]] → batches:[[..],[..]]), rate limiting (per-IP 100 req/min, per-user 1000 req/min, headers X-RateLimit-*), ETag+Cache-Control на responses, /v1/traces (recent N requests с latency/status), optional SSE streaming. Реализует R-P2-1..R-P2-6.
-- Class: quality-attribute
-- Status: active
-- Description: GET /openapi.json (OpenAPI 3.1 spec), GET /docs (Swagger UI), POST /v1/batch (batches:[[..],[..]] → batches:[[..],[..]]), rate limiting (per-IP 100 req/min, per-user 1000 req/min, headers X-RateLimit-*), ETag+Cache-Control на responses, /v1/traces (recent N requests с latency/status), optional SSE streaming. Реализует R-P2-1..R-P2-6.
-- Why it matters: Caller и операторы хотят self-describing API (OpenAPI), явный batch endpoint, rate limiting для защиты, traces для debugging.
-- Source: /root/fd-v2.md Section 2.7 P2 nice-to-have + Section 4 OpenAPI
-- Primary owning slice: M041-4tw0w7/S05
-- Validation: T-E-4/T-E-5: /openapi.json 200 валидный JSON, /docs 200 HTML; rate limit: 101-й запрос за минуту → 429; ETag: повторный запрос с If-None-Match → 304; /v1/traces возвращает последние N запросов.
-
 ### R020 — Письменный root cause analysis объясняет почему TEI queue_time=2.7s несмотря на max_concurrent_requests=512. Документ содержит hypothesis, evidence (TEI logs, /info metrics, профилирование), и рекомендации. Возможные выводы: (a) TEI single backend thread — fixed by source change (out of fd scope), (b) ONNX fallback, (c) async pipeline.
 - Class: quality-attribute
 - Status: active
@@ -229,6 +202,36 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: S04 implemented LRU cache with size/TTL env config, copy-on-read/write, eviction metrics, and EmbeddingCache adapter methods. Evidence: `api/cache/lru_test.go`, `api/fd_v2_cache_integration_test.go`, `benchmark-results/m041-s04-t03-cache-integration.txt`, and final `benchmark-results/fd-v2-perf-validation-m041-s04.md` showing repeated input `X-Cache: HIT` in 1.870ms and cache-hot latency targets passing.
 - Notes: Validated for fd-controlled cache-hot behavior. Backend cache-miss TEI CPU latency is outside R016 after D045.
 
+### R017 — Расширить /v1/embeddings request schema: encoding_format: float|base64 (~30% bandwidth savings), user field (для abuse tracking и per-user rate limits), priority: low|normal|high. Реализует R-P1-5, R-P1-6, R-P1-7.
+- Class: differentiator
+- Status: validated
+- Description: Расширить /v1/embeddings request schema: encoding_format: float|base64 (~30% bandwidth savings), user field (для abuse tracking и per-user rate limits), priority: low|normal|high. Реализует R-P1-5, R-P1-6, R-P1-7.
+- Why it matters: Daily-archive scripts используют urllib и не используют headers, но более толстые callers (например, web UI) выиграют от base64 и user-based rate limits.
+- Source: /root/fd-v2.md Section 2.6 P1 R-P1-5/6/7 + Section 4 OpenAPI spec
+- Primary owning slice: M041-4tw0w7/S05
+- Validation: `benchmark-results/fd-v2-validation-m041.md` 45/45 PASS: T019 validates `encoding_format=base64`; T020 validates `priority=high`; T021 validates `user`; T033 validates invalid `encoding_format` returns `encoding_format_invalid`; T034 validates invalid priority returns `priority_invalid`. Unit evidence in `benchmark-results/m041-s05-t01-go-test.txt`.
+- Notes: The `user` field is accepted and used by optional per-user rate limiting; it is not persisted.
+
+### R018 — Если env FD_API_KEY задан, все endpoints кроме /live, /metrics, /docs требуют Authorization: Bearer <key>, иначе 401 unauthorized. CORS headers (Access-Control-Allow-Origin/Methods/Headers) для web clients. Реализует R-P1-8, R-P1-9.
+- Class: compliance/security
+- Status: validated
+- Description: Если env FD_API_KEY задан, все endpoints кроме /live, /metrics, /docs требуют Authorization: Bearer <key>, иначе 401 unauthorized. CORS headers (Access-Control-Allow-Origin/Methods/Headers) для web clients. Реализует R-P1-8, R-P1-9.
+- Why it matters: Локальный сервис, но если exposed через reverse proxy — нужна хоть какая-то auth; CORS нужен для будущих web UI.
+- Source: /root/fd-v2.md Section 2.6 P1 R-P1-8/9
+- Primary owning slice: M041-4tw0w7/S05
+- Validation: Unit evidence in `benchmark-results/m041-s05-t02-go-test.txt` validates FD_API_KEY bearer auth: missing/wrong token -> 401 unauthorized, correct token -> 200, public endpoints skipped. `benchmark-results/fd-v2-validation-m041.md` validates CORS preflight (T027) and docs/openapi public surfaces.
+- Notes: Auth remains opt-in via FD_API_KEY; CORS defaults to `*` unless FD_CORS_ORIGINS is set.
+
+### R019 — GET /openapi.json (OpenAPI 3.1 spec), GET /docs (Swagger UI), POST /v1/batch (batches:[[..],[..]] → batches:[[..],[..]]), rate limiting (per-IP 100 req/min, per-user 1000 req/min, headers X-RateLimit-*), ETag+Cache-Control на responses, /v1/traces (recent N requests с latency/status), optional SSE streaming. Реализует R-P2-1..R-P2-6.
+- Class: quality-attribute
+- Status: validated
+- Description: GET /openapi.json (OpenAPI 3.1 spec), GET /docs (Swagger UI), POST /v1/batch (batches:[[..],[..]] → batches:[[..],[..]]), rate limiting (per-IP 100 req/min, per-user 1000 req/min, headers X-RateLimit-*), ETag+Cache-Control на responses, /v1/traces (recent N requests с latency/status), optional SSE streaming. Реализует R-P2-1..R-P2-6.
+- Why it matters: Caller и операторы хотят self-describing API (OpenAPI), явный batch endpoint, rate limiting для защиты, traces для debugging.
+- Source: /root/fd-v2.md Section 2.7 P2 nice-to-have + Section 4 OpenAPI
+- Primary owning slice: M041-4tw0w7/S05
+- Validation: `benchmark-results/fd-v2-validation-m041.md` 45/45 PASS validates `/openapi.json` (T010/T043), `/docs` (T011), `/v1/batch` (T038-T040), ETag/Cache-Control and 304 (T024-T026), `/v1/traces` (T012/T042), and cache-hot performance checks (T044-T045). T03/T05/T06/T07 task evidence covers rate limiting, cache validators, traces, OpenAPI validator, and docs unit tests.
+- Notes: SSE streaming remains optional and was not implemented in M041 S05; core R-P2 surfaces were validated.
+
 ### R023 — Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
 - Class: quality-attribute
 - Status: validated
@@ -280,9 +283,9 @@ This file is the explicit capability and coverage contract for the project.
 | R014 | operability | validated | M041-4tw0w7/S03 | none | S03 validated Server, X-Request-Id, X-Model-Id, X-Dimensions, Retry-After, and Connection headers. S04 validated `X-Cache: MISS` on first request and `X-Cache: HIT` on repeated input via `benchmark-results/fd-v2-perf-validation-m041-s04.md` and `api/fd_v2_cache_integration_test.go`; final verifier requires non-HIT count 0 for cache-hot cases. |
 | R015 | failure-visibility | validated | M041-4tw0w7/S03 | none | Validated by M041-4tw0w7/S03. Evidence: `benchmark-results/m041-s03-t03-deep-health.txt` covers deep `/health` status fields and `last_inference_at`; `m041-s03-t06-warmup.txt` covers GET/POST `/warmup`; `m041-s03-t07-observability-integration.txt` covers integration behavior. |
 | R016 | differentiator | validated | M041-4tw0w7/S04 | none | S04 implemented LRU cache with size/TTL env config, copy-on-read/write, eviction metrics, and EmbeddingCache adapter methods. Evidence: `api/cache/lru_test.go`, `api/fd_v2_cache_integration_test.go`, `benchmark-results/m041-s04-t03-cache-integration.txt`, and final `benchmark-results/fd-v2-perf-validation-m041-s04.md` showing repeated input `X-Cache: HIT` in 1.870ms and cache-hot latency targets passing. |
-| R017 | differentiator | active | M041-4tw0w7/S05 | none | T-H-5: encoding_format=base64 возвращает base64 string; T-H-6: priority=high принимается; user field принимается и логируется; невалидный encoding_format → 400 dimensions_invalid (или новый code). |
-| R018 | compliance/security | active | M041-4tw0w7/S05 | none | С FD_API_KEY=test: запрос без Authorization → 401 unauthorized; запрос с правильным Bearer → 200; OPTIONS preflight с правильным Origin → 200 с CORS headers. |
-| R019 | quality-attribute | active | M041-4tw0w7/S05 | none | T-E-4/T-E-5: /openapi.json 200 валидный JSON, /docs 200 HTML; rate limit: 101-й запрос за минуту → 429; ETag: повторный запрос с If-None-Match → 304; /v1/traces возвращает последние N запросов. |
+| R017 | differentiator | validated | M041-4tw0w7/S05 | none | `benchmark-results/fd-v2-validation-m041.md` 45/45 PASS: T019 validates `encoding_format=base64`; T020 validates `priority=high`; T021 validates `user`; T033 validates invalid `encoding_format` returns `encoding_format_invalid`; T034 validates invalid priority returns `priority_invalid`. Unit evidence in `benchmark-results/m041-s05-t01-go-test.txt`. |
+| R018 | compliance/security | validated | M041-4tw0w7/S05 | none | Unit evidence in `benchmark-results/m041-s05-t02-go-test.txt` validates FD_API_KEY bearer auth: missing/wrong token -> 401 unauthorized, correct token -> 200, public endpoints skipped. `benchmark-results/fd-v2-validation-m041.md` validates CORS preflight (T027) and docs/openapi public surfaces. |
+| R019 | quality-attribute | validated | M041-4tw0w7/S05 | none | `benchmark-results/fd-v2-validation-m041.md` 45/45 PASS validates `/openapi.json` (T010/T043), `/docs` (T011), `/v1/batch` (T038-T040), ETag/Cache-Control and 304 (T024-T026), `/v1/traces` (T012/T042), and cache-hot performance checks (T044-T045). T03/T05/T06/T07 task evidence covers rate limiting, cache validators, traces, OpenAPI validator, and docs unit tests. |
 | R020 | quality-attribute | active | M042-fjf2en/S01 | none | documents/te-perf-root-cause-m042.md существует, содержит: (a) TEI cold telemetry snapshot, (b) hypothesis tree (1+ hypotheses with testable predictions), (c) evidence collected (TEI logs, /info, request patterns), (d) verdict + recommended action, (e) links to M019 ONNX measurements as comparison baseline. |
 | R021 | quality-attribute | active | M042-fjf2en/S02 | none | tools/verify_fd_async_perf.sh: FD_ASYNC_CHUNKS=true vs false perf comparison. Cold path batch=128 ≤10s (was 25s sequential). Cold path batch=32 ≤4s (was 6s sequential). Cache hit path не regressed (≤5ms per request). Benchmark artifact в benchmark-results/fd-v2-async-perf-m042.md. |
 | R022 | quality-attribute | active | M042-fjf2en/S03 | none | (1) ONNX binary builds clean с -tags onnx, (2) FD_BACKEND=onnx switches runtime, (3) cold path batch=32 ≤500ms (was 6s TEI), (4) warm path batch=1 ≤10ms (was 1.6ms TEI — comparable), (5) regression suite (all M041 acceptance tests) pass в обоих режимах, (6) legal quality gate deferred — documented в ONNX mode docs с reference to M015/M016. |
@@ -292,7 +295,7 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Coverage Summary
 
-- Active requirements: 8
-- Mapped to slices: 8
-- Validated: 17 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R023, R024, R025)
+- Active requirements: 5
+- Mapped to slices: 5
+- Validated: 20 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R023, R024, R025)
 - Unmapped active requirements: 0

@@ -28,7 +28,7 @@
 - [x] **S04: Performance baseline and LRU cache** `risk:medium` `depends:[S02,S03]`
   > After this: After this, cache/perf validation includes warm/cold baseline plus M043 gates; cache code must keep context propagation, gocyclo <=15 for production functions, and no new static-analysis suppressions without justification.
 
-- [ ] **S05: OpenAI v2 compat features OpenAPI schema and P2 enhancements** `risk:low` `depends:[S01]`
+- [x] **S05: OpenAI v2 compat features OpenAPI schema and P2 enhancements** `risk:low` `depends:[S01]`
   > After this: After this, remaining OpenAI v2 compat work is complete without reimplementing encoding_format already covered by S01; user/priority/auth/CORS/OpenAPI/rate-limit/traces work passes M043 gates and documents any new API godoc.
 
 ## Boundary Map
