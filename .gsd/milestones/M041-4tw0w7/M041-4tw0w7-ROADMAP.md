@@ -20,16 +20,16 @@
   > After this: After this, /v1/embeddings возвращает OpenAI style error envelope с machine readable code/type, oversized batch и oversized input дают 413 (не 500), malformed JSON даёт clean 400 invalid_json (не сырую Gin ошибку), и все 16 кодов из Section 3 catalog работают.
 
 - [ ] **S02: Lifecycle warmup readiness and graceful shutdown** `risk:medium` `depends:[]`
-  > After this: After this, fd pre-warms model при старте, /live отвечает 200 сразу, /ready отвечает 200 только после warmup, deep /health отвечает 503 status=down до warmup и 200 status=ok после, SIGTERM приводит к 503 shutting_down для новых запросов и корректному drain in-flight за ≤30s.
+  > After this: After this, fd pre-warms model at startup, /live is cheap, /ready transitions 503 to 200 after warmup, shutdown gates new requests with 503+Retry-After, and the slice passes M043 gates: go test ./..., golangci-lint 18 linters, no reachable govulncheck findings.
 
 - [ ] **S03: Observability surface endpoints headers and deep health** `risk:low` `depends:[S01,S02]`
-  > After this: After this, /version возвращает semver+model+build_hash+uptime, /info возвращает список моделей с dims/limits/device/loaded/warmup, /metrics возвращает Prometheus text format с requests_total, request_duration_seconds histogram, batch_size, cache_hits (после S04), errors_total, model_loaded gauge, /v1/healthcheck работает как alias, и каждый response несёт Server, X-Request-Id, X-Model-Id, X-Dimensions, Connection: keep-alive, Retry-After на 429/503.
+  > After this: After this, /version, /info, /metrics, /v1/healthcheck, deep /health, /warmup, and response headers are implemented and tested; new exported observability APIs have godoc and pass M043 lint/test/govulncheck gates.
 
 - [ ] **S04: Performance baseline and LRU cache** `risk:medium` `depends:[S02,S03]`
-  > After this: After this, fd достигает perf baseline на warm model (1<50ms, 10<200ms, 32<1000ms p95, 100 sequential zero errors, 4×8 concurrent < 2s), in-memory LRU cache 10000 entries/24h TTL сокращает повторные inference до < 5ms, и cache status репортится через X-Cache header и fd_cache_hits_total metric.
+  > After this: After this, cache/perf validation includes warm/cold baseline plus M043 gates; cache code must keep context propagation, gocyclo <=15 for production functions, and no new static-analysis suppressions without justification.
 
 - [ ] **S05: OpenAI v2 compat features OpenAPI schema and P2 enhancements** `risk:low` `depends:[S01]`
-  > After this: After this, /v1/embeddings принимает encoding_format=base64, user, priority. FD_API_KEY env включает bearer auth с 401 unauthorized. CORS headers на responses. /openapi.json возвращает валидный OpenAPI 3.1 spec, /docs рендерит Swagger UI. /v1/batch принимает batches:[[..]] и возвращает batches:[[..]]. Rate limiting (если включен) даёт 429 с X-RateLimit-*. ETag на /v1/embeddings responses. /v1/traces возвращает последние N requests.
+  > After this: After this, remaining OpenAI v2 compat work is complete without reimplementing encoding_format already covered by S01; user/priority/auth/CORS/OpenAPI/rate-limit/traces work passes M043 gates and documents any new API godoc.
 
 ## Boundary Map
 

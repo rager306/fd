@@ -1,16 +1,18 @@
 ---
 estimated_steps: 1
-estimated_files: 2
+estimated_files: 3
 skills_used: []
 ---
 
-# T04: Perf benchmark: async vs sync cold/warm path
+# T04: Benchmark async versus sync cold and warm paths
 
-tools/verify_fd_async_perf.sh: прогон cold path measurements × batch sizes × async on/off. Output benchmark-results/fd-v2-async-perf-m042.md с table (batch 1/10/32/64/128 cold, sync vs async) и conclusion (improvement factor, where it falls short of 1000ms target). Также test concurrent scenario: 4 parallel fd calls × batch=32 cold, sync vs async (per M041 T-P-5 spec).
+Create or update perf benchmark tooling to compare FD_ASYNC_CHUNKS=false versus true for cold batch=32, cold batch=128, and cache-hit path. Record before/after numbers in benchmark-results/fd-v2-async-perf-m042.md. Include the expanded M043 gate in the verification transcript so perf work cannot regress lint/test/security gates.
 
 ## Inputs
 
-- None specified.
+- `docs/fd-v2.md`
+- `benchmark-results/m043-s03-final-lint.txt`
+- `benchmark-results/m043-s03-govulncheck-final.txt`
 
 ## Expected Output
 
@@ -19,4 +21,8 @@ tools/verify_fd_async_perf.sh: прогон cold path measurements × batch size
 
 ## Verification
 
-tools/verify_fd_async_perf.sh exit 0. Artifact содержит: cold path table (batch × async on/off), concurrent test results, conclusion с comparison vs M041 baseline (25s → ≤10s for batch=128 cold).
+cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./... && go run golang.org/x/vuln/cmd/govulncheck@latest ./... && ../tools/verify_fd_async_perf.sh
+
+## Observability Impact
+
+Benchmark artifact records async header/metrics evidence alongside latency.

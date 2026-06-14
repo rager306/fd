@@ -1,61 +1,62 @@
 # S02: Async parallel chunked TEI calls in handler
 
-**Goal:** Async parallel chunked TEI calls в handler. Bounded concurrency 4 (matches TEI max_batch_requests). Env FD_ASYNC_CHUNKS=true включает. Error aggregation, X-Concurrent-Chunks header, metrics.
+**Goal:** Async parallel chunked TEI calls in handler with M043 lint/security gates built into the design: bounded concurrency, context propagation, small helper functions, observability, perf proof, and regression coverage.
 **Demo:** After this, FD_ASYNC_CHUNKS=true enables parallel chunking: cold path for batch=128 падает с 25s до ≤10s, batch=32 с 6s до ≤4s. Cache hit path не regressed. New X-Concurrent-Chunks header в response для observability.
 
 ## Must-Haves
 
-- tools/verify_fd_async_perf.sh существует, exit 0. FD_ASYNC_CHUNKS=true: cold path batch=32 ≤4s, batch=128 ≤10s (was 25s sequential). FD_ASYNC_CHUNKS=false (default): cold path не regressed. Cache hit path не regressed (≤5ms per request в обоих режимах). X-Concurrent-Chunks response header присутствует в async mode. All M041 acceptance tests (45 test cases + 10 behavior scenarios) pass в обоих режимах. benchmark-results/fd-v2-async-perf-m042.md с before/after numbers.
+- FD_ASYNC_CHUNKS=true enables bounded parallel chunking with max concurrency 4.
+- Cold path batch=128 improves to <=10s without cache-hit regression.
+- X-Concurrent-Chunks header or equivalent metric exposes concurrency count in async mode.
+- Production functions introduced/modified by this slice stay at gocyclo <=15 or have explicit justified exceptions.
+- `go test ./...`, 18-linter golangci-lint, and govulncheck all exit 0.
 
 ## Proof Level
 
-- This slice proves: runtime + integration + benchmark
+- This slice proves: Perf proof + integration/regression proof + M043 static-analysis gates.
 
 ## Integration Closure
 
-Builds on M041 S01 chunked handler. Adds errgroup with semaphore(4). Modifies main.go to read FD_ASYNC_CHUNKS env. Cache logic (GetIfPresent/Set) unchanged. Headers/metrics from M041 S03 extended.
+Async mode remains opt-in. Default sync TEI path is unchanged and regression-tested. M041 acceptance behavior remains valid in both FD_ASYNC_CHUNKS=false and true modes.
 
 ## Verification
 
-- New X-Concurrent-Chunks header per response (only in async mode). New metrics: fd_async_chunks_total counter, fd_async_chunk_duration_seconds histogram.
+- Adds async chunk count and error/cancellation visibility; must avoid high-cardinality metric labels and noisy global state.
 
 ## Tasks
 
-- [ ] **T01: Реализовать async chunked orchestrator** `est:3h`
-  api/embed/async.go: AsyncChunkedEmbed(ctx, teiClient, texts, dims) ([][]float32, error) с bounded concurrency semaphore (max 4, matches TEI max_batch_requests). Использует errgroup (golang.org/x/sync) или sync.WaitGroup + atomic errors. Cache logic не меняется — handler всё ещё делает GetIfPresent per text, но для miss'ов шлёт несколько chunks в parallel. Returns concatenated [][]float32. На любой chunk error — return wrapped error, no partial result.
-  - Files: `api/embed/async.go`, `api/embed/async_test.go`, `api/go.mod`
-  - Verify: Unit tests: (a) 4 chunks of 8, concurrency limit 4 → все chunks запускаются; (b) 1 chunk fails → wrapped error, no partial result; (c) all chunks success → concatenated result. Race detector clean.
+- [ ] **T01: Implement lint-aware async chunked orchestrator** `est:3h`
+  Implement bounded parallel TEI chunk orchestration for batches larger than TEI's per-request limit. Keep production functions below gocyclo 15 by extracting small helpers for chunk planning, worker execution, ordered result assembly, and error aggregation. Propagate request context into every goroutine/call so contextcheck stays clean; ensure goroutines stop on cancellation and do not leak. Avoid exported APIs unless required; any exported helper/type needs meaningful godoc because revive:exported is now enforced.
+  - Files: `api/handlers/embeddings.go`, `api/handlers/embeddings_integration_test.go`
+  - Verify: cd api && go test ./handlers ./middleware && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./handlers ./middleware
 
-- [ ] **T02: Wire FD_ASYNC_CHUNKS env в handler + main.go** `est:1h`
-  api/handlers/embeddings.go: в CreateEmbedding, если FD_ASYNC_CHUNKS=true → использовать async orchestrator (chunks of 32 sent in parallel), иначе current sequential loop. api/main.go: parse FD_ASYNC_CHUNKS env на startup, log mode. Sync mode default (off) для backward compat.
-  - Files: `api/handlers/embeddings.go`, `api/main.go`
-  - Verify: FD_ASYNC_CHUNKS=true → 4 parallel TEI calls per request (verify via TEI logs overlapping timestamps). FD_ASYNC_CHUNKS=false (default) → sequential (no regression vs M041). Integration test asserts both modes pass.
+- [ ] **T02: Wire FD_ASYNC_CHUNKS env into handler and main config** `est:1h`
+  Add FD_ASYNC_CHUNKS configuration with default false and wire it into EmbeddingsHandler without changing default TEI behavior. Keep config parsing small and testable; use contextual errors for invalid env values if any. Ensure the handler path is explicit enough for future agents to see sync vs async behavior, and keep public config comments/godoc aligned with revive:exported requirements if new exported symbols are introduced.
+  - Files: `api/main.go`, `api/handlers/embeddings.go`, `api/main_test.go`, `api/handlers/embeddings_integration_test.go`
+  - Verify: cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./...
 
-- [ ] **T03: X-Concurrent-Chunks header + metrics** `est:1h`
-  api/middleware/headers.go (M041 S03 deliverable) расширить: в async mode добавить response header X-Concurrent-Chunks: N (number of chunks sent in parallel for this request). api/observability/metrics.go (M041 S03): добавить fd_async_chunks_total counter (incremented per chunk in flight), fd_async_chunk_duration_seconds histogram (per chunk inference time). Sync mode — headers/metrics absent (no overhead).
-  - Files: `api/middleware/headers.go`, `api/observability/metrics.go`
-  - Verify: curl -I -X POST /v1/embeddings с FD_ASYNC_CHUNKS=true показывает X-Concurrent-Chunks: 4 для batch=128. /metrics показывает fd_async_chunks_total counter incrementing.
+- [ ] **T03: Add async observability header and metrics** `est:1h`
+  Add X-Concurrent-Chunks response header in async mode and metrics/log surfaces that make the chunk count, miss count, and cancellation/error paths observable. Do not introduce noisy globals or unbounded labels. Ensure header/middleware interactions remain compatible with M041 S03 headers work and that new observability code passes gocritic/contextcheck.
+  - Files: `api/handlers/embeddings.go`, `api/handlers/embeddings_integration_test.go`
+  - Verify: cd api && go test ./handlers && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./handlers
 
-- [ ] **T04: Perf benchmark: async vs sync cold/warm path** `est:2h`
-  tools/verify_fd_async_perf.sh: прогон cold path measurements × batch sizes × async on/off. Output benchmark-results/fd-v2-async-perf-m042.md с table (batch 1/10/32/64/128 cold, sync vs async) и conclusion (improvement factor, where it falls short of 1000ms target). Также test concurrent scenario: 4 parallel fd calls × batch=32 cold, sync vs async (per M041 T-P-5 spec).
-  - Files: `tools/verify_fd_async_perf.sh`, `benchmark-results/fd-v2-async-perf-m042.md`
-  - Verify: tools/verify_fd_async_perf.sh exit 0. Artifact содержит: cold path table (batch × async on/off), concurrent test results, conclusion с comparison vs M041 baseline (25s → ≤10s for batch=128 cold).
+- [ ] **T04: Benchmark async versus sync cold and warm paths** `est:2h`
+  Create or update perf benchmark tooling to compare FD_ASYNC_CHUNKS=false versus true for cold batch=32, cold batch=128, and cache-hit path. Record before/after numbers in benchmark-results/fd-v2-async-perf-m042.md. Include the expanded M043 gate in the verification transcript so perf work cannot regress lint/test/security gates.
+  - Files: `tools/verify_fd_async_perf.sh`, `benchmark-results/fd-v2-async-perf-m042.md`, `benchmark.py`
+  - Verify: cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./... && go run golang.org/x/vuln/cmd/govulncheck@latest ./... && ../tools/verify_fd_async_perf.sh
 
-- [ ] **T05: Regression suite: M041 acceptance в async mode** `est:1h`
-  tools/verify_fd_v2_contract.py (M041 deliverable, deferred) запустить с FD_ASYNC_CHUNKS=true. Все 45 test cases должны pass. Любой failure — bug regression в S02. Проверить особенно: encoding_format=base64 с batch=128 (4 chunks, 128 embeddings in base64), dimensions=512, validation envelope (413, 400 etc) — всё должно работать identical к sync mode.
-  - Files: `tools/verify_fd_v2_contract.py`, `tests/integration/fd_v2_async_test.go`
-  - Verify: go test ./tests/integration/... -run TestFdV2AsyncMode: все M041 acceptance pass в async mode. 0 regressions.
+- [ ] **T05: Run regression suite for M041 acceptance in async mode** `est:1h`
+  Run the M041 acceptance/regression suite with FD_ASYNC_CHUNKS=false and true. Confirm error envelopes, validation behavior, cache-hit path, headers, and lifecycle assumptions are unchanged. Final completion evidence must include go test ./..., golangci-lint 18 linters, and govulncheck 0 reachable vulnerabilities.
+  - Files: `benchmark-results/fd-v2-async-regression-m042.md`, `api/handlers/embeddings_integration_test.go`
+  - Verify: cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./... && go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
 ## Files Likely Touched
 
-- api/embed/async.go
-- api/embed/async_test.go
-- api/go.mod
 - api/handlers/embeddings.go
+- api/handlers/embeddings_integration_test.go
 - api/main.go
-- api/middleware/headers.go
-- api/observability/metrics.go
+- api/main_test.go
 - tools/verify_fd_async_perf.sh
 - benchmark-results/fd-v2-async-perf-m042.md
-- tools/verify_fd_v2_contract.py
-- tests/integration/fd_v2_async_test.go
+- benchmark.py
+- benchmark-results/fd-v2-async-regression-m042.md

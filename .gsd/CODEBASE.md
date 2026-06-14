@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T05:17:25Z | Files: 160 | Described: 0/160
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T05:17:25Z","fingerprint":"dca37ff0b45e6add88965743d82a46545d573669","fileCount":160,"truncated":false} -->
+Generated: 2026-06-14T05:19:02Z | Files: 165 | Described: 0/165
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T05:19:02Z","fingerprint":"47d3d5dd77a045fcf37b140fab4c61782b7b3e60","fileCount":165,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -73,7 +73,7 @@ Generated: 2026-06-14T05:17:25Z | Files: 160 | Described: 0/160
 - `api/middleware/validation.go`
 
 ### benchmark-results/
-- *(74 files: 70 .txt, 4 .md)*
+- *(79 files: 75 .txt, 4 .md)*
 
 ### docs/
 - `docs/fd-v2.md`

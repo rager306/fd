@@ -1,22 +1,27 @@
 ---
 estimated_steps: 1
-estimated_files: 2
+estimated_files: 3
 skills_used: []
 ---
 
-# T03: ONNX cold/warm perf benchmark + async combo
+# T03: Benchmark ONNX cold and warm performance with cache namespace isolation
 
-tools/verify_fd_onnx_perf.sh: build fd-onnx binary (go build -tags onnx), start with FD_BACKEND=onnx + ONNX_ARTIFACT_MANIFEST=docs/onnx-artifacts/user-bge-m3-dense-fp32.json + ONNX_RUNTIME_LIBRARY=libonnxruntime.so + ONNX_TOKENIZER_PATH=..., measure cold/warm path × batch sizes 1/8/32/64/128, with FD_ASYNC_CHUNKS=true AND false. Output benchmark-results/fd-v2-onnx-perf-m042.md с comparison table (TEI vs ONNX × async on/off).
+Run ONNX cold/warm benchmark and async-combo measurement while isolating Redis cache namespace (e.g., EMBEDDING_CACHE_VERSION) or flushing deliberately so cached TEI vectors cannot masquerade as ONNX output. Capture cold batch=32, warm batch=1, and ONNX+async combo where applicable. Record runtime metadata and cache namespace in the benchmark artifact. If S02 async artifacts exist by then, compare against them; otherwise document the missing dependency.
 
 ## Inputs
 
-- None specified.
+- `docs/onnx-artifacts/user-bge-m3-dense-fp32.json`
+- `docs/static-analysis-recommendation.md`
 
 ## Expected Output
 
-- `tools/verify_fd_onnx_perf.sh`
 - `benchmark-results/fd-v2-onnx-perf-m042.md`
+- `tools/verify_fd_onnx_perf.sh`
 
 ## Verification
 
-ONNX mode exit 0. Artifact содержит: cold start latency (first request), warm p95 by batch, async on/off comparison. ONNX cold ≤500ms, warm ≤10ms. TEI baseline (from S02) shown for comparison.
+cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./... && ../tools/verify_fd_onnx_perf.sh
+
+## Observability Impact
+
+Perf artifact includes runtime model, dimensions, backend, and cache namespace evidence.

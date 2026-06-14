@@ -4,19 +4,23 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T05: ONNX mode docs + legal quality gate reference
+# T05: Document ONNX mode, legal quality gate deferral, and static-analysis constraints
 
-documents/onnx-mode-m042.md: (1) что такое ONNX mode (env flags, build command), (2) perf numbers (из S03 T03 benchmark), (3) legal quality gate deferred — explicit reference to M015/M016 findings (128-token truncation causes divergence), (4) production rollout checklist (legal quality gate close-out required as separate milestone, contact for opting in, monitoring recommendations). Обновить docs/fd-v2.md Section 5.4 с consolidated "after M042" perf table (TEI sync/async, ONNX sync/async) и known limitations.
+Update ONNX mode docs to state FD_BACKEND=onnx is opt-in, TEI remains production default, legal quality gate is deferred/reference-only, cache namespace must isolate TEI/ONNX comparisons, and M043 static-analysis gates are mandatory for future ONNX changes. Include gosec/govulncheck notes for operator-controlled artifacts and dependency changes.
 
 ## Inputs
 
-- None specified.
+- `docs/static-analysis-recommendation.md`
+- `docs/onnx-artifacts/README.md`
 
 ## Expected Output
 
-- `documents/onnx-mode-m042.md`
-- `docs/fd-v2.md (Section 5.4 update)`
+- `docs/onnx-mode-m042.md`
 
 ## Verification
 
-Документ существует, cross-references M015/M016, M019, M041. Production rollout checklist explicit. docs/fd-v2.md Section 5.4 updated.
+test -f docs/onnx-mode-m042.md && cd api && go test ./... && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./... && go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+## Observability Impact
+
+Docs explain which runtime metadata is observable and which checks still require smoke embedding requests.

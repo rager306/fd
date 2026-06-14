@@ -1,23 +1,28 @@
 ---
 estimated_steps: 1
-estimated_files: 3
+estimated_files: 2
 skills_used: []
 ---
 
-# T01: Реализовать async chunked orchestrator
+# T01: Implement lint-aware async chunked orchestrator
 
-api/embed/async.go: AsyncChunkedEmbed(ctx, teiClient, texts, dims) ([][]float32, error) с bounded concurrency semaphore (max 4, matches TEI max_batch_requests). Использует errgroup (golang.org/x/sync) или sync.WaitGroup + atomic errors. Cache logic не меняется — handler всё ещё делает GetIfPresent per text, но для miss'ов шлёт несколько chunks в parallel. Returns concatenated [][]float32. На любой chunk error — return wrapped error, no partial result.
+Implement bounded parallel TEI chunk orchestration for batches larger than TEI's per-request limit. Keep production functions below gocyclo 15 by extracting small helpers for chunk planning, worker execution, ordered result assembly, and error aggregation. Propagate request context into every goroutine/call so contextcheck stays clean; ensure goroutines stop on cancellation and do not leak. Avoid exported APIs unless required; any exported helper/type needs meaningful godoc because revive:exported is now enforced.
 
 ## Inputs
 
-- None specified.
+- `.golangci.yml`
+- `docs/static-analysis-phase2-report-m043.md`
+- `docs/fd-v2.md`
 
 ## Expected Output
 
-- `api/embed/async.go`
-- `api/embed/async_test.go`
-- `api/go.mod (errgroup dep)`
+- `api/handlers/embeddings.go`
+- `api/handlers/embeddings_integration_test.go`
 
 ## Verification
 
-Unit tests: (a) 4 chunks of 8, concurrency limit 4 → все chunks запускаются; (b) 1 chunk fails → wrapped error, no partial result; (c) all chunks success → concatenated result. Race detector clean.
+cd api && go test ./handlers ./middleware && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./handlers ./middleware
+
+## Observability Impact
+
+Worker errors, cancellation, and chunk count should be visible in logs/tests without high-cardinality metrics.

@@ -4,19 +4,24 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T03: X-Concurrent-Chunks header + metrics
+# T03: Add async observability header and metrics
 
-api/middleware/headers.go (M041 S03 deliverable) расширить: в async mode добавить response header X-Concurrent-Chunks: N (number of chunks sent in parallel for this request). api/observability/metrics.go (M041 S03): добавить fd_async_chunks_total counter (incremented per chunk in flight), fd_async_chunk_duration_seconds histogram (per chunk inference time). Sync mode — headers/metrics absent (no overhead).
+Add X-Concurrent-Chunks response header in async mode and metrics/log surfaces that make the chunk count, miss count, and cancellation/error paths observable. Do not introduce noisy globals or unbounded labels. Ensure header/middleware interactions remain compatible with M041 S03 headers work and that new observability code passes gocritic/contextcheck.
 
 ## Inputs
 
-- None specified.
+- `.gsd/milestones/M041-4tw0w7/M041-4tw0w7-ROADMAP.md`
+- `.golangci.yml`
 
 ## Expected Output
 
-- `api/middleware/headers.go (extended)`
-- `api/observability/metrics.go (extended)`
+- `api/handlers/embeddings.go`
+- `api/handlers/embeddings_integration_test.go`
 
 ## Verification
 
-curl -I -X POST /v1/embeddings с FD_ASYNC_CHUNKS=true показывает X-Concurrent-Chunks: 4 для batch=128. /metrics показывает fd_async_chunks_total counter incrementing.
+cd api && go test ./handlers && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./handlers
+
+## Observability Impact
+
+Adds async concurrency signal to responses and testable logs/metrics.

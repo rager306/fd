@@ -1,22 +1,27 @@
 ---
 estimated_steps: 1
-estimated_files: 3
+estimated_files: 5
 skills_used: []
 ---
 
-# T01: Audit existing ONNX implementation + build matrix
+# T01: Audit ONNX implementation and build matrix under M043 gates
 
-Прочитать api/embed/onnx.go (уже есть с M008/M019), api/embed/onnx_manifest.go, api/embed/onnx_tokenizer_*.go. Проверить что impl поддерживает batched input (Embed(ctx, texts []string) ([][]float32, error) — это contract). Build matrix: (1) go build . (default, no onnx) — работает, (2) go build -tags onnx . — компилируется, runtime требует libonnxruntime.so. Создать Makefile target `make build-onnx`.
+Audit existing ONNX implementation, build tags, native libraries, manifest validation, tokenizer/runtime paths, and current tests before changing behavior. Identify any M043 lint/security risks: exported API godoc, gosec G304 operator-path handling, context propagation, gocyclo hotspots, and govulncheck dependency exposure. Record whether the GitNexus/index view is stale before edits if code changes are needed.
 
 ## Inputs
 
-- None specified.
+- `docs/static-analysis-recommendation.md`
+- `docs/onnx-artifacts/README.md`
+- `.golangci.yml`
 
 ## Expected Output
 
-- `Makefile`
-- `api/embed/onnx-audit-m042-s03.md (audit findings)`
+- `benchmark-results/fd-v2-onnx-audit-m042.md`
 
 ## Verification
 
-go build -tags onnx -o /tmp/fd-api-onnx ./api exit 0. Audit doc: ONNXEmbedder implements Embedder interface (batch input supported), handles tokenizer, has artifact manifest validation.
+cd api && go test ./embed && go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./embed
+
+## Observability Impact
+
+Audit records which runtime metadata is safe to expose and which checks are startup-only.
