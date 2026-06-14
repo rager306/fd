@@ -253,6 +253,15 @@ func logRuntimePreflight(logger *slog.Logger, runtimeConfig *embeddingRuntimeCon
 	)
 }
 
+func closeResource(name string, resource interface{ Close() error }, logger *slog.Logger) {
+	if resource == nil {
+		return
+	}
+	if err := resource.Close(); err != nil {
+		logger.Warn(name+" close failed", "error", err)
+	}
+}
+
 func startModelWarmup(logger *slog.Logger, state *lifecycle.State, model lifecycle.WarmupModel, timeout time.Duration) {
 	go func() {
 		started := time.Now()
@@ -338,6 +347,7 @@ func main() {
 	lifecycleState := lifecycle.DefaultState()
 
 	var embeddingClient handlers.Embedder
+	var onnxCloser interface{ Close() error }
 	if runtimeConfig.Backend == embeddingBackendONNX {
 		onnxClient, err := embed.NewONNXEmbedder(embed.ONNXEmbedderOptions{
 			ManifestPath:      runtimeConfig.ONNXManifestPath,
@@ -352,11 +362,7 @@ func main() {
 			}
 			os.Exit(1)
 		}
-		defer func() {
-			if err := onnxClient.Close(); err != nil {
-				logger.Warn("onnx close failed", "error", err)
-			}
-		}()
+		onnxCloser = onnxClient
 		embeddingClient = onnxClient
 		logger.Info(
 			"onnx backend ready",
@@ -371,12 +377,6 @@ func main() {
 		embeddingClient = teiClient
 		logger.Info("tei client configured", "url", teiURL, "model", modelID)
 	}
-
-	defer func() {
-		if err := redisCache.Close(); err != nil {
-			logger.Warn("redis close failed", "error", err)
-		}
-	}()
 
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
@@ -432,13 +432,20 @@ func main() {
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
-	<-sigCh
 
-	logger.Info("shutting down...")
-	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		logger.Error("server shutdown failed", "error", err)
+	if err := lifecycle.AwaitSignalAndShutdown(
+		context.Background(),
+		sigCh,
+		srv,
+		lifecycleState,
+		logger,
+		lifecycle.DefaultShutdownTimeout,
+	); err != nil {
+		logger.Error("shutdown failed", "error", err)
+		closeResource("onnx", onnxCloser, logger)
+		closeResource("redis", redisCache, logger)
+		os.Exit(1)
 	}
-	logger.Info("stopped")
+	closeResource("onnx", onnxCloser, logger)
+	closeResource("redis", redisCache, logger)
 }

@@ -4,7 +4,7 @@ estimated_files: 3
 skills_used: []
 ---
 
-# T05: Graceful shutdown по SIGTERM/SIGINT
+# T05: Added lifecycle-managed graceful shutdown for SIGTERM/SIGINT with 30s shared server/in-flight drain and force-close failure path.
 
 api/lifecycle/shutdown.go: signal handler для SIGTERM и SIGINT. По сигналу: BeginShutdown(), log SIGTERM received, http.Server.Shutdown(ctxWith30sTimeout) — отказывает в новых соединениях, ждёт активные handlers до 30s, force close после. WaitDrain(30s) с inflight tracking. Exit 0 на clean drain, exit 1 на force timeout. Также: при shutdown in-flight handlers получают 503 shutting_down+Retry-After: 30 (через lifecycle middleware из T04).
 
