@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T07:50:30Z | Files: 263 | Described: 0/263
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T07:50:30Z","fingerprint":"04328c35f8cd2d50991c882b82fe1fd65a0e3719","fileCount":263,"truncated":false} -->
+Generated: 2026-06-14T08:39:26Z | Files: 308 | Described: 0/308
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T08:39:26Z","fingerprint":"2fb8278f22e73e3566b62250fb4b85684589b341","fileCount":308,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -65,23 +65,7 @@ Generated: 2026-06-14T07:50:30Z | Files: 263 | Described: 0/263
 - `api/embed/types.go`
 
 ### api/handlers/
-- `api/handlers/batch.go`
-- `api/handlers/constants.go`
-- `api/handlers/embeddings_integration_test.go`
-- `api/handlers/embeddings.go`
-- `api/handlers/errors_test.go`
-- `api/handlers/errors.go`
-- `api/handlers/health_test.go`
-- `api/handlers/health.go`
-- `api/handlers/notfound.go`
-- `api/handlers/observability_test.go`
-- `api/handlers/observability.go`
-- `api/handlers/probes_test.go`
-- `api/handlers/probes.go`
-- `api/handlers/recovery_test.go`
-- `api/handlers/recovery.go`
-- `api/handlers/warmup_test.go`
-- `api/handlers/warmup.go`
+- *(22 files: 22 .go)*
 
 ### api/lifecycle/
 - `api/lifecycle/shutdown_test.go`
@@ -92,19 +76,33 @@ Generated: 2026-06-14T07:50:30Z | Files: 263 | Described: 0/263
 - `api/lifecycle/warmup.go`
 
 ### api/middleware/
+- `api/middleware/auth_test.go`
+- `api/middleware/auth.go`
+- `api/middleware/cache_headers_test.go`
+- `api/middleware/cache_headers.go`
+- `api/middleware/cors_test.go`
+- `api/middleware/cors.go`
 - `api/middleware/headers_test.go`
 - `api/middleware/headers.go`
 - `api/middleware/lifecycle_test.go`
 - `api/middleware/lifecycle.go`
+- `api/middleware/ratelimit_test.go`
+- `api/middleware/ratelimit.go`
 - `api/middleware/validation_test.go`
 - `api/middleware/validation.go`
 
 ### api/observability/
 - `api/observability/metrics_test.go`
 - `api/observability/metrics.go`
+- `api/observability/traces_test.go`
+- `api/observability/traces.go`
+
+### api/openapi/
+- `api/openapi/spec_test.go`
+- `api/openapi/spec.go`
 
 ### benchmark-results/
-- *(151 files: 146 .txt, 5 .md)*
+- *(178 files: 172 .txt, 6 .md)*
 
 ### docs/
 - `docs/fd-v2.md`
@@ -145,6 +143,7 @@ Generated: 2026-06-14T07:50:30Z | Files: 263 | Described: 0/263
 - `tools/profile_legal_divergence.py`
 - `tools/provision_onnx_artifacts.py`
 - `tools/run_m040_s02_docker_restart_proof.sh`
+- `tools/verify_fd_v2_contract.py`
 - `tools/verify_fd_v2_perf.sh`
 - `tools/verify_legal_model_quick_gate_artifact.py`
 - `tools/verify_m040_s02_artifacts.py`
