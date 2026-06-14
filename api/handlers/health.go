@@ -7,6 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	responseStatusKey = "status"
+	responseTimeKey   = "time"
+)
+
 // RuntimeHealth describes the active embedding runtime reported by /health.
 // It is metadata only; readiness still requires a smoke embedding request.
 type RuntimeHealth struct {
@@ -40,8 +45,8 @@ func NewHealthHandler(runtime *RuntimeHealth) gin.HandlerFunc {
 
 func writeHealth(c *gin.Context, runtime *RuntimeHealth) {
 	body := gin.H{
-		"status": "ok",
-		"time":   time.Now().Format(time.RFC3339),
+		responseStatusKey: "ok",
+		responseTimeKey:   time.Now().Format(time.RFC3339),
 	}
 	if runtime != nil {
 		body["runtime"] = runtime

@@ -37,7 +37,7 @@ Lifecycle state (warmupDone, shuttingDown, inflight) атомики исполь
   - Files: `api/lifecycle/warmup.go`, `api/lifecycle/warmup_test.go`, `api/main.go`
   - Verify: Integration test: запустить fd binary, в течение 100ms после start curl /live → 200, curl /ready → 503, через 30s (после warmup) curl /ready → 200. Проверить логи: model loading, warmup started, warmup done.
 
-- [ ] **T03: /live и /ready endpoints** `est:1h`
+- [x] **T03: Added /live and /ready probes backed by lifecycle state: /live always 200, /ready 200 after warmup and 503 model_not_loaded before warmup/shutdown.** `est:1h`
   api/handlers/probes.go: GET /live — cheap, проверяет только process alive, всегда 200 (даже если warmup not done). GET /ready — проверяет IsReady(), 200 если warmup done, 503 (overloaded_error, model_not_loaded, Retry-After: 5) если нет. Оба endpoints используют lifecycle state из T01.
   - Files: `api/handlers/probes.go`, `api/handlers/probes_test.go`
   - Verify: Unit tests: после MarkWarmupDone → /ready 200; до → /ready 503 с code=model_not_loaded, Retry-After: 5. /live всегда 200.

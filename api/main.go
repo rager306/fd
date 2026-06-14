@@ -399,6 +399,8 @@ func main() {
 	embedHandler := handlers.NewEmbeddingsHandler(embeddingClient, tiered, modelID, logger)
 	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
 
+	r.GET("/live", handlers.NewLiveHandler())
+	r.GET("/ready", handlers.NewReadyHandler(lifecycleState))
 	r.GET("/health", handlers.NewHealthHandler(runtimeConfig.Health(modelID, redisOptions.Namespace.String())))
 	// /v1/embeddings: validation middleware runs BEFORE the handler so
 	// 4xx/5xx (400 input_required, 413 input_too_long, 413 batch_too_large,
