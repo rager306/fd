@@ -1,0 +1,8 @@
+M041 S04 T04 no-op optimization assessment
+
+Baseline evidence from benchmark-results/fd-v2-baseline-before-m041-s04.md / T01 summary:
+- batch=1 p95=3.7ms target<50ms PASS
+- batch=10 p95=3.9ms target<200ms PASS
+- batch=32 p95=3.5ms target<1000ms PASS
+
+Decision: no targeted latency optimization needed in T04. Avoid adding speculative env flags or worker/tensor-packing code because measured warm-model latency already exceeds targets by large margins. Remaining S04 validation belongs to T05 final perf/cache validation.
