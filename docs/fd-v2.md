@@ -12,6 +12,8 @@
 `fd` — это local HTTP embedding service, обслуживающий daily-archive (scientific KG pipeline).
 Модель: `deepvk/USER-bge-m3`, размерности 1024 / 512 (Matryoshka), max input length 512 tokens.
 
+**Current runtime posture (M042): TEI-only.** ONNX references in historical artifacts are research-only and not part of the current active build/runtime path.
+
 Сервис вызывается daily-archive из:
 - `src/arxiv_archive/embedder.py` (class `Embedder`, async, httpx)
 - `scripts/m057_table_embed.py` (helper, sync, urllib)

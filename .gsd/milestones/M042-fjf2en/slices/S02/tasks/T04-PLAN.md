@@ -4,7 +4,7 @@ estimated_files: 5
 skills_used: []
 ---
 
-# T04: Update docs and operator contract to TEI-only current posture
+# T04: Updated operator docs and compose/CI surfaces to TEI-only current posture, with ONNX retained only as historical/future research context.
 
 Update README, same-host contract, fd-v2 docs, and relevant operations docs to state TEI is the only current runtime. Mark ONNX as historical/future research, not an operator option. Remove outdated compose comments suggesting ONNX export as current optimization. Update R021/R027/R022 statuses if evidence supports it.
 

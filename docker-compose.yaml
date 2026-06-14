@@ -9,9 +9,7 @@ services:
       - tei_data:/data
     environment:
       HF_HOME: /data
-    command: --model-id deepvk/USER-bge-m3 --dtype fp16 --max-batch-tokens 8192
-    # Note: --dtype fp16 requires ONNX model. Falls back to FP32 if ONNX unavailable.
-    # For true FP16 speedup: convert model to ONNX using optimum-cli first.
+    command: --model-id deepvk/USER-bge-m3 --max-batch-tokens 8192
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 5s

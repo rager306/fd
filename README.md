@@ -56,7 +56,7 @@ POST /embeddings/batch    — batch embeddings for FalkorDB
 
 `encoding_format`: `base64` (default) or `float`.
 
-> **Full service contract:** For same-host local clients, see [docs/same-host-embedding-service-contract.md](docs/same-host-embedding-service-contract.md). It covers `/health` readiness semantics, timeout/retry guidance, cache namespace isolation, no-silent-fallback rules, and the ONNX opt-in operating contract.
+> **Full service contract:** For same-host local clients, see [docs/same-host-embedding-service-contract.md](docs/same-host-embedding-service-contract.md). It covers `/health` readiness semantics, timeout/retry guidance, cache namespace isolation, and the TEI-only current runtime contract.
 
 ## Architecture
 
@@ -110,9 +110,8 @@ Request → L1 (sync.Map, ~50ns) → L2 (Redis binary, ~0.5ms) → TEI (~70ms)
 
 ### TEI backend artifacts
 
-- The Compose command includes `--dtype fp16`, but the current `deepvk/USER-bge-m3` runtime has been observed falling back when ONNX artifacts are unavailable.
-- Current local benchmarks are valid for the measured Candle/CPU fallback runtime. Treat ONNX export as a future measured optimization, not a correctness requirement.
-- If ONNX artifacts are introduced later, run an A/B benchmark with the same `uv --python 3.13` command and compare cold p50/p95, memory, and response shape before making it the default.
+- The current supported runtime path is TEI. Historical ONNX experiments remain research artifacts only and are not an operator option in the current build.
+- Current local benchmarks are valid for the measured TEI/Candle CPU runtime. Treat any future ONNX work as a separate research milestone with fresh A/B benchmarks and operational gates.
 
 ### Runtime logging
 

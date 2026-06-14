@@ -41,7 +41,7 @@ S02 consumes S01 RCA. It leaves fd in a coherent TEI-only current posture and pr
   - Files: `api/go.mod`, `api/go.sum`, `Dockerfile.onnx`, `api/embed/onnx*.go`, `api/embed/*onnx*_test.go`, `tools/*onnx*`
   - Verify: Default `go test ./...` works without ONNX runtime/toolchain dependencies; `go list -deps ./...` no longer includes ONNX runtime packages unless justified.
 
-- [ ] **T04: Update docs and operator contract to TEI-only current posture** `est:1h`
+- [x] **T04: Updated operator docs and compose/CI surfaces to TEI-only current posture, with ONNX retained only as historical/future research context.** `est:1h`
   Update README, same-host contract, fd-v2 docs, and relevant operations docs to state TEI is the only current runtime. Mark ONNX as historical/future research, not an operator option. Remove outdated compose comments suggesting ONNX export as current optimization. Update R021/R027/R022 statuses if evidence supports it.
   - Files: `README.md`, `docs/same-host-embedding-service-contract.md`, `docs/fd-v2.md`, `docker-compose.yaml`, `.gsd/REQUIREMENTS.md`
   - Verify: Docs contain TEI-only current posture and no active ONNX operator instructions outside historical/future research notes.
