@@ -42,15 +42,15 @@ Cache слой между validation (S01) и model inference. Cache key = SHA25
   - Files: `api/middleware/cache.go`, `api/middleware/cache_test.go`
   - Verify: Unit tests: первый запрос → X-Cache: MISS, повторный → X-Cache: HIT. Cache HIT latency < 5ms. fd_cache_hits_total{result=hit} increments.
 
-- [x] **T04: Skipped speculative performance optimization because baseline warm-model latency already met p95 targets with large margin.** `est:8h (если нужен); 1h (если baseline уже ОК)`
+- [x] **T04: Confirmed real cache-miss inference performance blocker: current fd + TEI CPU misses T-P latency targets when Redis namespace is isolated.** `est:8h (если нужен); 1h (если baseline уже ОК)`
   Если baseline из T01 НЕ достигает target (50/200/1000ms p95), выполнить targeted optimization. Возможные направления: (a) batch tensor packing — отправлять весь input array одним тензором в ONNX/TEI за раз, не per-item; (b) concurrent workers — если backend медленный, N goroutines обрабатывают chunks; (c) request coalescing — multiple requests с одинаковым input идут в один model call; (d) ONNX session warmup и graph optimization. Каждое изменение проверяется отдельным benchmark. Изменения оформляются как opt-in через env (FD_BATCH_TENSOR_PACKING=true, FD_CONCURRENT_WORKERS=4, etc).
   - Files: `api/embed/optimizations.go`, `api/embed/optimizations_test.go`, `api/embed/perf_test.go`
   - Verify: После optimization: повторный baseline показывает p95 latency в target. benchmark-results/fd-v2-perf-m041-s04.md содержит before/after numbers и какие optimization сработали.
 
-- [ ] **T05: Final perf validation + concurrent load test** `est:2h`
-  tools/verify_fd_v2_perf.sh: запускает T-P-1..T-P-5 против running fd v2. Проверяет: 1 input p95<50ms, 10 input p95<200ms, 32 input p95<1000ms, 100 sequential 0 errors, 4 concurrent × 8 input < 2s total. Также проверяет cache effectiveness: cache hit latency < 5ms, eviction работает. Результаты в benchmark-results/fd-v2-perf-validation-m041-s04.md. Спека: docs/fd-v2.md Section 5.4 T-P-1..T-P-5 + Section 6.3 F-4 (cache miss → hit).
+- [ ] **T05: Final perf validation after backend remediation** `est:1`
+  Run tools/verify_fd_v2_perf.sh against a current fd instance backed by real inference and an isolated Redis cache namespace. Passing cache-hot runs are insufficient. This task remains pending while the current TEI CPU backend misses T-P latency targets; complete only after backend/runtime remediation (for example ONNX/GPU/faster TEI runtime) or explicit requirement rescope.
   - Files: `tools/verify_fd_v2_perf.sh`, `benchmark-results/fd-v2-perf-validation-m041-s04.md`
-  - Verify: tools/verify_fd_v2_perf.sh exit 0, benchmark-results artifact содержит p50/p95/p99 для всех 5 test cases, все 4×8 concurrent requests complete < 2s.
+  - Verify: FD_BASE_URL=http://localhost:8000 tools/verify_fd_v2_perf.sh exits 0 against current fd with isolated EMBEDDING_CACHE_VERSION and real inference. Artifact contains p50/p95/p99 for T-P cases, 100 sequential 0 errors, 4x8 concurrent <2s, and cache HIT <5ms.
 
 ## Files Likely Touched
 

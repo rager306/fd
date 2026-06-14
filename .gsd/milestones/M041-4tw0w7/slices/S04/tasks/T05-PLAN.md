@@ -4,19 +4,20 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T05: Final perf validation + concurrent load test
+# T05: Final perf validation after backend remediation
 
-tools/verify_fd_v2_perf.sh: запускает T-P-1..T-P-5 против running fd v2. Проверяет: 1 input p95<50ms, 10 input p95<200ms, 32 input p95<1000ms, 100 sequential 0 errors, 4 concurrent × 8 input < 2s total. Также проверяет cache effectiveness: cache hit latency < 5ms, eviction работает. Результаты в benchmark-results/fd-v2-perf-validation-m041-s04.md. Спека: docs/fd-v2.md Section 5.4 T-P-1..T-P-5 + Section 6.3 F-4 (cache miss → hit).
+Run tools/verify_fd_v2_perf.sh against a current fd instance backed by real inference and an isolated Redis cache namespace. Passing cache-hot runs are insufficient. This task remains pending while the current TEI CPU backend misses T-P latency targets; complete only after backend/runtime remediation (for example ONNX/GPU/faster TEI runtime) or explicit requirement rescope.
 
 ## Inputs
 
-- None specified.
+- `tools/verify_fd_v2_perf.sh`
+- `docs/fd-v2.md`
+- `benchmark-results/m041-s04-t04-bottleneck-measurement.txt`
 
 ## Expected Output
 
-- `tools/verify_fd_v2_perf.sh`
 - `benchmark-results/fd-v2-perf-validation-m041-s04.md`
 
 ## Verification
 
-tools/verify_fd_v2_perf.sh exit 0, benchmark-results artifact содержит p50/p95/p99 для всех 5 test cases, все 4×8 concurrent requests complete < 2s.
+FD_BASE_URL=http://localhost:8000 tools/verify_fd_v2_perf.sh exits 0 against current fd with isolated EMBEDDING_CACHE_VERSION and real inference. Artifact contains p50/p95/p99 for T-P cases, 100 sequential 0 errors, 4x8 concurrent <2s, and cache HIT <5ms.
