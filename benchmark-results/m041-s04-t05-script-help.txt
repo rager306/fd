@@ -1,0 +1,11 @@
+Usage: FD_BASE_URL=http://localhost:8000 tools/verify_fd_v2_perf.sh
+
+Runs fd v2 performance checks:
+- batch=1 p95 < 50ms
+- batch=10 p95 < 200ms
+- batch=32 p95 < 1000ms
+- 100 sequential requests: 0 errors
+- 4 concurrent workers x 8 requests complete < 2s
+- repeated identical input returns X-Cache: HIT with latency < 5ms
+
+Writes markdown results to benchmark-results/fd-v2-perf-validation-m041-s04.md by default.
