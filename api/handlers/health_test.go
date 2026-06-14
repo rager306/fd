@@ -9,7 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const testModelID = "deepvk/USER-bge-m3"
+const (
+	testModelID    = "deepvk/USER-bge-m3"
+	testTEIBackend = "tei"
+	testVersion200 = "2.0.0"
+)
 
 func TestHealthHandlerDefaultShape(t *testing.T) {
 	gin.SetMode(gin.TestMode)
@@ -42,7 +46,7 @@ func TestNewHealthHandlerIncludesSafeTEIRuntimeMetadata(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/health", NewHealthHandler(&RuntimeHealth{
-		Backend:           "tei",
+		Backend:           testTEIBackend,
 		Model:             testModelID,
 		Dimensions:        1024,
 		ProductionDefault: true,
@@ -64,7 +68,7 @@ func TestNewHealthHandlerIncludesSafeTEIRuntimeMetadata(t *testing.T) {
 	if !ok {
 		t.Fatalf("runtime metadata missing: %#v", body)
 	}
-	if runtime["backend"] != "tei" {
+	if runtime["backend"] != testTEIBackend {
 		t.Fatalf("backend = %#v, want tei", runtime["backend"])
 	}
 	if runtime["model"] != testModelID {

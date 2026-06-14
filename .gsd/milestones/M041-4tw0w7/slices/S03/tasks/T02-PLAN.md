@@ -4,7 +4,7 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T02: Endpoints /version, /info, /v1/healthcheck
+# T02: Added /version, /info, and /v1/healthcheck observability endpoints backed by buildinfo and lifecycle state.
 
 api/handlers/observability.go: GET /version — возвращает buildinfo.Info + uptime. GET /info — возвращает список моделей с dims=[512,1024], max_input_length_tokens=512, max_batch_size=32, loaded, warmup_done, device (cuda:0/cpu). GET /v1/healthcheck — alias для /health, тот же response. Все endpoints используют lifecycle state из S02.
 

@@ -355,6 +355,12 @@ func main() {
 	}
 
 	lifecycleState := lifecycle.DefaultState()
+	buildInfo := buildinfo.New(buildinfo.Info{
+		Version:   Version,
+		Model:     modelID,
+		BuildHash: BuildHash,
+		BuildDate: BuildDate,
+	})
 	maxInFlight := getEnvInt("FD_MAX_IN_FLIGHT", 0)
 	if maxInFlight > 0 {
 		logger.Info("embedding lifecycle capacity gate enabled", "max_in_flight", maxInFlight)
@@ -413,9 +419,14 @@ func main() {
 	embedHandler := handlers.NewEmbeddingsHandler(embeddingClient, tiered, modelID, logger)
 	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
 
+	runtimeHealth := runtimeConfig.Health(modelID, redisOptions.Namespace.String())
+	healthHandler := handlers.NewHealthHandler(runtimeHealth)
 	r.GET("/live", handlers.NewLiveHandler())
 	r.GET("/ready", handlers.NewReadyHandler(lifecycleState))
-	r.GET("/health", handlers.NewHealthHandler(runtimeConfig.Health(modelID, redisOptions.Namespace.String())))
+	r.GET("/version", handlers.NewVersionHandler(buildInfo))
+	r.GET("/info", handlers.NewInfoHandler(buildInfo, runtimeHealth, lifecycleState))
+	r.GET("/health", healthHandler)
+	r.GET("/v1/healthcheck", healthHandler)
 	// /v1/embeddings: validation middleware runs BEFORE the handler so
 	// 4xx/5xx (400 input_required, 413 input_too_long, 413 batch_too_large,
 	// 413 payload_too_large) are returned without burning inference

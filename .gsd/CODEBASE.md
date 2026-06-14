@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T06:03:56Z | Files: 175 | Described: 0/175
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T06:03:56Z","fingerprint":"3cd34d8927242aa727cb41629aae8b32a9c0534e","fileCount":175,"truncated":false} -->
+Generated: 2026-06-14T06:29:24Z | Files: 201 | Described: 0/201
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T06:29:24Z","fingerprint":"3802e316994bbc9040de562d71818ab8dc95aec6","fileCount":201,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -21,10 +21,15 @@ Generated: 2026-06-14T06:03:56Z | Files: 175 | Described: 0/175
 - `api/.dockerignore`
 - `api/Dockerfile`
 - `api/Dockerfile.tests`
+- `api/fd_v2_lifecycle_integration_test.go`
 - `api/go.mod`
 - `api/go.sum`
 - `api/main_test.go`
 - `api/main.go`
+
+### api/buildinfo/
+- `api/buildinfo/info_test.go`
+- `api/buildinfo/info.go`
 
 ### api/cache/
 - `api/cache/local_test.go`
@@ -65,21 +70,27 @@ Generated: 2026-06-14T06:03:56Z | Files: 175 | Described: 0/175
 - `api/handlers/health_test.go`
 - `api/handlers/health.go`
 - `api/handlers/notfound.go`
+- `api/handlers/probes_test.go`
+- `api/handlers/probes.go`
 - `api/handlers/recovery_test.go`
 - `api/handlers/recovery.go`
 
 ### api/lifecycle/
+- `api/lifecycle/shutdown_test.go`
+- `api/lifecycle/shutdown.go`
 - `api/lifecycle/state_test.go`
 - `api/lifecycle/state.go`
 - `api/lifecycle/warmup_test.go`
 - `api/lifecycle/warmup.go`
 
 ### api/middleware/
+- `api/middleware/lifecycle_test.go`
+- `api/middleware/lifecycle.go`
 - `api/middleware/validation_test.go`
 - `api/middleware/validation.go`
 
 ### benchmark-results/
-- *(85 files: 81 .txt, 4 .md)*
+- *(102 files: 98 .txt, 4 .md)*
 
 ### docs/
 - `docs/fd-v2.md`

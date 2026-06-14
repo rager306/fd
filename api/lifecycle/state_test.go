@@ -10,6 +10,9 @@ import (
 func TestStateReadinessAndShutdown(t *testing.T) {
 	state := NewState()
 
+	if state.IsWarmupDone() {
+		t.Fatal("new state should not report warmup done")
+	}
 	if state.IsReady() {
 		t.Fatal("new state should not be ready before warmup")
 	}
@@ -18,6 +21,9 @@ func TestStateReadinessAndShutdown(t *testing.T) {
 	}
 
 	state.MarkWarmupDone()
+	if !state.IsWarmupDone() {
+		t.Fatal("state should report warmup done after MarkWarmupDone")
+	}
 	if !state.IsReady() {
 		t.Fatal("state should be ready after warmup")
 	}

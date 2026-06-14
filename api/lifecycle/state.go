@@ -64,9 +64,14 @@ func (s *State) MarkWarmupDone() {
 	s.warmupDone.Store(true)
 }
 
+// IsWarmupDone reports whether model warmup has completed successfully.
+func (s *State) IsWarmupDone() bool {
+	return s.warmupDone.Load()
+}
+
 // IsReady reports whether fd should accept embedding requests.
 func (s *State) IsReady() bool {
-	return s.warmupDone.Load() && !s.shuttingDown.Load() && s.LastError() == nil
+	return s.IsWarmupDone() && !s.shuttingDown.Load() && s.LastError() == nil
 }
 
 // BeginShutdown marks fd as shutting down. New embedding requests should be
