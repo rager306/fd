@@ -41,7 +41,7 @@ func TestAPIKeyAuthAcceptsCorrectBearerToken(t *testing.T) {
 
 func TestAPIKeyAuthSkipsPublicEndpoints(t *testing.T) {
 	r := authTestRouter("test")
-	for _, path := range []string{publicLivePath, publicMetrics, publicDocs, publicDocs + "/index.html", publicOpenAPI} {
+	for _, path := range []string{publicLivePath, publicReadyPath, publicHealthPath, publicV1Healthcheck, publicMetrics, publicDocs, publicDocs + "/index.html", publicOpenAPI} {
 		w := performAuthRequest(r, path, "")
 		if w.Code != http.StatusOK {
 			t.Fatalf("%s status = %d, want 200; body=%s", path, w.Code, w.Body.String())
@@ -61,7 +61,7 @@ func authTestRouter(apiKey string) *gin.Engine {
 func performAuthRequest(r http.Handler, path, authorization string) *httptest.ResponseRecorder {
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodPost, path, http.NoBody)
-	if path == publicLivePath || path == publicMetrics || path == publicDocs || path == publicDocs+"/index.html" || path == publicOpenAPI {
+	if path == publicLivePath || path == publicReadyPath || path == publicHealthPath || path == publicV1Healthcheck || path == publicMetrics || path == publicDocs || path == publicDocs+"/index.html" || path == publicOpenAPI {
 		req.Method = http.MethodGet
 	}
 	if authorization != "" {
