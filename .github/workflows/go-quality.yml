@@ -8,9 +8,6 @@ on:
       - "api/**"
       - ".golangci.yml"
       - ".github/workflows/go-quality.yml"
-      - "Dockerfile.onnx"
-      - "docs/onnx-artifacts/**"
-      - "tools/verify_onnx_artifacts.py"
       - "README.md"
   pull_request:
     branches:
@@ -19,9 +16,6 @@ on:
       - "api/**"
       - ".golangci.yml"
       - ".github/workflows/go-quality.yml"
-      - "Dockerfile.onnx"
-      - "docs/onnx-artifacts/**"
-      - "tools/verify_onnx_artifacts.py"
       - "README.md"
   workflow_dispatch:
 
@@ -55,28 +49,6 @@ jobs:
       - name: Run Go tests
         working-directory: api
         run: go test ./... -short
-
-      - name: Verify ONNX artifact contract metadata
-        run: |
-          python3 -m py_compile tools/verify_onnx_artifacts.py
-          python3 tools/verify_onnx_artifacts.py \
-            --onnx-manifest docs/onnx-artifacts/user-bge-m3-dense-fp32.json \
-            --native-tokenizer-manifest docs/onnx-artifacts/hf-tokenizers-linux-amd64.json \
-            --allow-missing >/tmp/fd-onnx-artifacts-ci.json
-          python3 -m json.tool /tmp/fd-onnx-artifacts-ci.json >/dev/null
-
-      - name: Ensure native ONNX binaries are not tracked
-        run: |
-          tracked="$(git ls-files | awk '
-            $0 ~ /\.onnx$/ && $0 != "Dockerfile.onnx" { print }
-            $0 ~ /libtokenizers\.a$/ { print }
-            $0 ~ /libonnxruntime\.so(\.|$)/ { print }
-          ')"
-          if [ -n "$tracked" ]; then
-            echo "Tracked ONNX/native runtime binaries are not allowed:"
-            echo "$tracked"
-            exit 1
-          fi
 
       - name: Run GolangCI-Lint with Staticcheck + Tier 1/2 linters
         working-directory: api

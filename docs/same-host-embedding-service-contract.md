@@ -241,13 +241,13 @@ The following are explicitly **out of scope** for the `fd` same-host embedding s
 | Concern | Guidance |
 |---------|---------|
 | Endpoint base | `http://localhost:8000` (or the host's fd service address) |
-| Backend detection | `GET /health` → `runtime.backend` (`"tei"` or `"onnx"`) |
+| Backend detection | `GET /health` → `runtime.backend` (`"tei"` for current product builds) |
 | Full readiness | Smoke `POST /v1/embeddings` → verify `data[0].dimensions` in response |
 | Request timeout | 30 s for single/batch embeddings; 10 s minimum for health |
 | Retry on | Transport errors, HTTP 503 |
 | Do not retry on | HTTP 400, HTTP 500 |
 | Cache compatibility | Verify `runtime.cache_namespace` matches your expected namespace |
-| TEI ↔ ONNX switch | Restart the service with new `EMBEDDING_BACKEND`; flush Redis or use a new `EMBEDDING_CACHE_VERSION` |
+| Future backend research | Use a separate milestone and isolated `EMBEDDING_CACHE_VERSION`; current product builds are TEI-only |
 | Logging | Set `LOG_LEVEL=debug` to see cache hit/miss events (short key hashes only, no raw text) |
 
 ---

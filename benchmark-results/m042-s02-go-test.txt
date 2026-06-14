@@ -1,0 +1,13 @@
+ok  	fd-api	(cached)
+ok  	fd-api/buildinfo	(cached)
+ok  	fd-api/cache	(cached)
+ok  	fd-api/embed	(cached)
+ok  	fd-api/handlers	(cached)
+ok  	fd-api/lifecycle	(cached)
+ok  	fd-api/middleware	(cached)
+ok  	fd-api/observability	(cached)
+ok  	fd-api/openapi	(cached)
+
+real	0m0.420s
+user	0m0.974s
+sys	0m0.672s

@@ -42,16 +42,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
-### R027 — Current fd product/runtime scope is TEI-first: ONNX runtime branch must be disabled or removed from active build, CI, docs, and runtime selection paths; ONNX may remain only as future research history/artifacts.
-- Class: constraint
-- Status: active
-- Description: Current fd product/runtime scope is TEI-first: ONNX runtime branch must be disabled or removed from active build, CI, docs, and runtime selection paths; ONNX may remain only as future research history/artifacts.
-- Why it matters: ONNX has not passed operational readiness and adds build/runtime/artifact complexity. The project should advance the working TEI path without ONNX code paths, binary/dependency noise, or confusing operator choices.
-- Source: User directive during M042 TEI perf investigation
-- Primary owning slice: M042-fjf2en/S02
-- Validation: Default build, Docker image, docs, and runtime config expose only TEI as current backend; ONNX build/runtime selectors are absent or fail closed as explicitly research-only; `go test ./...`, golangci-lint v2.12.2, and govulncheck pass.
-- Notes: This supersedes M042/S03 ONNX implementation scope; R022 is deferred.
-
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -270,6 +260,16 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M043-dpr0cq/S03
 - Validation: M043 S03: govulncheck CI step added and local govulncheck exits 0 with 0 reachable vulnerabilities; docs finalized. Evidence: benchmark-results/m043-s03-govulncheck-final.txt, docs/static-analysis-recommendation.md.
 
+### R027 — Current fd product/runtime scope is TEI-first: ONNX runtime branch must be disabled or removed from active build, CI, docs, and runtime selection paths; ONNX may remain only as future research history/artifacts.
+- Class: constraint
+- Status: validated
+- Description: Current fd product/runtime scope is TEI-first: ONNX runtime branch must be disabled or removed from active build, CI, docs, and runtime selection paths; ONNX may remain only as future research history/artifacts.
+- Why it matters: ONNX has not passed operational readiness and adds build/runtime/artifact complexity. The project should advance the working TEI path without ONNX code paths, binary/dependency noise, or confusing operator choices.
+- Source: User directive during M042 TEI perf investigation
+- Primary owning slice: M042-fjf2en/S02
+- Validation: M042 S02 evidence validates TEI-only current posture: `api/main.go` rejects non-TEI `EMBEDDING_BACKEND`; ONNX Go embedder/build-tag files, `Dockerfile.onnx`, and ONNX packaging workflow are removed; `api/go.mod`/`go.sum` no longer include ONNX/runtime tokenizer deps; docs/compose describe TEI-only current runtime; final gates passed in `benchmark-results/m042-s02-*`.
+- Notes: Historical ONNX benchmark/GSD artifacts remain as research history only.
+
 ## Deferred
 
 ### R022 — Opt-in ONNX mode (FD_BACKEND=onnx, requires onnx build tag) — fd serves embeddings из Go ONNX runtime вместо TEI HTTP. Per M019: cold latency 8.3ms, warm 1.19ms, throughput 858 req/s. Опционально через env, default off (TEI остаётся production per R001/M015). fd binary должен билдиться с onnx tag без regression: все M041 acceptance criteria должны pass в обоих режимах.
@@ -314,11 +314,11 @@ This file is the explicit capability and coverage contract for the project.
 | R024 | quality-attribute | validated | M043-dpr0cq/S02 | none | M043 S02: Tier 2 linters enabled; 17 baseline issues fixed; final lint 0 issues. Evidence: docs/static-analysis-phase2-report-m043.md, benchmark-results/m043-s02-final-lint.txt. |
 | R025 | quality-attribute | validated | M043-dpr0cq/S03 | none | M043 S03: govulncheck CI step added and local govulncheck exits 0 with 0 reachable vulnerabilities; docs finalized. Evidence: benchmark-results/m043-s03-govulncheck-final.txt, docs/static-analysis-recommendation.md. |
 | R026 | integration | active | none | none | `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass. |
-| R027 | constraint | active | M042-fjf2en/S02 | none | Default build, Docker image, docs, and runtime config expose only TEI as current backend; ONNX build/runtime selectors are absent or fail closed as explicitly research-only; `go test ./...`, golangci-lint v2.12.2, and govulncheck pass. |
+| R027 | constraint | validated | M042-fjf2en/S02 | none | M042 S02 evidence validates TEI-only current posture: `api/main.go` rejects non-TEI `EMBEDDING_BACKEND`; ONNX Go embedder/build-tag files, `Dockerfile.onnx`, and ONNX packaging workflow are removed; `api/go.mod`/`go.sum` no longer include ONNX/runtime tokenizer deps; docs/compose describe TEI-only current runtime; final gates passed in `benchmark-results/m042-s02-*`. |
 
 ## Coverage Summary
 
-- Active requirements: 5
-- Mapped to slices: 4
-- Validated: 21 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025)
+- Active requirements: 4
+- Mapped to slices: 3
+- Validated: 22 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027)
 - Unmapped active requirements: 1

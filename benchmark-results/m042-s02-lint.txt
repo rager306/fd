@@ -1,0 +1,6 @@
+go: github.com/golangci/golangci-lint/v2@v2.12.2 requires go >= 1.25.0; switching to go1.25.11
+0 issues.
+
+real	0m2.016s
+user	0m2.976s
+sys	0m1.247s

@@ -1,0 +1,147 @@
+{
+  "runId": "uat:M042-fjf2en:S02:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M042-fjf2en",
+  "sliceId": "S02",
+  "uatType": "runtime-executable",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-14T10:54:01.912Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "TEI-only check artifact proves ONNX active path removal.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "496e3cfd-4ab9-4642-9483-4a08b34508f6",
+          "note": "Verified TEI-only artifact content and absence of ONNX deps/dtype.",
+          "tool": "gsd_uat_exec",
+          "executionId": "496e3cfd-4ab9-4642-9483-4a08b34508f6"
+        }
+      ],
+      "notes": "Artifact is benchmark-results/m042-s02-tei-only-check.txt."
+    },
+    {
+      "id": "UAT-02",
+      "description": "ONNX active files are removed.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "f2496079-d0a0-4634-b4fe-d1b5783683fa",
+          "note": "Verified Dockerfile.onnx, ONNX workflow, and api/embed/onnx.go are absent.",
+          "tool": "gsd_uat_exec",
+          "executionId": "f2496079-d0a0-4634-b4fe-d1b5783683fa"
+        }
+      ],
+      "notes": "Historical artifacts are preserved."
+    },
+    {
+      "id": "UAT-03",
+      "description": "Requirement state reflects S02 outcome.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "eade47d7-b70e-4127-be6c-4314edb36938",
+          "note": "Verified R027 validated and R021 deferred.",
+          "tool": "gsd_uat_exec",
+          "executionId": "eade47d7-b70e-4127-be6c-4314edb36938"
+        }
+      ],
+      "notes": "R022 was already deferred during S01/S02 rescope."
+    },
+    {
+      "id": "UAT-04",
+      "description": "Mandatory gate artifacts show pass.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "90e5eb5a-1cff-4b4c-8978-74d2de07c6c5",
+          "note": "Verified go test, lint, and govulncheck artifacts contain pass signals.",
+          "tool": "gsd_uat_exec",
+          "executionId": "90e5eb5a-1cff-4b4c-8978-74d2de07c6c5"
+        }
+      ],
+      "notes": "Fresh gates were run after final docs/CI changes."
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "S02 UAT is runtime/artifact executable using file checks and gate artifacts; no browser UI is involved.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S02 leaves fd in a TEI-only current runtime posture with ONNX active code/build/docs removed and mandatory gates passing."
+}

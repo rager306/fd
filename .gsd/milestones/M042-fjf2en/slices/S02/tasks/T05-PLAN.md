@@ -4,7 +4,7 @@ estimated_files: 4
 skills_used: []
 ---
 
-# T05: Final TEI-only gates and milestone scope decision
+# T05: Ran final TEI-only checks and mandatory Go/static/security gates; validated R027 and deferred R021.
 
 Run mandatory M043 gates and final TEI-only checks: `go test ./...`, golangci-lint v2.12.2, govulncheck, and a small runtime/config smoke if Docker service is healthy. Record whether R021 async chunking is deferred or implemented separately. Validate R027. Write final S02 evidence artifacts.
 

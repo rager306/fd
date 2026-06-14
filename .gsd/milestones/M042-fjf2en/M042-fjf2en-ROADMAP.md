@@ -16,7 +16,7 @@
 - [x] **S01: TEI queue_time root cause analysis** `risk:low` `depends:[]`
   > After this: After this, документ docs/te-perf-root-cause-m042.md объясняет почему TEI queue_time=2.7s несмотря на max_concurrent_requests=512, и обосновывает выбор mitigation strategy (async vs ONNX vs both) с evidence.
 
-- [ ] **S02: TEI active-path cleanup and safe mitigation** `risk:medium` `depends:[S01]`
+- [x] **S02: TEI active-path cleanup and safe mitigation** `risk:medium` `depends:[S01]`
   > After this: After this, active build/config/docs no longer present ONNX as a current runtime path; TEI remains the only current backend, and any TEI request-shaping mitigation has fresh safe evidence or is explicitly deferred.
 
 - [x] **S03: ONNX conditional fallback and speed measurement** `risk:high` `depends:[S01,S02]`

@@ -1,0 +1,14 @@
+go: golang.org/x/vuln@v1.3.0 requires go >= 1.25.0; switching to go1.25.11
+=== Symbol Results ===
+
+No vulnerabilities found.
+
+Your code is affected by 0 vulnerabilities.
+This scan also found 2 vulnerabilities in packages you import and 19
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+Use '-show verbose' for more details.
+
+real	0m8.512s
+user	0m16.506s
+sys	0m2.047s

@@ -1,0 +1,63 @@
+# M042 S02 TEI-only check
+captured: 2026-06-14T10:51:51Z
+
+## Active runtime/docs scan (tests excluded)
+docs/same-host-embedding-service-contract.md:46:- `EMBEDDING_BACKEND` may be omitted or set to `tei`; any other value is rejected. `EMBEDDING_BACKEND=onnx` is intentionally disabled in the current product scope.
+docs/same-host-embedding-service-contract.md:157:1. **Backend selection is effectively fixed to TEI.** `EMBEDDING_BACKEND` may be omitted or set to `tei`; any other value is rejected at startup.
+docs/same-host-embedding-service-contract.md:162:Any change to `EMBEDDING_BACKEND` requires a service restart.
+api/main.go:96:	backend := embeddingBackend(strings.ToLower(getEnv("EMBEDDING_BACKEND", string(embeddingBackendTEI))))
+api/main.go:101:		return nil, fmt.Errorf("EMBEDDING_BACKEND=%q is not supported; fd currently supports TEI only", backend)
+
+## Test-only ONNX guard references
+api/main_test.go:89:	t.Setenv("ONNX_ARTIFACT_MANIFEST", "/tmp/stale-manifest.json")
+api/main_test.go:110:	t.Setenv("EMBEDDING_BACKEND", "onnx")
+api/main_test.go:111:	t.Setenv("ONNX_ARTIFACT_MANIFEST", "/tmp/stale-manifest.json")
+api/main_test.go:112:	t.Setenv("ONNX_RUNTIME_LIBRARY", "/tmp/libonnxruntime.so")
+api/main_test.go:113:	t.Setenv("ONNX_TOKENIZER_PATH", "/tmp/tokenizer.json")
+
+## Dependency graph ONNX/tokenizer packages
+
+## File existence checks
+PASS: Dockerfile.onnx removed
+PASS: onnx packaging workflow removed
+
+## Docker compose effective TEI command
+name: fd
+services:
+  tei:
+    command:
+      - --model-id
+      - deepvk/USER-bge-m3
+    container_name: fd_tei
+    environment:
+      HF_HOME: /data
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - http://localhost:80/health
+      timeout: 5s
+      interval: 5s
+      retries: 20
+      start_period: 5m0s
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "30080"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: tei_data
+        target: /data
+        volume: {}
+networks:
+  default:
+    name: fd_default
+volumes:
+  tei_data:
+    name: fd_tei_data

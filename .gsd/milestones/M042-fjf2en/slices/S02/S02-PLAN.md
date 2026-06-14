@@ -46,7 +46,7 @@ S02 consumes S01 RCA. It leaves fd in a coherent TEI-only current posture and pr
   - Files: `README.md`, `docs/same-host-embedding-service-contract.md`, `docs/fd-v2.md`, `docker-compose.yaml`, `.gsd/REQUIREMENTS.md`
   - Verify: Docs contain TEI-only current posture and no active ONNX operator instructions outside historical/future research notes.
 
-- [ ] **T05: Final TEI-only gates and milestone scope decision** `est:1h`
+- [x] **T05: Ran final TEI-only checks and mandatory Go/static/security gates; validated R027 and deferred R021.** `est:1h`
   Run mandatory M043 gates and final TEI-only checks: `go test ./...`, golangci-lint v2.12.2, govulncheck, and a small runtime/config smoke if Docker service is healthy. Record whether R021 async chunking is deferred or implemented separately. Validate R027. Write final S02 evidence artifacts.
   - Files: `benchmark-results/m042-s02-go-test.txt`, `benchmark-results/m042-s02-lint.txt`, `benchmark-results/m042-s02-govulncheck.txt`, `benchmark-results/m042-s02-tei-only-check.txt`
   - Verify: All mandatory gates pass; R027 validated; R021 either validated with evidence or deferred with explicit rationale.
