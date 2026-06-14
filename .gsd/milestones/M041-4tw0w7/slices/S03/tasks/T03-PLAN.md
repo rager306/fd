@@ -4,7 +4,7 @@ estimated_files: 2
 skills_used: []
 ---
 
-# T03: Deep /health с status/degraded/down
+# T03: Replaced /health with deep lifecycle health reporting ok/degraded/down plus inference and in-flight state.
 
 api/handlers/health.go (replace existing): GET /health возвращает { status: ok|degraded|down, time, model_loaded, warmup_done, device, last_inference_at, in_flight_requests }. 200 если status=ok, 503 если degraded/down. last_inference_at обновляется при каждом успешном /v1/embeddings.
 

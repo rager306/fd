@@ -149,6 +149,26 @@ func TestFdV2LifecycleF2ModelOverloadedThenRecovers(t *testing.T) {
 	}
 }
 
+func TestFdV2LifecycleHealthLastInferenceAfterEmbedding(t *testing.T) {
+	state := lifecycle.NewState()
+	state.MarkWarmupDone()
+	r := newLifecycleTestRouter(state, 0, staticLifecycleEmbedder())
+
+	response := postLifecycleEmbedding(t, r)
+	if response.Code != http.StatusOK {
+		t.Fatalf("embedding status = %d, want %d; body=%s", response.Code, http.StatusOK, response.Body.String())
+	}
+
+	health := assertStatus(t, r, http.MethodGet, "/health", nil, http.StatusOK)
+	var body handlers.DeepHealthResponse
+	if err := json.Unmarshal(health.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal health response: %v", err)
+	}
+	if body.LastInferenceAt == nil || *body.LastInferenceAt == "" {
+		t.Fatalf("last_inference_at missing after successful embedding: %#v", body.LastInferenceAt)
+	}
+}
+
 func TestFdV2LifecycleF5ShutdownRejectsNewAndDrainsInflight(t *testing.T) {
 	state := lifecycle.NewState()
 	state.MarkWarmupDone()
@@ -199,7 +219,7 @@ func newLifecycleTestRouter(state *lifecycle.State, maxInFlight int64, embedder 
 	embedHandler := handlers.NewEmbeddingsHandler(embedder, newLifecycleTestCache(), lifecycleTestModel, logger)
 	r.GET("/live", handlers.NewLiveHandler())
 	r.GET("/ready", handlers.NewReadyHandler(state))
-	r.GET("/health", handlers.NewHealthHandler(&handlers.RuntimeHealth{Backend: "test", Model: lifecycleTestModel}))
+	r.GET("/health", handlers.NewHealthHandlerWithState(&handlers.RuntimeHealth{Backend: "test", Model: lifecycleTestModel}, state))
 	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), middleware.LifecycleGateWithCapacity(state, maxInFlight), embedHandler.CreateEmbedding)
 	return r
 }

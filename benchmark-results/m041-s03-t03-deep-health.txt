@@ -1,0 +1,14 @@
+=== RUN   TestDeepHealthReportsOKWhenReady
+--- PASS: TestDeepHealthReportsOKWhenReady (0.00s)
+=== RUN   TestDeepHealthReportsDegradedBeforeWarmup
+--- PASS: TestDeepHealthReportsDegradedBeforeWarmup (0.00s)
+=== RUN   TestDeepHealthReportsDownDuringShutdown
+--- PASS: TestDeepHealthReportsDownDuringShutdown (0.00s)
+=== RUN   TestDeepHealthIncludesLastInferenceAt
+--- PASS: TestDeepHealthIncludesLastInferenceAt (0.00s)
+PASS
+ok  	fd-api/handlers	0.011s
+=== RUN   TestFdV2LifecycleHealthLastInferenceAfterEmbedding
+--- PASS: TestFdV2LifecycleHealthLastInferenceAfterEmbedding (0.00s)
+PASS
+ok  	fd-api	0.011s

@@ -141,6 +141,38 @@ func TestTryTrackRequestUnlimitedWhenMaxIsZero(t *testing.T) {
 	}
 }
 
+func TestStateReportsInFlightCount(t *testing.T) {
+	state := NewState()
+	if got := state.InFlightCount(); got != 0 {
+		t.Fatalf("InFlightCount initial = %d, want 0", got)
+	}
+	doneRequest := state.TrackRequest()
+	if got := state.InFlightCount(); got != 1 {
+		t.Fatalf("InFlightCount active = %d, want 1", got)
+	}
+	doneRequest()
+	if got := state.InFlightCount(); got != 0 {
+		t.Fatalf("InFlightCount after done = %d, want 0", got)
+	}
+}
+
+func TestStateRecordsLastInferenceAt(t *testing.T) {
+	state := NewState()
+	if _, ok := state.LastInferenceAt(); ok {
+		t.Fatal("LastInferenceAt should be absent before inference")
+	}
+
+	before := time.Now()
+	state.MarkInferenceSuccess()
+	got, ok := state.LastInferenceAt()
+	if !ok {
+		t.Fatal("LastInferenceAt should be present after success")
+	}
+	if got.Before(before) {
+		t.Fatalf("LastInferenceAt = %s, want >= %s", got, before)
+	}
+}
+
 func TestWaitDrainTimesOutWhenInflight(t *testing.T) {
 	state := NewState()
 	doneRequest := state.TrackRequest()

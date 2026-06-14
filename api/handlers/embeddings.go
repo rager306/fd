@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"fd-api/embed"
+	"fd-api/lifecycle"
 
 	"github.com/gin-gonic/gin"
 	"log/slog"
@@ -71,6 +72,9 @@ func (h *EmbeddingsHandler) CreateEmbedding(c *gin.Context) {
 		return
 	}
 
+	if state, ok := lifecycle.FromContext(c.Request.Context()); ok {
+		state.MarkInferenceSuccess()
+	}
 	c.JSON(http.StatusOK, buildEmbeddingsResponse(embeddings, dims, encodingFormat, h.modelID, promptTokens))
 }
 

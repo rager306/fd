@@ -42,7 +42,7 @@ Metrics middleware инкрементит counters/histograms на каждом 
   - Files: `api/handlers/observability.go`, `api/handlers/observability_test.go`
   - Verify: Integration tests: T-H-10 (/version 200 с version field), T-H-7 (/health deep с model_loaded, warmup_done), T-E-1..T-E-3 (Section 5.5 existence: /version 200, /info 200, /metrics 200 text/plain).
 
-- [ ] **T03: Deep /health с status/degraded/down** `est:2h`
+- [x] **T03: Replaced /health with deep lifecycle health reporting ok/degraded/down plus inference and in-flight state.** `est:2h`
   api/handlers/health.go (replace existing): GET /health возвращает { status: ok|degraded|down, time, model_loaded, warmup_done, device, last_inference_at, in_flight_requests }. 200 если status=ok, 503 если degraded/down. last_inference_at обновляется при каждом успешном /v1/embeddings.
   - Files: `api/handlers/health.go`, `api/handlers/health_test.go`
   - Verify: Unit tests: status=ok 200, status=degraded 503, status=down 503. last_inference_at обновляется после inference. T-H-7 pass.

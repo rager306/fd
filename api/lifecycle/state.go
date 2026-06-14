@@ -17,11 +17,12 @@ var ErrDrainTimeout = errors.New("lifecycle drain timeout")
 // State tracks fd process lifecycle: warmup completion, shutdown mode,
 // in-flight request count, and the last warmup/runtime error.
 type State struct {
-	warmupDone    atomic.Bool
-	shuttingDown  atomic.Bool
-	inflight      sync.WaitGroup
-	inflightCount atomic.Int64
-	lastError     atomic.Value // stores errorSnapshot
+	warmupDone      atomic.Bool
+	shuttingDown    atomic.Bool
+	inflight        sync.WaitGroup
+	inflightCount   atomic.Int64
+	lastInferenceAt atomic.Value // stores time.Time
+	lastError       atomic.Value // stores errorSnapshot
 }
 
 type errorSnapshot struct {
@@ -120,6 +121,26 @@ func (s *State) doneRequestOnce() func() {
 			s.inflight.Done()
 		})
 	}
+}
+
+// InFlightCount returns the current number of tracked in-flight requests.
+func (s *State) InFlightCount() int64 {
+	return s.inflightCount.Load()
+}
+
+// MarkInferenceSuccess records the timestamp of the latest successful
+// embedding response.
+func (s *State) MarkInferenceSuccess() {
+	s.lastInferenceAt.Store(time.Now())
+}
+
+// LastInferenceAt returns the latest successful embedding response timestamp.
+func (s *State) LastInferenceAt() (time.Time, bool) {
+	value := s.lastInferenceAt.Load()
+	if value == nil {
+		return time.Time{}, false
+	}
+	return value.(time.Time), true
 }
 
 // WaitDrain waits until all tracked requests finish or timeout elapses.

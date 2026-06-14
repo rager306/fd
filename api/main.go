@@ -420,7 +420,7 @@ func main() {
 	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
 
 	runtimeHealth := runtimeConfig.Health(modelID, redisOptions.Namespace.String())
-	healthHandler := handlers.NewHealthHandler(runtimeHealth)
+	healthHandler := handlers.NewHealthHandlerWithState(runtimeHealth, lifecycleState)
 	r.GET("/live", handlers.NewLiveHandler())
 	r.GET("/ready", handlers.NewReadyHandler(lifecycleState))
 	r.GET("/version", handlers.NewVersionHandler(buildInfo))

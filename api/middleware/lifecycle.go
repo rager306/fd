@@ -41,6 +41,7 @@ func LifecycleGateWithCapacity(state *lifecycle.State, maxInFlight int64) gin.Ha
 			return
 		}
 		defer done()
+		c.Request = c.Request.WithContext(lifecycle.WithState(c.Request.Context(), state))
 		c.Next()
 	}
 }

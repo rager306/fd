@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"fd-api/lifecycle"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -95,6 +97,90 @@ func TestNewHealthHandlerIncludesSafeTEIRuntimeMetadata(t *testing.T) {
 			t.Fatalf("runtime health must not expose %q", field)
 		}
 	}
+}
+
+func TestDeepHealthReportsOKWhenReady(t *testing.T) {
+	state := lifecycle.NewState()
+	state.MarkWarmupDone()
+	w := serveDeepHealth(state)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body=%s", w.Code, http.StatusOK, w.Body.String())
+	}
+	body := decodeDeepHealth(t, w)
+	if body.Status != healthStatusOK {
+		t.Fatalf("health status = %q, want %q", body.Status, healthStatusOK)
+	}
+	if !body.ModelLoaded || !body.WarmupDone {
+		t.Fatalf("model_loaded=%v warmup_done=%v, want true/true", body.ModelLoaded, body.WarmupDone)
+	}
+}
+
+func TestDeepHealthReportsDegradedBeforeWarmup(t *testing.T) {
+	state := lifecycle.NewState()
+	w := serveDeepHealth(state)
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want %d; body=%s", w.Code, http.StatusServiceUnavailable, w.Body.String())
+	}
+	body := decodeDeepHealth(t, w)
+	if body.Status != healthStatusDegraded {
+		t.Fatalf("health status = %q, want %q", body.Status, healthStatusDegraded)
+	}
+	if body.ModelLoaded || body.WarmupDone {
+		t.Fatalf("model_loaded=%v warmup_done=%v, want false/false", body.ModelLoaded, body.WarmupDone)
+	}
+}
+
+func TestDeepHealthReportsDownDuringShutdown(t *testing.T) {
+	state := lifecycle.NewState()
+	state.MarkWarmupDone()
+	state.BeginShutdown()
+	w := serveDeepHealth(state)
+
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want %d; body=%s", w.Code, http.StatusServiceUnavailable, w.Body.String())
+	}
+	body := decodeDeepHealth(t, w)
+	if body.Status != healthStatusDown {
+		t.Fatalf("health status = %q, want %q", body.Status, healthStatusDown)
+	}
+	if body.ModelLoaded {
+		t.Fatal("model_loaded should be false during shutdown")
+	}
+	if !body.WarmupDone {
+		t.Fatal("warmup_done should remain true during shutdown")
+	}
+}
+
+func TestDeepHealthIncludesLastInferenceAt(t *testing.T) {
+	state := lifecycle.NewState()
+	state.MarkWarmupDone()
+	state.MarkInferenceSuccess()
+	w := serveDeepHealth(state)
+
+	body := decodeDeepHealth(t, w)
+	if body.LastInferenceAt == nil || *body.LastInferenceAt == "" {
+		t.Fatalf("last_inference_at missing: %#v", body.LastInferenceAt)
+	}
+}
+
+func serveDeepHealth(state *lifecycle.State) *httptest.ResponseRecorder {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/health", NewHealthHandlerWithState(&RuntimeHealth{Backend: testTEIBackend, Model: testModelID}, state))
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/health", http.NoBody))
+	return w
+}
+
+func decodeDeepHealth(t *testing.T, w *httptest.ResponseRecorder) DeepHealthResponse {
+	t.Helper()
+	var body DeepHealthResponse
+	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
+		t.Fatalf("unmarshal deep health response: %v", err)
+	}
+	return body
 }
 
 func boolPtr(v bool) *bool { return &v }
