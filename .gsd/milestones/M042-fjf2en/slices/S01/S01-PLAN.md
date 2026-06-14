@@ -21,7 +21,7 @@ Document consumed by S02 (async implementation) to decide concurrency level and 
 
 ## Tasks
 
-- [ ] **T01: Собрать TEI cold telemetry snapshot из M041 baseline** `est:1h`
+- [x] **T01: Captured direct TEI telemetry snapshot showing batch-size-sensitive queue_time growth for batch 1, 8, and 32.** `est:1h`
   Извлечь из benchmark-results/fd-v2-baseline-before-m041-s04.md (post-S01 section) + live TEI /info + docker logs fd_tei за последний час: total_time, tokenization_time, queue_time, inference_time per call. Построить таблицу cold latency by batch size (1, 8, 32) и correlation: queue_time vs batch_tokens. Capture concurrency limits: max_concurrent_requests=512, max_batch_requests=4, max_client_batch_size=32. Это evidence section в документе.
   - Files: `benchmark-results/fd-v2-baseline-before-m041-s04.md`, `docs/fd-v2-compatibility-report.md`
   - Verify: Snapshot таблица с минимум 3 batch sizes, ≥10 data points каждый. Готова для вставки в RCA документ.
