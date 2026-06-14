@@ -36,7 +36,10 @@ jobs:
   quality:
     name: Go tests and lint
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # M043 S01: timeout bumped from 10 to 15 minutes after enabling 5 additional
+    # linters (gosec, bodyclose, prealloc, errorlint, revive). 12 linters in fail mode
+    # is ~50% slower than the original 7; 15 min gives headroom for future growth.
+    timeout-minutes: 15
 
     steps:
       - name: Check out repository
@@ -75,8 +78,11 @@ jobs:
             exit 1
           fi
 
-      - name: Run GolangCI-Lint with Staticcheck
+      - name: Run GolangCI-Lint with Staticcheck + Tier 1 linters
         working-directory: api
         run: |
           go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 \
             run --config ../.golangci.yml ./...
+        # M043 S01: this step now runs 12 linters (M040 baseline 7 + Tier 1 5).
+        # Tier 1: gosec, bodyclose, prealloc, errorlint, revive.
+        # All in fail mode (severity: error). See .golangci.yml for details.

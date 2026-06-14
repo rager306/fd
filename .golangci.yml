@@ -6,6 +6,7 @@ run:
 
 linters:
   enable:
+    # M040 baseline (7 linters)
     - errcheck
     - govet
     - ineffassign
@@ -13,7 +14,89 @@ linters:
     - unused
     - goconst
     - misspell
+    # M043 S01 Tier 1 (5 linters, added 2026-06-13)
+    - gosec       # security: G107 URL-from-var (warn), G110 HTTP-server-without-timeouts, weak crypto, etc
+    - bodyclose   # HTTP resp.Body not closed
+    - prealloc    # slice preallocation hints (make([]T, 0) → make([]T, 0, cap))
+    - errorlint   # error wrapping via %w (Go 1.13+)
+    - revive      # successor to deprecated golint: godoc, var-naming, error-strings, etc
+    # M043 S02 Tier 2 (6 linters, added 2026-06-13)
+    - gocyclo       # cyclomatic complexity; min-complexity configured below
+    - gocritic      # diagnostic/performance/style checks with noisy checks disabled
+    - durationcheck # invalid time.Duration arithmetic and comparisons
+    - unparam       # unused function parameters / always-constant args
+    - contextcheck  # missing context propagation on function calls
+    - nilnil        # returns (nil, nil) in error-returning functions
 
+  settings:
+    gosec:
+      # G107: URL from variable — fd loads TEI_URL, REDIS_HOST, MODEL_ID, etc. from env.
+      # Operator-controlled, not user input. Per-call //nolint:gosec with justification.
+      # G304: file inclusion via variable — fd paths come from env vars
+      # (ONNX_ARTIFACT_MANIFEST, etc) and manifest-validated keys. Operator-controlled.
+      # Per-call //nolint:gosec G304 with justification (see main.go, onnx_manifest.go).
+      exclusions:
+        - "G107"
+        - "G304"
+    goconst:
+      # Test files often repeat string literals as part of table-driven fixtures.
+      # Skipping _test.go for goconst avoids extracting test-only constants
+      # that would hurt readability. Production code is still linted.
+      # golangci-lint v2 path-pattern uses doublestar glob. _test.go match
+      # prevents noise on table-driven test fixtures.
+      path-pattern: "!**/*_test.go"
+    errorlint:
+      checks: ["all"]
+    gocyclo:
+      # M043 S02: fail when a function exceeds 15 branches.
+      # CreateEmbedding is expected to be the highest-risk candidate.
+      min-complexity: 15
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+      disabled-checks:
+        # fd handlers pass small structs by value intentionally; hugeParam/rangeValCopy
+        # were noisy in dry-run analysis and are better handled manually.
+        - hugeParam
+        - rangeValCopy
+    revive:
+      # Default rules are noisy on unexported methods. Selectively enable
+      # only the high-value rules for fd. Adjust in Phase 1 baseline if noise > 10%.
+      # M043 S02: 'exported' is enabled after the manual godoc pass.
+      # Keep the ruleset narrow enough to avoid style-only churn.
+      rules:
+        - name: exported
+        - name: package-comments
+        - name: var-naming
+        - name: error-strings
+        - name: error-naming
+        - name: errorf
+        - name: blank-imports
+        - name: early-return
+        - name: range
+        - name: receiver-naming
+        - name: indent-error-flow
+        - name: time-naming
+        - name: var-declaration
+        - name: if-return
+        - name: increment-decrement
+        - name: context-as-argument
+        - name: dot-imports
+        - name: confusing-naming
+        - name: defer
+        - name: duplicated-imports
+      # No severity override: all enabled linters fail CI on any issue.
+
+# Issues policy: max-issues-per-linter 0 means fail on any issue (default).
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  # Exclude rules — used to skip linters for specific path patterns.
+  exclude-rules:
+    # goconst in _test.go: test fixtures legitimately repeat string literals
+    # (e.g., "input" for input param name across table-driven cases). Production
+    # code is still linted by goconst.
+    - path: "**/*_test\\.go"
+      linters: [goconst]

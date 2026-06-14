@@ -1,12 +1,10 @@
+// Package handlers implements the legacy /embeddings/batch endpoint used by FalkorDB callers. Preserves base64-by-default response shape for backward compatibility.
 package handlers
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/binary"
-	"encoding/json"
-	"math"
 	"net/http"
+	"strconv"
 	"time"
 
 	"fd-api/embed"
@@ -15,6 +13,8 @@ import (
 	"log/slog"
 )
 
+// BatchHandler serves the legacy /embeddings/batch endpoint used by
+// FalkorDB integrations that expect base64 vectors by default.
 type BatchHandler struct {
 	teiClient Embedder
 	cache     EmbeddingCache
@@ -22,6 +22,8 @@ type BatchHandler struct {
 	logger    *slog.Logger
 }
 
+// NewBatchHandler wires the embedder, cache, model ID, and logger used by
+// the legacy batch embeddings endpoint.
 func NewBatchHandler(teiClient Embedder, c EmbeddingCache, modelID string, logger *slog.Logger) *BatchHandler {
 	return &BatchHandler{
 		teiClient: teiClient,
@@ -31,31 +33,36 @@ func NewBatchHandler(teiClient Embedder, c EmbeddingCache, modelID string, logge
 	}
 }
 
+// CreateBatchEmbeddings serves POST /embeddings/batch (legacy FalkorDB endpoint).
+// /v1/embeddings uses middleware validation; this handler keeps its own
+// inline validation because the request shape (inputs/dimensions) differs
+// from /v1/embeddings (input/dimensions).
 func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	var req embed.BatchEmbeddingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("invalid batch request", "error", err)
-		c.JSON(http.StatusBadRequest, gin.H{errorKey: err.Error()})
+		WriteError(c, CodeInvalidJSON, "", "invalid JSON: "+err.Error())
 		return
 	}
 
 	if len(req.Inputs) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{errorKey: "inputs is required"})
+		WriteError(c, CodeInputRequired, "inputs", "inputs is required (non-empty array of strings)")
 		return
 	}
 
 	dims := 1024
 	if req.Dimensions != 0 {
-		if req.Dimensions == 512 || req.Dimensions == 1024 {
-			dims = req.Dimensions
-		} else {
-			c.JSON(http.StatusBadRequest, gin.H{errorKey: "dimensions must be 1024 or 512"})
+		if req.Dimensions != 512 && req.Dimensions != 1024 {
+			WriteError(c, CodeDimensionsInvalid, "dimensions",
+				"dimensions must be 1024 or 512, got "+strconv.Itoa(req.Dimensions))
 			return
 		}
+		dims = req.Dimensions
 	}
 
-	if req.EncodingFormat != "" && req.EncodingFormat != "base64" && req.EncodingFormat != "float" {
-		c.JSON(http.StatusBadRequest, gin.H{errorKey: "encoding_format must be base64 or float"})
+	if req.EncodingFormat != "" && req.EncodingFormat != embed.EncodingFormatBase64 && req.EncodingFormat != embed.EncodingFormatFloat {
+		WriteError(c, CodeEncodingInvalid, "encoding_format",
+			"encoding_format must be float or base64, got \""+req.EncodingFormat+"\"")
 		return
 	}
 
@@ -72,8 +79,8 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 			return embs[0], nil
 		})
 		if err != nil {
-			h.logger.Error("batch embedding error", "error", err)
-			c.JSON(http.StatusInternalServerError, gin.H{errorKey: "embedding generation failed"})
+			h.logger.Error("batch embedding error", "error", err, "index", i)
+			WriteError(c, CodeInternalError, "", "embedding generation failed")
 			return
 		}
 
@@ -82,7 +89,7 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 			fullEmb = fullEmb[:512]
 		}
 
-		embeddings[i] = encodeEmbedding(fullEmb, req.EncodingFormat)
+		embeddings[i] = embed.EncodeEmbedding(fullEmb, defaultBatchEncoding(req.EncodingFormat))
 	}
 
 	c.JSON(http.StatusOK, embed.BatchEmbeddingsResponse{
@@ -92,18 +99,14 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	})
 }
 
-func encodeEmbedding(emb []float32, format string) string {
-	if format == "float" {
-		b, _ := json.Marshal(emb)
-		return string(b)
-	}
-	return base64.StdEncoding.EncodeToString(float32SliceToBytes(emb))
-}
+// (Removed local itoa — strconv.Itoa is sufficient.)
 
-func float32SliceToBytes(slice []float32) []byte {
-	b := make([]byte, len(slice)*4)
-	for i, v := range slice {
-		binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
+// defaultBatchEncoding preserves the legacy /embeddings/batch default of
+// base64 (FalkorDB callers depend on it). The OpenAI-style /v1/embeddings
+// endpoint defaults to float instead.
+func defaultBatchEncoding(format string) string {
+	if format == "" {
+		return embed.EncodingFormatBase64
 	}
-	return b
+	return format
 }

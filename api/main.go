@@ -1,3 +1,4 @@
+// Package main starts the fd embedding service: loads runtime config, wires TEI or ONNX embedder, and serves /v1/embeddings + observability endpoints on the configured port.
 package main
 
 import (
@@ -18,26 +19,27 @@ import (
 	"fd-api/cache"
 	"fd-api/embed"
 	"fd-api/handlers"
+	"fd-api/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-func getEnv(key, default_ string) string {
+func getEnv(key, defaultValue string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
 	}
-	return default_
+	return defaultValue
 }
 
-func getEnvInt(key string, default_ int) int {
+func getEnvInt(key string, defaultValue int) int {
 	value := os.Getenv(key)
 	if value == "" {
-		return default_
+		return defaultValue
 	}
 	var n int
 	for _, c := range []byte(value) {
 		if c < '0' || c > '9' {
-			return default_
+			return defaultValue
 		}
 		n = n*10 + int(c-'0')
 	}
@@ -45,7 +47,10 @@ func getEnvInt(key string, default_ int) int {
 }
 
 func sha256FileHex(path string) (string, error) {
-	file, err := os.Open(path)
+	// path comes from os.Getenv (ONNX_RUNTIME_SHA256 verification path)
+	// or a manifest-controlled key under the same env-named ONNX_ARTIFACT_MANIFEST.
+	// Operator-controlled, not user input. gosec G304 suppression is intentional.
+	file, err := os.Open(path) //nolint:gosec // G304: env-controlled operator path, not user input
 	if err != nil {
 		return "", fmt.Errorf("open %q for sha256: %w", path, err)
 	}
@@ -228,6 +233,23 @@ func loadEmbeddingRuntimeConfig() (*embeddingRuntimeConfig, error) {
 	}
 }
 
+func logRuntimePreflight(logger *slog.Logger, runtimeConfig *embeddingRuntimeConfig) {
+	if runtimeConfig.Backend != embeddingBackendONNX || runtimeConfig.ONNXArtifact == nil {
+		return
+	}
+	logger.Info(
+		"onnx artifact preflight verified",
+		"artifact_id", runtimeConfig.ONNXArtifact.ArtifactID,
+		"dimensions", runtimeConfig.ONNXArtifact.Dimensions,
+		"max_sequence_length", runtimeConfig.ONNXMaxSequenceLength,
+		"validated_max_sequence_length", runtimeConfig.ONNXArtifact.ValidatedMaxSequenceLength,
+		"production_default", runtimeConfig.ONNXArtifact.ProductionDefault,
+		"tokenizer_verified", runtimeConfig.ONNXTokenizerVerified,
+		"runtime_library_verified", runtimeConfig.ONNXRuntimeLibraryVerified,
+		"provider", runtimeConfig.ONNXProvider,
+	)
+}
+
 func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -248,19 +270,7 @@ func main() {
 		os.Exit(1)
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
-	if runtimeConfig.Backend == embeddingBackendONNX && runtimeConfig.ONNXArtifact != nil {
-		logger.Info(
-			"onnx artifact preflight verified",
-			"artifact_id", runtimeConfig.ONNXArtifact.ArtifactID,
-			"dimensions", runtimeConfig.ONNXArtifact.Dimensions,
-			"max_sequence_length", runtimeConfig.ONNXMaxSequenceLength,
-			"validated_max_sequence_length", runtimeConfig.ONNXArtifact.ValidatedMaxSequenceLength,
-			"production_default", runtimeConfig.ONNXArtifact.ProductionDefault,
-			"tokenizer_verified", runtimeConfig.ONNXTokenizerVerified,
-			"runtime_library_verified", runtimeConfig.ONNXRuntimeLibraryVerified,
-			"provider", runtimeConfig.ONNXProvider,
-		)
-	}
+	logRuntimePreflight(logger, runtimeConfig)
 
 	numCPU := runtime.NumCPU()
 	runtime.GOMAXPROCS(numCPU)
@@ -280,15 +290,13 @@ func main() {
 		logger.Error("redis cache init failed", "error", err)
 		os.Exit(1)
 	}
-	defer func() {
-		if err := redisCache.Close(); err != nil {
-			logger.Warn("redis close failed", "error", err)
-		}
-	}()
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := redisCache.Ping(ctx); err != nil {
+		cancel()
 		logger.Error("redis connect failed", "error", err)
+		if closeErr := redisCache.Close(); closeErr != nil {
+			logger.Warn("redis close failed after ping error", "error", closeErr)
+		}
 		os.Exit(1)
 	}
 	cancel()
@@ -316,6 +324,9 @@ func main() {
 		})
 		if err != nil {
 			logger.Error("onnx backend init failed", "error", err)
+			if closeErr := redisCache.Close(); closeErr != nil {
+				logger.Warn("redis close failed after onnx init error", "error", closeErr)
+			}
 			os.Exit(1)
 		}
 		defer func() {
@@ -338,24 +349,50 @@ func main() {
 		logger.Info("tei client configured", "url", teiURL, "model", modelID)
 	}
 
+	defer func() {
+		if err := redisCache.Close(); err != nil {
+			logger.Warn("redis close failed", "error", err)
+		}
+	}()
+
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	r := gin.New()
-	r.Use(gin.Recovery())
+	r.HandleMethodNotAllowed = true // explicit; gin's v1.12 default may differ
+	// Wrap gin.Recovery so any panic returns an OpenAI-style error envelope
+	// (500 internal_error) instead of gin.Recovery's default plain-text
+	// 500. Without this, T-E-15 fails — panic-induced 500s would leak
+	// server internals and lack the code/type envelope.
+	r.Use(handlers.RecoveryMiddleware(logger))
+
+	// 404/405 envelopes for paths/methods that don't match a registered
+	// route. Without these, gin returns text/plain "404 page not found"
+	// which fails the v2 spec (T-E-8, T-E-10).
+	r.NoRoute(handlers.NotFoundMiddleware())
+	r.NoMethod(handlers.MethodNotAllowedMiddleware())
 
 	embedHandler := handlers.NewEmbeddingsHandler(embeddingClient, tiered, modelID, logger)
 	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
 
 	r.GET("/health", handlers.NewHealthHandler(runtimeConfig.Health(modelID, redisOptions.Namespace.String())))
-	r.POST("/v1/embeddings", embedHandler.CreateEmbedding)
+	// /v1/embeddings: validation middleware runs BEFORE the handler so
+	// 4xx/5xx (400 input_required, 413 input_too_long, 413 batch_too_large,
+	// 413 payload_too_large) are returned without burning inference
+	// capacity. The handler reads the parsed request from gin context.
+	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), embedHandler.CreateEmbedding)
 	r.POST("/embeddings/batch", batchHandler.CreateBatchEmbeddings)
 
 	addr := bindHost + ":" + port
 	srv := &http.Server{
 		Addr:    addr,
 		Handler: r,
+		// ReadHeaderTimeout: bound the time spent reading the request
+		// headers to mitigate Slowloris-style attacks (gosec G112).
+		// 10s is generous for /v1/embeddings callers (request bodies are
+		// small; S01 caps at 10MB) and matches the Redis Ping timeout.
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {

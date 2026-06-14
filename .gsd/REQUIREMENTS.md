@@ -4,6 +4,142 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Active
 
+### R010 — Все входящие /v1/embeddings запросы должны пройти предварительную валидацию (input length, batch size, dimensions, JSON shape) и при ошибке возвращать OpenAI-style error envelope с машинно-читаемым code/type и корректным HTTP-статусом (400/413/503), а не сырое сообщение Gin/Go. Реализует R-P0-1, R-P0-2, R-P0-18, R-P0-19.
+- Class: core-capability
+- Status: active
+- Description: Все входящие /v1/embeddings запросы должны пройти предварительную валидацию (input length, batch size, dimensions, JSON shape) и при ошибке возвращать OpenAI-style error envelope с машинно-читаемым code/type и корректным HTTP-статусом (400/413/503), а не сырое сообщение Gin/Go. Реализует R-P0-1, R-P0-2, R-P0-18, R-P0-19.
+- Why it matters: Текущая реализация отдает сырые ошибки Go-парсера и 500 на oversized batch; caller не может отличить caller-bug (400/413) от server-bug (500) и retry-логика ломается.
+- Source: /root/fd-v2.md Section 2.4 + Section 3 error catalog
+- Primary owning slice: M041-4tw0w7/S01
+- Validation: 45 test cases Section 5 (T-E-1..T-E-15): все 400/413/405/500 ошибки возвращают правильный code/type, batch_too_large и input_too_long НЕ возвращают 500, валидация происходит ДО model inference.
+
+### R011 — Сервис должен поддерживать корректный lifecycle: pre-warm model при старте (1 dummy inference), отдавать /live (cheap) и /ready (200 только после warmup), маппить model-not-loaded/overloaded на 503+Retry-After, и завершаться по SIGTERM за ≤30s с in-flight drain. Реализует R-P0-3, R-P0-4, R-P0-5.
+- Class: operability
+- Status: active
+- Description: Сервис должен поддерживать корректный lifecycle: pre-warm model при старте (1 dummy inference), отдавать /live (cheap) и /ready (200 только после warmup), маппить model-not-loaded/overloaded на 503+Retry-After, и завершаться по SIGTERM за ≤30s с in-flight drain. Реализует R-P0-3, R-P0-4, R-P0-5.
+- Why it matters: Сейчас при cold start caller получает 500 silent timeout; SIGTERM рвёт in-flight запросы; нет k8s probe surface.
+- Source: /root/fd-v2.md Section 2.1 P0 lifecycle + Section 6.1 startup sequence + Section 6.3 F-1/F-5
+- Primary owning slice: M041-4tw0w7/S02
+- Validation: Startup test: /live=200 сразу, /ready=503 до warmup, /ready=200 после; SIGTERM test: новые запросы получают 503+shutting_down+Retry-After:30, in-flight завершаются нормально, exit 0.
+
+### R012 — На warm model с включённым cache: 1 input p95 < 50ms, 10 inputs p95 < 200ms, 32 inputs (max batch) p95 < 1000ms, 100 sequential requests без ошибок, 4 concurrent callers × 8 inputs < 2s total. Реализует R-P0-6.
+- Class: quality-attribute
+- Status: active
+- Description: На warm model с включённым cache: 1 input p95 < 50ms, 10 inputs p95 < 200ms, 32 inputs (max batch) p95 < 1000ms, 100 sequential requests без ошибок, 4 concurrent callers × 8 inputs < 2s total. Реализует R-P0-6.
+- Why it matters: Daily-archive pipeline требует ≥7 papers/min end-to-end; B8 (10 inputs timeout 10s) и B9 (100 inputs 500) — blocking performance баги.
+- Source: /root/fd-v2.md Section 1.4 B4/B8/B9 + Section 2.1 R-P0-6 + Section 5.4 T-P-1..T-P-5
+- Primary owning slice: M041-4tw0w7/S04
+- Supporting slices: M041-4tw0w7/S02
+- Validation: Section 5.4 T-P-1..T-P-5 пройдены с p95 метриками и X-Cache: HIT в кэш-попадающих сценариях; benchmark-results/ artifact зафиксирован.
+
+### R013 — Должны быть доступны: GET /version (semver+model+build_hash+uptime), GET /info или /v1/models (список моделей с dims/limits/device/loaded/warmup), GET /metrics (Prometheus text: requests_total, request_duration_seconds histogram, batch_size histogram, cache_hits_total, errors_total, model_loaded gauge), GET /v1/healthcheck (alias). Реализует R-P0-7, R-P0-8, R-P0-9, R-P0-10.
+- Class: failure-visibility
+- Status: active
+- Description: Должны быть доступны: GET /version (semver+model+build_hash+uptime), GET /info или /v1/models (список моделей с dims/limits/device/loaded/warmup), GET /metrics (Prometheus text: requests_total, request_duration_seconds histogram, batch_size histogram, cache_hits_total, errors_total, model_loaded gauge), GET /v1/healthcheck (alias). Реализует R-P0-7, R-P0-8, R-P0-9, R-P0-10.
+- Why it matters: Сейчас нет machine-readable way узнать версию/модель/limits/метрики — caller и оператор работают вслепую.
+- Source: /root/fd-v2.md Section 1.3 missing endpoints + Section 2.2 P0 observability + Section 4 OpenAPI spec
+- Primary owning slice: M041-4tw0w7/S03
+- Validation: Section 5.5 T-E-1..T-E-5 + T-H-7..T-H-10 все возвращают 200 с ожидаемым shape; /metrics отдаёт text/plain с требуемыми counter/histogram/gauge.
+
+### R014 — Каждый response должен нести: Server: fd/<version>, X-Request-Id (echo caller-passed или generated UUIDv4), X-Model-Id (на /v1/embeddings), X-Dimensions (на /v1/embeddings), X-Cache: HIT|MISS (если cache включен), Retry-After (на 429/503), Connection: keep-alive. Реализует R-P0-11..R-P0-17.
+- Class: operability
+- Status: active
+- Description: Каждый response должен нести: Server: fd/<version>, X-Request-Id (echo caller-passed или generated UUIDv4), X-Model-Id (на /v1/embeddings), X-Dimensions (на /v1/embeddings), X-Cache: HIT|MISS (если cache включен), Retry-After (на 429/503), Connection: keep-alive. Реализует R-P0-11..R-P0-17.
+- Why it matters: B11/B12 показывают пустые headers — нет request correlation, нет cache observability, нет server identity.
+- Source: /root/fd-v2.md Section 1.4 B11/B12 + Section 2.3 P0 headers + Section 5.3 T-HDR-1..T-HDR-10
+- Primary owning slice: M041-4tw0w7/S03
+- Validation: Section 5.3 T-HDR-1..T-HDR-10 — все headers присутствуют; X-Request-Id echo работает; Retry-After присутствует на 503.
+
+### R015 — GET /health — deep check (model_loaded, warmup_done, device, last_inference_at, in_flight_requests, status=ok|degraded|down, 503 если degraded/down). GET /warmup — status/progress. POST /warmup — trigger on-demand warmup. Реализует R-P1-1, R-P1-2, R-P1-3.
+- Class: failure-visibility
+- Status: active
+- Description: GET /health — deep check (model_loaded, warmup_done, device, last_inference_at, in_flight_requests, status=ok|degraded|down, 503 если degraded/down). GET /warmup — status/progress. POST /warmup — trigger on-demand warmup. Реализует R-P1-1, R-P1-2, R-P1-3.
+- Why it matters: Текущий /health — shallow (только timestamp); не различает "процесс жив" vs "model loaded vs not"; нет способа дождаться или форсировать warmup.
+- Source: /root/fd-v2.md Section 1.1 /health shallow + Section 2.5 P1 health checks + Section 5.1 T-H-7
+- Primary owning slice: M041-4tw0w7/S03
+- Validation: T-H-7: /health 200 с model_loaded:true, warmup_done:true; degraded scenario (model unloaded) → 503; POST /warmup возвращает 202 если не warm, 200 если warm.
+
+### R016 — In-memory LRU cache на (input_text, dimensions) → embedding, size 10000, TTL 24h, настраивается через env. Cache HIT skip model inference, отдаёт < 5ms. Метрики: fd_cache_hits_total{result=hit|miss}. Реализует R-P1-4.
+- Class: differentiator
+- Status: active
+- Description: In-memory LRU cache на (input_text, dimensions) → embedding, size 10000, TTL 24h, настраивается через env. Cache HIT skip model inference, отдаёт < 5ms. Метрики: fd_cache_hits_total{result=hit|miss}. Реализует R-P1-4.
+- Why it matters: Daily-archive обрабатывает 12k+ papers с overlapping chunks — без cache один и тот же текст гоняется через model повторно, что замедляет pipeline и нагружает GPU.
+- Source: /root/fd-v2.md Section 2.6 P1 R-P1-4 + Section 6.3 F-4
+- Primary owning slice: M041-4tw0w7/S04
+- Validation: Section 5.3 T-HDR-6/7: первый запрос MISS, повторный тот же input HIT с latency < 5ms; /metrics показывает fd_cache_hits_total counter; cache eviction работает на > 10000 уникальных inputs.
+
+### R017 — Расширить /v1/embeddings request schema: encoding_format: float|base64 (~30% bandwidth savings), user field (для abuse tracking и per-user rate limits), priority: low|normal|high. Реализует R-P1-5, R-P1-6, R-P1-7.
+- Class: differentiator
+- Status: active
+- Description: Расширить /v1/embeddings request schema: encoding_format: float|base64 (~30% bandwidth savings), user field (для abuse tracking и per-user rate limits), priority: low|normal|high. Реализует R-P1-5, R-P1-6, R-P1-7.
+- Why it matters: Daily-archive scripts используют urllib и не используют headers, но более толстые callers (например, web UI) выиграют от base64 и user-based rate limits.
+- Source: /root/fd-v2.md Section 2.6 P1 R-P1-5/6/7 + Section 4 OpenAPI spec
+- Primary owning slice: M041-4tw0w7/S05
+- Validation: T-H-5: encoding_format=base64 возвращает base64 string; T-H-6: priority=high принимается; user field принимается и логируется; невалидный encoding_format → 400 dimensions_invalid (или новый code).
+
+### R018 — Если env FD_API_KEY задан, все endpoints кроме /live, /metrics, /docs требуют Authorization: Bearer <key>, иначе 401 unauthorized. CORS headers (Access-Control-Allow-Origin/Methods/Headers) для web clients. Реализует R-P1-8, R-P1-9.
+- Class: compliance/security
+- Status: active
+- Description: Если env FD_API_KEY задан, все endpoints кроме /live, /metrics, /docs требуют Authorization: Bearer <key>, иначе 401 unauthorized. CORS headers (Access-Control-Allow-Origin/Methods/Headers) для web clients. Реализует R-P1-8, R-P1-9.
+- Why it matters: Локальный сервис, но если exposed через reverse proxy — нужна хоть какая-то auth; CORS нужен для будущих web UI.
+- Source: /root/fd-v2.md Section 2.6 P1 R-P1-8/9
+- Primary owning slice: M041-4tw0w7/S05
+- Validation: С FD_API_KEY=test: запрос без Authorization → 401 unauthorized; запрос с правильным Bearer → 200; OPTIONS preflight с правильным Origin → 200 с CORS headers.
+
+### R019 — GET /openapi.json (OpenAPI 3.1 spec), GET /docs (Swagger UI), POST /v1/batch (batches:[[..],[..]] → batches:[[..],[..]]), rate limiting (per-IP 100 req/min, per-user 1000 req/min, headers X-RateLimit-*), ETag+Cache-Control на responses, /v1/traces (recent N requests с latency/status), optional SSE streaming. Реализует R-P2-1..R-P2-6.
+- Class: quality-attribute
+- Status: active
+- Description: GET /openapi.json (OpenAPI 3.1 spec), GET /docs (Swagger UI), POST /v1/batch (batches:[[..],[..]] → batches:[[..],[..]]), rate limiting (per-IP 100 req/min, per-user 1000 req/min, headers X-RateLimit-*), ETag+Cache-Control на responses, /v1/traces (recent N requests с latency/status), optional SSE streaming. Реализует R-P2-1..R-P2-6.
+- Why it matters: Caller и операторы хотят self-describing API (OpenAPI), явный batch endpoint, rate limiting для защиты, traces для debugging.
+- Source: /root/fd-v2.md Section 2.7 P2 nice-to-have + Section 4 OpenAPI
+- Primary owning slice: M041-4tw0w7/S05
+- Validation: T-E-4/T-E-5: /openapi.json 200 валидный JSON, /docs 200 HTML; rate limit: 101-й запрос за минуту → 429; ETag: повторный запрос с If-None-Match → 304; /v1/traces возвращает последние N запросов.
+
+### R020 — Письменный root cause analysis объясняет почему TEI queue_time=2.7s несмотря на max_concurrent_requests=512. Документ содержит hypothesis, evidence (TEI logs, /info metrics, профилирование), и рекомендации. Возможные выводы: (a) TEI single backend thread — fixed by source change (out of fd scope), (b) ONNX fallback, (c) async pipeline.
+- Class: quality-attribute
+- Status: active
+- Description: Письменный root cause analysis объясняет почему TEI queue_time=2.7s несмотря на max_concurrent_requests=512. Документ содержит hypothesis, evidence (TEI logs, /info metrics, профилирование), и рекомендации. Возможные выводы: (a) TEI single backend thread — fixed by source change (out of fd scope), (b) ONNX fallback, (c) async pipeline.
+- Why it matters: M041 perf measurements показали TEI cold path 6s per chunk — bottleneck для fd v2 latency target. Без RCA дальнейшие fixes (async/ONNX) могут не решить root problem. Документ нужен чтобы: (1) объяснить stakeholders почему current perf так себе, (2) обосновать выбор mitigation strategy, (3) capture знание для future M0xx milestones.
+- Source: M041-4tw0w7 perf measurement (2026-06-13 18:59) + M042 CONTEXT
+- Primary owning slice: M042-fjf2en/S01
+- Validation: documents/te-perf-root-cause-m042.md существует, содержит: (a) TEI cold telemetry snapshot, (b) hypothesis tree (1+ hypotheses with testable predictions), (c) evidence collected (TEI logs, /info, request patterns), (d) verdict + recommended action, (e) links to M019 ONNX measurements as comparison baseline.
+
+### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
+- Class: quality-attribute
+- Status: active
+- Description: fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
+- Why it matters: TEI queue_time=2.7s создаёт sequential bottleneck: каждый chunk of 32 ждёт ~6s. Async pipeline в fd позволит параллельно слать несколько chunks — TEI может обрабатывать max_batch_requests=4 sub-batches параллельно. Reduction с 25s до 10s = 60% improvement для batch=128, без изменения TEI config.
+- Source: M041-4tw0w7 S04 perf measurement; M042 CONTEXT decision on bounded concurrency
+- Primary owning slice: M042-fjf2en/S02
+- Validation: tools/verify_fd_async_perf.sh: FD_ASYNC_CHUNKS=true vs false perf comparison. Cold path batch=128 ≤10s (was 25s sequential). Cold path batch=32 ≤4s (was 6s sequential). Cache hit path не regressed (≤5ms per request). Benchmark artifact в benchmark-results/fd-v2-async-perf-m042.md.
+
+### R022 — Opt-in ONNX mode (FD_BACKEND=onnx, requires onnx build tag) — fd serves embeddings из Go ONNX runtime вместо TEI HTTP. Per M019: cold latency 8.3ms, warm 1.19ms, throughput 858 req/s. Опционально через env, default off (TEI остаётся production per R001/M015). fd binary должен билдиться с onnx tag без regression: все M041 acceptance criteria должны pass в обоих режимах.
+- Class: quality-attribute
+- Status: active
+- Description: Opt-in ONNX mode (FD_BACKEND=onnx, requires onnx build tag) — fd serves embeddings из Go ONNX runtime вместо TEI HTTP. Per M019: cold latency 8.3ms, warm 1.19ms, throughput 858 req/s. Опционально через env, default off (TEI остаётся production per R001/M015). fd binary должен билдиться с onnx tag без regression: все M041 acceptance criteria должны pass в обоих режимах.
+- Why it matters: M019 measurements показывают ONNX Go runtime на 100-700x быстрее TEI на warm path. Даже с ограничениями legal-quality gate (M015/M016), opt-in mode даёт операторам speed-first option для workloads где legal quality менее критична (например, прототипирование, non-legal embeddings). Production default остаётся TEI.
+- Source: M019 ONNX 1024 perf benchmark; M015/M016 legal quality gate (stays as blocking concern for production); M042 CONTEXT decision on opt-in
+- Primary owning slice: M042-fjf2en/S03
+- Validation: (1) ONNX binary builds clean с -tags onnx, (2) FD_BACKEND=onnx switches runtime, (3) cold path batch=32 ≤500ms (was 6s TEI), (4) warm path batch=1 ≤10ms (was 1.6ms TEI — comparable), (5) regression suite (all M041 acceptance tests) pass в обоих режимах, (6) legal quality gate deferred — documented в ONNX mode docs с reference to M015/M016.
+
+### R023 — Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
+- Class: quality-attribute
+- Status: active
+- Description: Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
+- Why it matters: fd имеет консервативный baseline из 7 linters (errcheck, govet, ineffassign, staticcheck, unused, goconst, misspell). Без gosec, bodyclose, prealloc, errorlint, revive: (a) security issues не ловятся (gosec G107/G110), (b) HTTP body leaks могут проскочить (bodyclose), (c) slice allocations regressions возможны (prealloc), (d) error wrapping regressions возможны (errorlint), (e) code documentation quality не enforced (revive). 2026 Go community consensus: golangci-lint + staticcheck + targeted security/optim linters — стандарт де-факто.
+- Source: https://github.com/dpolivaev/static-analysis Go section + 2026 community consensus (Reddit r/golang, analysis-tools.dev); M041-4tw0w7 baseline (7 linters)
+- Primary owning slice: M043-dpr0cq/S01
+- Validation: golangci-lint run --config .golangci.yml exit 0 на всём fd repo. Каждый Tier 1 линтер в fail mode (не warn). Новые linters, в отличие от baseline 7, integrated. CI go-quality.yml runs full lint and fails on issues. Документ docs/static-analysis-phase1-report-m043.md фиксирует baseline issues count, fix list, exclusions rationale.
+
+### R024 — Добавить Tier 2 linters: gocyclo (cyclomatic complexity, custom threshold для fd), gocritic (selective enabled-tags: diagnostic, performance, style), durationcheck (time.Duration conversions), unparam (unused parameters), contextcheck (context propagation), nilnil (nil error returns). Каждый в warn mode первым проходом, потом fail mode. Fix issues в существующем коде (особенно gocyclo в CreateEmbedding handler в M041 S01, M042 S02 async orchestrator).
+- Class: quality-attribute
+- Status: active
+- Description: Добавить Tier 2 linters: gocyclo (cyclomatic complexity, custom threshold для fd), gocritic (selective enabled-tags: diagnostic, performance, style), durationcheck (time.Duration conversions), unparam (unused parameters), contextcheck (context propagation), nilnil (nil error returns). Каждый в warn mode первым проходом, потом fail mode. Fix issues в существующем коде (особенно gocyclo в CreateEmbedding handler в M041 S01, M042 S02 async orchestrator).
+- Why it matters: Phase 1 закрывает critical gaps (security, body leaks, allocations, error wrapping, docs). Phase 2 покрывает medium-value checks: complexity (CreateEmbedding уже ~150 LOC с nested loops после M041 S04 chunking), quality (unused params, context), style (naming, structure). 2026 best practice: gocyclo с threshold=15-20 для service code, gocritic selective to avoid noise.
+- Source: https://github.com/dpolivaev/static-analysis Go section + 2026 community consensus; fd complexity analysis (M041 S04 chunked handler ~150 LOC)
+- Primary owning slice: M043-dpr0cq/S02
+- Validation: golangci-lint run --config .golangci.yml exit 0 в Tier 2 fail mode. Все Tier 1 + Tier 2 linters active. gocyclo threshold явно установлен. Issue count reduction vs Phase 1 (fewer issues, complex code refactored). docs/static-analysis-phase2-report-m043.md с complexity metrics, before/after LOC distribution.
+
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -122,10 +258,25 @@ This file is the explicit capability and coverage contract for the project.
 | R007 | constraint | validated | M040-pbp9z1/S04 | none | M040 S04 verifier and final artifact passed in gsd_exec c52073f9-7ea0-4b13-9efa-99d54193c6f0, including hosted/remote CI readiness-gate rejection semantics and final artifact language that keeps hosted CI proof out of the same-host readiness gate. |
 | R008 | constraint | validated | M040-pbp9z1/S03 | M040-pbp9z1/S04 | M040-pbp9z1/S03 produced `benchmark-results/fd-legal-model-quick-gate-m040-s03.md`, validated by `tools/verify_legal_model_quick_gate_artifact.py --max-candidates 2` plus closeout schema checks. The artifact caps candidates to BAAI/bge-m3 and intfloat/multilingual-e5-large, records sanitized legal-corpus hashes/counts, rejects cross-model cosine parity as a replacement criterion, and defers candidate replacement fail-closed because baseline `/health` lacks runtime metadata. |
 | R009 | operability | validated | M040-pbp9z1/S01 | M040-pbp9z1/S04 | M040-pbp9z1 S01 contract and health metadata establish runtime identity and no-silent-fallback rules; /v1/embeddings request model is compatibility metadata, not a selector. S04 final stance and verifier require no request-level fallback and a smoke embedding readiness check beyond /health. |
+| R010 | core-capability | active | M041-4tw0w7/S01 | none | 45 test cases Section 5 (T-E-1..T-E-15): все 400/413/405/500 ошибки возвращают правильный code/type, batch_too_large и input_too_long НЕ возвращают 500, валидация происходит ДО model inference. |
+| R011 | operability | active | M041-4tw0w7/S02 | none | Startup test: /live=200 сразу, /ready=503 до warmup, /ready=200 после; SIGTERM test: новые запросы получают 503+shutting_down+Retry-After:30, in-flight завершаются нормально, exit 0. |
+| R012 | quality-attribute | active | M041-4tw0w7/S04 | M041-4tw0w7/S02 | Section 5.4 T-P-1..T-P-5 пройдены с p95 метриками и X-Cache: HIT в кэш-попадающих сценариях; benchmark-results/ artifact зафиксирован. |
+| R013 | failure-visibility | active | M041-4tw0w7/S03 | none | Section 5.5 T-E-1..T-E-5 + T-H-7..T-H-10 все возвращают 200 с ожидаемым shape; /metrics отдаёт text/plain с требуемыми counter/histogram/gauge. |
+| R014 | operability | active | M041-4tw0w7/S03 | none | Section 5.3 T-HDR-1..T-HDR-10 — все headers присутствуют; X-Request-Id echo работает; Retry-After присутствует на 503. |
+| R015 | failure-visibility | active | M041-4tw0w7/S03 | none | T-H-7: /health 200 с model_loaded:true, warmup_done:true; degraded scenario (model unloaded) → 503; POST /warmup возвращает 202 если не warm, 200 если warm. |
+| R016 | differentiator | active | M041-4tw0w7/S04 | none | Section 5.3 T-HDR-6/7: первый запрос MISS, повторный тот же input HIT с latency < 5ms; /metrics показывает fd_cache_hits_total counter; cache eviction работает на > 10000 уникальных inputs. |
+| R017 | differentiator | active | M041-4tw0w7/S05 | none | T-H-5: encoding_format=base64 возвращает base64 string; T-H-6: priority=high принимается; user field принимается и логируется; невалидный encoding_format → 400 dimensions_invalid (или новый code). |
+| R018 | compliance/security | active | M041-4tw0w7/S05 | none | С FD_API_KEY=test: запрос без Authorization → 401 unauthorized; запрос с правильным Bearer → 200; OPTIONS preflight с правильным Origin → 200 с CORS headers. |
+| R019 | quality-attribute | active | M041-4tw0w7/S05 | none | T-E-4/T-E-5: /openapi.json 200 валидный JSON, /docs 200 HTML; rate limit: 101-й запрос за минуту → 429; ETag: повторный запрос с If-None-Match → 304; /v1/traces возвращает последние N запросов. |
+| R020 | quality-attribute | active | M042-fjf2en/S01 | none | documents/te-perf-root-cause-m042.md существует, содержит: (a) TEI cold telemetry snapshot, (b) hypothesis tree (1+ hypotheses with testable predictions), (c) evidence collected (TEI logs, /info, request patterns), (d) verdict + recommended action, (e) links to M019 ONNX measurements as comparison baseline. |
+| R021 | quality-attribute | active | M042-fjf2en/S02 | none | tools/verify_fd_async_perf.sh: FD_ASYNC_CHUNKS=true vs false perf comparison. Cold path batch=128 ≤10s (was 25s sequential). Cold path batch=32 ≤4s (was 6s sequential). Cache hit path не regressed (≤5ms per request). Benchmark artifact в benchmark-results/fd-v2-async-perf-m042.md. |
+| R022 | quality-attribute | active | M042-fjf2en/S03 | none | (1) ONNX binary builds clean с -tags onnx, (2) FD_BACKEND=onnx switches runtime, (3) cold path batch=32 ≤500ms (was 6s TEI), (4) warm path batch=1 ≤10ms (was 1.6ms TEI — comparable), (5) regression suite (all M041 acceptance tests) pass в обоих режимах, (6) legal quality gate deferred — documented в ONNX mode docs с reference to M015/M016. |
+| R023 | quality-attribute | active | M043-dpr0cq/S01 | none | golangci-lint run --config .golangci.yml exit 0 на всём fd repo. Каждый Tier 1 линтер в fail mode (не warn). Новые linters, в отличие от baseline 7, integrated. CI go-quality.yml runs full lint and fails on issues. Документ docs/static-analysis-phase1-report-m043.md фиксирует baseline issues count, fix list, exclusions rationale. |
+| R024 | quality-attribute | active | M043-dpr0cq/S02 | none | golangci-lint run --config .golangci.yml exit 0 в Tier 2 fail mode. Все Tier 1 + Tier 2 linters active. gocyclo threshold явно установлен. Issue count reduction vs Phase 1 (fewer issues, complex code refactored). docs/static-analysis-phase2-report-m043.md с complexity metrics, before/after LOC distribution. |
 
 ## Coverage Summary
 
-- Active requirements: 0
-- Mapped to slices: 0
+- Active requirements: 15
+- Mapped to slices: 15
 - Validated: 9 (R001, R002, R003, R004, R005, R006, R007, R008, R009)
 - Unmapped active requirements: 0

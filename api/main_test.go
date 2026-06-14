@@ -313,7 +313,7 @@ func TestLoadEmbeddingRuntimeConfigRejectsInvalidONNXManifest(t *testing.T) {
 	}
 }
 
-func writeMainTestONNXManifest(t *testing.T, corruptDigest bool) (manifestPath string, artifactPath string) {
+func writeMainTestONNXManifest(t *testing.T, corruptDigest bool) (manifestPath, artifactPath string) {
 	t.Helper()
 
 	dir := t.TempDir()

@@ -126,3 +126,42 @@ func (tc *TieredCache) Ping(ctx context.Context) error {
 func (tc *TieredCache) Close() error {
 	return tc.redis.Close()
 }
+
+// GetIfPresent returns the cached embedding for (key, dim) without
+// triggering any model load on miss. Used by the embeddings handler to
+// peek at the cache before issuing TEI calls so a fully-cached batch
+// results in zero TEI traffic. Returns (vec, true) on hit, (nil, false)
+// on miss.
+func (tc *TieredCache) GetIfPresent(ctx context.Context, key string, dim int) ([]float32, bool) {
+	localKey := fmt.Sprintf("%s:d%d", key, dim)
+	data, ok := tc.local.Get(ctx, localKey)
+	if !ok {
+		// L2 fallback (without backfilling L1)
+		emb, lok, err := tc.redis.Get(ctx, key, dim)
+		if err != nil || !lok {
+			return nil, false
+		}
+		return emb[:dim], true
+	}
+	emb, d := unmarshalEmbedding(data)
+	if d != dim {
+		return nil, false
+	}
+	return emb[:dim], true
+}
+
+// Set stores an embedding in both L1 and L2 caches. Used by the
+// embeddings handler to backfill the cache after a model call so the
+// next request can use GetIfPresent.
+func (tc *TieredCache) Set(ctx context.Context, key string, dim int, emb []float32) {
+	if len(emb) < dim {
+		return
+	}
+	localKey := fmt.Sprintf("%s:d%d", key, dim)
+	data, err := marshalEmbedding(emb[:dim], dim)
+	if err != nil {
+		return
+	}
+	tc.local.Set(ctx, localKey, data, tc.localTTL)
+	_ = tc.redis.SetBytes(ctx, key, data, dim)
+}

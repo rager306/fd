@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -36,6 +37,27 @@ func (m *mockEmbedder) Embed(ctx context.Context, texts []string) ([][]float32, 
 
 type mockEmbeddingCache struct {
 	getOrLoadFunc func(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error)
+	// In-memory store for GetIfPresent / Set pair (mirrors the
+	// production TieredCache shape closely enough for handler tests).
+	store map[string][]float32
+}
+
+func (m *mockEmbeddingCache) GetIfPresent(ctx context.Context, key string, dim int) ([]float32, bool) {
+	if m.store == nil {
+		return nil, false
+	}
+	v, ok := m.store[fmt.Sprintf("%s:d%d", key, dim)]
+	return v, ok
+}
+
+func (m *mockEmbeddingCache) Set(ctx context.Context, key string, dim int, emb []float32) {
+	if m.store == nil {
+		m.store = map[string][]float32{}
+	}
+	if len(emb) < dim {
+		return
+	}
+	m.store[fmt.Sprintf("%s:d%d", key, dim)] = emb[:dim]
 }
 
 func (m *mockEmbeddingCache) GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
@@ -53,7 +75,7 @@ func bufferLogger(buf *bytes.Buffer) *slog.Logger {
 	return slog.New(slog.NewTextHandler(buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
 }
 
-func postJSON(router *gin.Engine, path string, body string) *httptest.ResponseRecorder {
+func postJSON(router *gin.Engine, path, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, path, bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -61,6 +83,7 @@ func postJSON(router *gin.Engine, path string, body string) *httptest.ResponseRe
 	return w
 }
 
+//nolint:gocyclo // table-driven production integration coverage intentionally exercises many request/error/cache paths in one matrix.
 func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -69,6 +92,7 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 		body          string
 		embedFunc     func(ctx context.Context, texts []string) ([][]float32, error)
 		cacheFunc     func(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error)
+		cacheSetup    func(c *mockEmbeddingCache) // pre-populate cache for GetIfPresent path
 		wantStatus    int
 		checkResponse func(*testing.T, *httptest.ResponseRecorder, *mockEmbedder)
 	}{
@@ -117,8 +141,15 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 				if resp.Data[0].Dimensions != 512 {
 					t.Errorf("expected dimensions=512, got %d", resp.Data[0].Dimensions)
 				}
-				if len(resp.Data[0].Embedding) != 512 {
-					t.Errorf("expected embedding len=512, got %d", len(resp.Data[0].Embedding))
+				// JSON round-trip via interface{} yields []interface{} of
+				// float64 (Go's json package has no native float32). Re-marshal
+				// to []float32 to verify the wire shape is correct.
+				raw, ok := resp.Data[0].Embedding.([]interface{})
+				if !ok {
+					t.Fatalf("expected []interface{} embedding after JSON round-trip, got %T", resp.Data[0].Embedding)
+				}
+				if len(raw) != 512 {
+					t.Errorf("expected embedding len=512, got %d", len(raw))
 				}
 			},
 		},
@@ -129,8 +160,16 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 				t.Fatal("embedder should not be called on cache hit")
 				return nil, nil
 			},
-			cacheFunc: func(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
-				return []float32{0.5, 0.6, 0.7}, nil
+			// Pre-populate the mock cache with a 1024-dim vector, so the
+			// new GetIfPresent-based handler code path short-circuits
+			// without hitting the embedder. Mock Set requires len(emb)
+			// >= dim (mirrors production TieredCache.Set).
+			cacheSetup: func(c *mockEmbeddingCache) {
+				cached := make([]float32, 1024)
+				cached[0] = 0.5
+				cached[1] = 0.6
+				cached[2] = 0.7
+				c.Set(context.Background(), "cached text", 1024, cached)
 			},
 			wantStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, w *httptest.ResponseRecorder, embedder *mockEmbedder) {
@@ -141,8 +180,22 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 				if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 					t.Fatalf("unmarshal response: %v", err)
 				}
-				if resp.Data[0].Embedding[0] != 0.5 {
-					t.Errorf("expected cached embedding [0.5,...], got %v", resp.Data[0].Embedding)
+				raw, ok := resp.Data[0].Embedding.([]interface{})
+				if !ok {
+					t.Fatalf("expected []interface{} embedding, got %T", resp.Data[0].Embedding)
+				}
+				if len(raw) == 0 {
+					t.Fatalf("expected non-empty embedding")
+				}
+				first, ok := raw[0].(float64)
+				if !ok {
+					t.Fatalf("expected float64 element, got %T", raw[0])
+				}
+				if first != 0.5 {
+					t.Errorf("expected first element=0.5, got %v", first)
+				}
+				if len(raw) != 1024 {
+					t.Errorf("expected embedding len=1024, got %d", len(raw))
 				}
 			},
 		},
@@ -178,6 +231,9 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			embedder := &mockEmbedder{embedFunc: tt.embedFunc}
 			cache := &mockEmbeddingCache{getOrLoadFunc: tt.cacheFunc}
+			if tt.cacheSetup != nil {
+				tt.cacheSetup(cache)
+			}
 			handler := NewEmbeddingsHandler(embedder, cache, "test-model", testLogger())
 			router := gin.New()
 			router.POST("/v1/embeddings", handler.CreateEmbedding)

@@ -17,7 +17,7 @@ func TestHealthHandlerDefaultShape(t *testing.T) {
 	r.GET("/health", HealthHandler)
 
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
@@ -50,7 +50,7 @@ func TestNewHealthHandlerIncludesSafeTEIRuntimeMetadata(t *testing.T) {
 	}))
 
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
@@ -106,7 +106,7 @@ func TestNewHealthHandlerIncludesSafeRuntimeMetadata(t *testing.T) {
 		MaxSequenceLength:          1024,
 		ValidatedMaxSequenceLength: 1024,
 		ProductionDefault:          false,
-		ArtifactVerified:            boolPtr(true),
+		ArtifactVerified:           boolPtr(true),
 		TokenizerVerified:          boolPtr(true),
 		RuntimeLibraryVerified:     boolPtr(true),
 		Provider:                   "CPUExecutionProvider",
@@ -114,7 +114,7 @@ func TestNewHealthHandlerIncludesSafeRuntimeMetadata(t *testing.T) {
 	}))
 
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	req := httptest.NewRequest(http.MethodGet, "/health", http.NoBody)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {

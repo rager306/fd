@@ -150,7 +150,7 @@ func TestLoadONNXArtifactManifestInvalidJSON(t *testing.T) {
 	require.False(t, errors.Is(err, ErrONNXManifestMetadataMismatch))
 }
 
-func writeTestONNXManifest(t *testing.T, mutate func(map[string]any)) (manifestPath string, artifactPath string, digest string) {
+func writeTestONNXManifest(t *testing.T, mutate func(map[string]any)) (manifestPath, artifactPath, digest string) {
 	t.Helper()
 
 	dir := t.TempDir()
