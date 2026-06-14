@@ -16,7 +16,7 @@
 - [x] **S01: Audit validation map** `risk:high` `depends:[]`
   > After this: A durable assessment maps issue #3 P0 and P1 findings to current-code evidence, false positives, root decisions, and fix waves.
 
-- [ ] **S02: Batch endpoint guardrails** `risk:medium` `depends:[S01]`
+- [x] **S02: Batch endpoint guardrails** `risk:medium` `depends:[S01]`
   > After this: Oversized or malformed requests to `/v1/batch` and `/embeddings/batch` are rejected before backend work, while valid batch smoke still passes.
 
 - [ ] **S03: Batch backend work shaping** `risk:high` `depends:[S02]`

@@ -344,6 +344,27 @@ func TestCreateBatchEmbeddings_Validation(t *testing.T) {
 	}
 }
 
+func TestCreateBatchEmbeddingsRejectsTooLongInputBeforeEmbedder(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	embedder := &mockEmbedder{embedFunc: func(context.Context, []string) ([][]float32, error) {
+		t.Fatal("embedder should not be called for invalid input")
+		return nil, nil
+	}}
+	handler := NewBatchHandler(embedder, &mockEmbeddingCache{}, "test-model", testLogger())
+	router := gin.New()
+	router.POST("/embeddings/batch", handler.CreateBatchEmbeddings)
+
+	body, err := json.Marshal(gin.H{"inputs": []string{string(make([]byte, maxBatchInputChars+1))}})
+	if err != nil {
+		t.Fatalf("marshal body: %v", err)
+	}
+	w := postJSON(router, "/embeddings/batch", string(body))
+	assertV1BatchError(t, w, CodeInputTooLong, http.StatusRequestEntityTooLarge, "inputs[0]")
+	if embedder.calls != 0 {
+		t.Fatalf("embedder calls = %d, want 0", embedder.calls)
+	}
+}
+
 func TestCreateBatchEmbeddings_Base64Response(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	embedder := &mockEmbedder{embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {

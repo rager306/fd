@@ -3,6 +3,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -41,28 +42,17 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	var req embed.BatchEmbeddingsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("invalid batch request", "error", err)
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			WriteError(c, CodePayloadTooLarge, "", "request body exceeds max "+strconv.FormatInt(maxBytesErr.Limit, 10)+" bytes")
+			return
+		}
 		WriteError(c, CodeInvalidJSON, "", "invalid JSON: "+err.Error())
 		return
 	}
 
-	if len(req.Inputs) == 0 {
-		WriteError(c, CodeInputRequired, "inputs", "inputs is required (non-empty array of strings)")
-		return
-	}
-
-	dims := 1024
-	if req.Dimensions != 0 {
-		if req.Dimensions != 512 && req.Dimensions != 1024 {
-			WriteError(c, CodeDimensionsInvalid, "dimensions",
-				"dimensions must be 1024 or 512, got "+strconv.Itoa(req.Dimensions))
-			return
-		}
-		dims = req.Dimensions
-	}
-
-	if req.EncodingFormat != "" && req.EncodingFormat != embed.EncodingFormatBase64 && req.EncodingFormat != embed.EncodingFormatFloat {
-		WriteError(c, CodeEncodingInvalid, "encoding_format",
-			"encoding_format must be float or base64, got \""+req.EncodingFormat+"\"")
+	dims, ok := validateLegacyBatchRequest(c, req)
+	if !ok {
 		return
 	}
 
@@ -99,7 +89,37 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 	})
 }
 
-// (Removed local itoa — strconv.Itoa is sufficient.)
+func validateLegacyBatchRequest(c *gin.Context, req embed.BatchEmbeddingsRequest) (int, bool) {
+	if len(req.Inputs) == 0 {
+		WriteError(c, CodeInputRequired, "inputs", "inputs is required (non-empty array of strings)")
+		return 0, false
+	}
+	if len(req.Inputs) > maxLegacyBatchInputs {
+		WriteError(c, CodeBatchTooLarge, "inputs", "batch size "+strconv.Itoa(len(req.Inputs))+" exceeds max "+strconv.Itoa(maxLegacyBatchInputs))
+		return 0, false
+	}
+	for i, text := range req.Inputs {
+		if len(text) > maxBatchInputChars {
+			WriteError(c, CodeInputTooLong, "inputs["+strconv.Itoa(i)+"]", "input["+strconv.Itoa(i)+"] exceeds max length "+strconv.Itoa(maxBatchInputChars)+" chars")
+			return 0, false
+		}
+	}
+
+	dims := 1024
+	if req.Dimensions != 0 {
+		if req.Dimensions != 512 && req.Dimensions != 1024 {
+			WriteError(c, CodeDimensionsInvalid, "dimensions", "dimensions must be 1024 or 512, got "+strconv.Itoa(req.Dimensions))
+			return 0, false
+		}
+		dims = req.Dimensions
+	}
+
+	if req.EncodingFormat != "" && req.EncodingFormat != embed.EncodingFormatBase64 && req.EncodingFormat != embed.EncodingFormatFloat {
+		WriteError(c, CodeEncodingInvalid, "encoding_format", "encoding_format must be float or base64, got \""+req.EncodingFormat+"\"")
+		return 0, false
+	}
+	return dims, true
+}
 
 // defaultBatchEncoding preserves the legacy /embeddings/batch default of
 // base64 (FalkorDB callers depend on it). The OpenAI-style /v1/embeddings

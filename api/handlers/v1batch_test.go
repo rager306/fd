@@ -74,6 +74,27 @@ func TestV1BatchHandlerRejectsEmptyBatches(t *testing.T) {
 	assertV1BatchError(t, w, CodeInputRequired, http.StatusBadRequest, "batches")
 }
 
+func TestV1BatchHandlerRejectsTooLongInputBeforeEmbedder(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	embedder := &mockEmbedder{embedFunc: func(context.Context, []string) ([][]float32, error) {
+		t.Fatal("embedder should not be called for invalid input")
+		return nil, nil
+	}}
+	router := gin.New()
+	handler := NewV1BatchHandler(embedder, &mockEmbeddingCache{}, testLogger())
+	router.POST("/v1/batch", handler.CreateBatch)
+
+	body, err := json.Marshal(gin.H{"batches": [][]string{{string(make([]byte, maxBatchInputChars+1))}}})
+	if err != nil {
+		t.Fatalf("marshal body: %v", err)
+	}
+	w := postJSON(router, "/v1/batch", string(body))
+	assertV1BatchError(t, w, CodeInputTooLong, http.StatusRequestEntityTooLarge, "batches[0][0]")
+	if embedder.calls != 0 {
+		t.Fatalf("embedder calls = %d, want 0", embedder.calls)
+	}
+}
+
 func assertV1BatchError(t *testing.T, w *httptest.ResponseRecorder, wantCode string, wantStatus int, wantParam string) {
 	t.Helper()
 	if w.Code != wantStatus {

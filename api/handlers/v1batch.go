@@ -43,6 +43,11 @@ func (h *V1BatchHandler) CreateBatch(c *gin.Context) {
 	var req v1BatchRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("invalid v1 batch request", "error", err)
+		var maxBytesErr *http.MaxBytesError
+		if errors.As(err, &maxBytesErr) {
+			WriteError(c, CodePayloadTooLarge, "", "request body exceeds max "+strconv.FormatInt(maxBytesErr.Limit, 10)+" bytes")
+			return
+		}
 		WriteError(c, CodeInvalidJSON, "", "invalid JSON: "+err.Error())
 		return
 	}
@@ -81,6 +86,12 @@ func validateV1BatchRequest(c *gin.Context, batches [][]string) bool {
 		if len(batch) > maxV1BatchInputs {
 			WriteError(c, CodeBatchTooLarge, "batches["+strconv.Itoa(i)+"]", "inner batch size "+strconv.Itoa(len(batch))+" exceeds max "+strconv.Itoa(maxV1BatchInputs))
 			return false
+		}
+		for j, text := range batch {
+			if len(text) > maxBatchInputChars {
+				WriteError(c, CodeInputTooLong, "batches["+strconv.Itoa(i)+"]["+strconv.Itoa(j)+"]", "batches["+strconv.Itoa(i)+"]["+strconv.Itoa(j)+"] exceeds max length "+strconv.Itoa(maxBatchInputChars)+" chars")
+				return false
+			}
 		}
 	}
 	return true

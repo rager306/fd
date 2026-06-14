@@ -1,0 +1,147 @@
+{
+  "runId": "uat:M046-zqzcu6:S02:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M046-zqzcu6",
+  "sliceId": "S02",
+  "uatType": "runtime-executable",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-14T16:10:25.505Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": [
+      "runtime"
+    ]
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Rebuilt API is ready and reports TEI runtime.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "0e10d0e6-0ad5-4824-8456-778945b19345",
+          "note": "Verified /ready and /health after API rebuild.",
+          "tool": "gsd_uat_exec",
+          "executionId": "0e10d0e6-0ad5-4824-8456-778945b19345"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "/v1/batch rejects too-long input before backend work.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "0d532f91-4886-4a4b-9866-cb788e9347d2",
+          "note": "Verified 413 input_too_long for batches[0][0].",
+          "tool": "gsd_uat_exec",
+          "executionId": "0d532f91-4886-4a4b-9866-cb788e9347d2"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "/embeddings/batch rejects too-long input before backend work.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "9b990efc-8758-4440-a8d7-2d9ec4973c53",
+          "note": "Verified 413 input_too_long for inputs[0].",
+          "tool": "gsd_uat_exec",
+          "executionId": "9b990efc-8758-4440-a8d7-2d9ec4973c53"
+        }
+      ]
+    },
+    {
+      "id": "UAT-04",
+      "description": "Valid batch requests still work after guardrails.",
+      "mode": "runtime",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "86b73f80-3859-4671-9691-3c1a97da5b1b",
+          "note": "Verified valid /v1/batch and /embeddings/batch smokes.",
+          "tool": "gsd_uat_exec",
+          "executionId": "86b73f80-3859-4671-9691-3c1a97da5b1b"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S02 validates backend HTTP behavior; runtime HTTP checks are the applicable surface."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Runtime-executable UAT validates rebuilt API and batch endpoint behavior.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S02 closes issue #3 P0 #2 and #3 guardrail defects; P1 N+1 remains for S03."
+}

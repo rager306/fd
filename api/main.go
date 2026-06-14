@@ -262,8 +262,10 @@ func main() {
 	// 413 payload_too_large) are returned without burning inference
 	// capacity. The handler reads the parsed request from gin context.
 	r.POST("/v1/embeddings", middleware.ValidateEmbeddingsRequest(), middleware.UserRateLimitFromEnv(), middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), embedHandler.CreateEmbedding)
-	r.POST("/v1/batch", middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), v1BatchHandler.CreateBatch)
-	r.POST("/embeddings/batch", batchHandler.CreateBatchEmbeddings)
+	// Batch endpoints use distinct JSON shapes, so they share the body/rate/lifecycle
+	// guardrails while handlers perform shape-specific input validation before backend work.
+	r.POST("/v1/batch", middleware.LimitRequestBody(), middleware.UserRateLimitFromEnv(), middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), v1BatchHandler.CreateBatch)
+	r.POST("/embeddings/batch", middleware.LimitRequestBody(), middleware.UserRateLimitFromEnv(), middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), batchHandler.CreateBatchEmbeddings)
 
 	addr := bindHost + ":" + port
 	srv := &http.Server{

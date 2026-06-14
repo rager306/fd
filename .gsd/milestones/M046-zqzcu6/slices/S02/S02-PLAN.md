@@ -1,0 +1,64 @@
+# S02: Batch endpoint guardrails
+
+**Goal:** Bring `/v1/batch` and `/embeddings/batch` up to bounded request and lifecycle posture before any backend work.
+**Demo:** Oversized or malformed requests to `/v1/batch` and `/embeddings/batch` are rejected before backend work, while valid batch smoke still passes.
+
+## Must-Haves
+
+- Both batch endpoints enforce request body caps before JSON bind.
+- Both batch endpoints enforce bounded input counts and per-input length before cache/TEI work.
+- `/v1/batch` retains its nested batch response shape.
+- `/embeddings/batch` retains legacy response defaults.
+- Lifecycle/capacity and rate-limit middleware apply where appropriate.
+- Red tests prove invalid requests do not call the embedder/cache loader.
+- Valid batch smoke tests still pass.
+
+## Proof Level
+
+- This slice proves: TDD with handler/middleware tests plus Go package tests; no runtime load abuse tests.
+
+## Integration Closure
+
+Closes P0 #2 and #3 from issue #3 and provides safe input bounds for S03 backend call-count optimization.
+
+## Verification
+
+- Rejected requests use existing OpenAI-style error envelopes and do not log request bodies.
+
+## Tasks
+
+- [x] **T01: Added red tests proving batch endpoints must reject too-long inputs before backend work.** `est:60m`
+  Write failing tests that demonstrate `/v1/batch` and `/embeddings/batch` currently accept or reach backend work for oversized bodies, too many inputs, or too-long strings. Include a fake embedder/cache that fails the test if invoked for rejected requests.
+  - Files: `api/handlers/v1batch_test.go`, `api/handlers/embeddings_integration_test.go`, `api/middleware/validation_test.go`
+  - Verify: Targeted tests fail before implementation for at least one missing guardrail on each batch endpoint.
+
+- [x] **T02: Implemented shared body cap middleware and batch-specific input validation before backend work.** `est:90m`
+  Refactor validation middleware carefully: keep `/v1/embeddings` behavior unchanged, expose or add helpers for request body cap/content-length handling, and add batch-specific validation for legacy `inputs` and v1 nested `batches` shapes.
+  - Files: `api/middleware/validation.go`, `api/handlers/batch.go`, `api/handlers/v1batch.go`, `api/handlers/errors.go`
+  - Verify: Targeted validation tests pass; existing `/v1/embeddings` validation tests still pass.
+
+- [x] **T03: Mounted both batch routes with body, rate-limit, and lifecycle guardrails.** `est:45m`
+  Update route registration so `/v1/batch` and `/embeddings/batch` pass through appropriate validation, user rate limit, and lifecycle/capacity gates before handlers. Preserve PR #2 public health behavior.
+  - Files: `api/main.go`, `api/middleware/ratelimit.go`, `api/middleware/lifecycle.go`, `api/main_test.go`
+  - Verify: Route-level tests or integration tests show batch endpoints reject while service is not ready/over capacity and rate-limit middleware is applied when enabled.
+
+- [x] **T04: Recorded S02 evidence and verified Go, lint, and vulnerability gates.** `est:45m`
+  Run focused handler/middleware tests, full Go tests, lint, govulncheck, then update M046 evidence artifacts with S02 outcomes and remaining S03 inputs.
+  - Files: `benchmark-results/m046-s02-batch-guardrails.md`, `documents/issue-3-audit-remediation-plan-m046.md`
+  - Verify: `cd api && go test ./...`, lint, and govulncheck pass; evidence artifact records fixed P0 #2 and #3.
+
+## Files Likely Touched
+
+- api/handlers/v1batch_test.go
+- api/handlers/embeddings_integration_test.go
+- api/middleware/validation_test.go
+- api/middleware/validation.go
+- api/handlers/batch.go
+- api/handlers/v1batch.go
+- api/handlers/errors.go
+- api/main.go
+- api/middleware/ratelimit.go
+- api/middleware/lifecycle.go
+- api/main_test.go
+- benchmark-results/m046-s02-batch-guardrails.md
+- documents/issue-3-audit-remediation-plan-m046.md

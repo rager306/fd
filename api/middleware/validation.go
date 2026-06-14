@@ -66,14 +66,10 @@ const (
 // (handlers.WriteError) so callers can switch on error.code.
 func ValidateEmbeddingsRequest() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Body size cap. http.MaxBytesReader returns *http.MaxBytesError
-		// from any subsequent Read once the cap is exceeded; we surface
-		// that specifically as 413 payload_too_large.
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBodyBytes)
-
-		if !validateContentLength(c) {
+		if !applyRequestBodyLimit(c) {
 			return
 		}
+
 		req, ok := bindEmbeddingsRequest(c)
 		if !ok {
 			return
@@ -85,6 +81,26 @@ func ValidateEmbeddingsRequest() gin.HandlerFunc {
 		c.Set(handlers.ContextKeyValidatedRequest, req)
 		c.Next()
 	}
+}
+
+// LimitRequestBody caps request bodies for endpoints with JSON shapes that
+// validate in their handlers rather than through ValidateEmbeddingsRequest.
+func LimitRequestBody() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !applyRequestBodyLimit(c) {
+			return
+		}
+		c.Next()
+	}
+}
+
+func applyRequestBodyLimit(c *gin.Context) bool {
+	// Body size cap. http.MaxBytesReader returns *http.MaxBytesError
+	// from any subsequent Read once the cap is exceeded; handlers surface
+	// that specifically as 413 payload_too_large.
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxRequestBodyBytes)
+
+	return validateContentLength(c)
 }
 
 func validateContentLength(c *gin.Context) bool {

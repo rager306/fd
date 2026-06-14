@@ -17,6 +17,27 @@ import (
 
 const paramInput = "input"
 
+func TestLimitRequestBodyRejectsDeclaredOversizeBeforeDownstream(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	downstreamCalled := false
+	r := gin.New()
+	r.POST("/batch", LimitRequestBody(), func(c *gin.Context) {
+		downstreamCalled = true
+		c.Status(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/batch", strings.NewReader(`{"inputs":["ok"]}`))
+	req.ContentLength = maxRequestBodyBytes + 1
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assertCode(t, w, handlers.CodePayloadTooLarge, http.StatusRequestEntityTooLarge, "")
+	if downstreamCalled {
+		t.Fatal("downstream handler should not be called for oversized request")
+	}
+}
+
 // runMiddleware runs a single request through the validation middleware
 // and returns the recorder. The middleware is wired to a downstream
 // handler that simply stores the validated request in the context for

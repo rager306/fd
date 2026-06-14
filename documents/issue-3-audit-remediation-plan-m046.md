@@ -49,7 +49,7 @@ Corrective direction:
 | Wave | Slice | Fixes | Output |
 |---|---|---|---|
 | 1 | S01 Audit validation map | Confirms P0/P1 and root decisions | This document plus `benchmark-results/m046-s01-audit-validation.md` |
-| 2 | S02 Batch endpoint guardrails | P0 #2, P0 #3 | Tests proving invalid/oversized batch requests are rejected before backend work |
+| 2 | S02 Batch endpoint guardrails | P0 #2, P0 #3 | DONE: `benchmark-results/m046-s02-batch-guardrails.md` proves both batch routes now include body, rate-limit, and lifecycle guardrails; too-long inputs reject before embedder work. |
 | 3 | S03 Batch backend work shaping | P1 #4, P1 #5, maybe P1 #6 | Tests proving bounded TEI call counts and preserved response order |
 | 4 | S04 Exposure posture policy | P0 #1, P1 #7, P1 #8 and related exposure items | Auth/compose policy tests and docs |
 | 5 | S05 LocalCache correctness | P1 #10 | Race/capacity/lifecycle tests |

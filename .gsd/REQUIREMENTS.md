@@ -33,15 +33,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
-### R029 — Batch endpoints must enforce the same bounded request, lifecycle, capacity, and abuse-control posture as `/v1/embeddings`.
-- Class: compliance/security
-- Status: active
-- Description: Batch endpoints must enforce the same bounded request, lifecycle, capacity, and abuse-control posture as `/v1/embeddings`.
-- Why it matters: Issue #3 reports P0 DoS risk because `/v1/batch` and `/embeddings/batch` bypass parts of validation/rate-limit/body/input caps and can drive unbounded TEI/cache work.
-- Source: GitHub issue #3 audit
-- Primary owning slice: M046-zqzcu6
-- Validation: Tests demonstrate oversized body/input/length requests are rejected before backend work; lifecycle/capacity gates apply; embedding smoke still passes.
-
 ### R030 — Default exposure posture must be explicit and safe for the documented same-host contract, with no accidental public unauthenticated inference surface.
 - Class: compliance/security
 - Status: active
@@ -50,6 +41,15 @@ This file is the explicit capability and coverage contract for the project.
 - Source: GitHub issue #3 audit
 - Primary owning slice: M046-zqzcu6
 - Validation: Compose and startup tests prove default bind/auth posture is safe; health/readiness remain usable for local operators; protected endpoints require auth or explicit local-only exposure.
+
+### R031 — L1 cache implementation must have bounded growth, race-safe size/accounting, and deterministic shutdown behavior.
+- Class: quality-attribute
+- Status: active
+- Description: L1 cache implementation must have bounded growth, race-safe size/accounting, and deterministic shutdown behavior.
+- Why it matters: Issue #3 flags LocalCache size drift/race/lifecycle risks that could lead to unbounded memory growth or goroutine leaks under concurrent load.
+- Source: GitHub issue #3 audit
+- Primary owning slice: M046-zqzcu6
+- Validation: Race-enabled tests and capacity tests prove no size drift beyond maxSize, eviction remains bounded, and Close/shutdown stops background eviction.
 
 ## Validated
 
@@ -288,6 +288,16 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M045 S03 local snapshot proof validates bounded TEI startup posture: TEI command uses cached local USER-bge-m3 snapshot path under `/data`, reached Docker health healthy at 2026-06-14T12:15:15 after container start 2026-06-14T12:12:14, fd `/health` and `/ready` passed, fd `/v1/embeddings` and direct TEI `/embeddings` returned 1024-dimensional embeddings. Evidence: `benchmark-results/m045-tei-local-path-startup-proof.md`.
 - Notes: The earlier `HF_HUB_OFFLINE=1` candidate failed and is rejected; local snapshot path is the validated mitigation.
 
+### R029 — Batch endpoints must enforce the same bounded request, lifecycle, capacity, and abuse-control posture as `/v1/embeddings`.
+- Class: compliance/security
+- Status: validated
+- Description: Batch endpoints must enforce the same bounded request, lifecycle, capacity, and abuse-control posture as `/v1/embeddings`.
+- Why it matters: Issue #3 reports P0 DoS risk because `/v1/batch` and `/embeddings/batch` bypass parts of validation/rate-limit/body/input caps and can drive unbounded TEI/cache work.
+- Source: GitHub issue #3 audit
+- Primary owning slice: M046-zqzcu6
+- Validation: Validated by M046-zqzcu6/S02. Evidence: `benchmark-results/m046-s02-batch-guardrails.md`; Go tests passed; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verified `/v1/batch` and `/embeddings/batch` reject too-long inputs with 413 `input_too_long` and valid batch smokes still pass.
+- Notes: S02 closes issue #3 P0 #2 and P0 #3 guardrail defects. S03 still handles P1 N+1 backend call shaping now that inputs are bounded.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -344,12 +354,13 @@ This file is the explicit capability and coverage contract for the project.
 | R026 | integration | active | none | none | `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass. |
 | R027 | constraint | validated | M042-fjf2en/S02 | none | M042 S02 evidence validates TEI-only current posture: `api/main.go` rejects non-TEI `EMBEDDING_BACKEND`; ONNX Go embedder/build-tag files, `Dockerfile.onnx`, and ONNX packaging workflow are removed; `api/go.mod`/`go.sum` no longer include ONNX/runtime tokenizer deps; docs/compose describe TEI-only current runtime; final gates passed in `benchmark-results/m042-s02-*`. |
 | R028 | operability | validated | none | none | M045 S03 local snapshot proof validates bounded TEI startup posture: TEI command uses cached local USER-bge-m3 snapshot path under `/data`, reached Docker health healthy at 2026-06-14T12:15:15 after container start 2026-06-14T12:12:14, fd `/health` and `/ready` passed, fd `/v1/embeddings` and direct TEI `/embeddings` returned 1024-dimensional embeddings. Evidence: `benchmark-results/m045-tei-local-path-startup-proof.md`. |
-| R029 | compliance/security | active | M046-zqzcu6 | none | Tests demonstrate oversized body/input/length requests are rejected before backend work; lifecycle/capacity gates apply; embedding smoke still passes. |
+| R029 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S02. Evidence: `benchmark-results/m046-s02-batch-guardrails.md`; Go tests passed; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verified `/v1/batch` and `/embeddings/batch` reject too-long inputs with 413 `input_too_long` and valid batch smokes still pass. |
 | R030 | compliance/security | active | M046-zqzcu6 | none | Compose and startup tests prove default bind/auth posture is safe; health/readiness remain usable for local operators; protected endpoints require auth or explicit local-only exposure. |
+| R031 | quality-attribute | active | M046-zqzcu6 | none | Race-enabled tests and capacity tests prove no size drift beyond maxSize, eviction remains bounded, and Close/shutdown stops background eviction. |
 
 ## Coverage Summary
 
 - Active requirements: 5
 - Mapped to slices: 2
-- Validated: 23 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028)
+- Validated: 24 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029)
 - Unmapped active requirements: 1
