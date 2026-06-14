@@ -1,0 +1,7 @@
+fd batch 1 ms [245.1, 245.9, 450.0] p50 245.9
+fd batch 10 ms [2811.8, 2993.3, 2947.2] p50 2947.2
+fd batch 32 ms [7363.8, 6861.7, 7738.4] p50 7363.8
+tei-direct batch 1 ms [419.2, 453.0, 397.0] p50 419.2
+tei-direct batch 10 ms [3275.5, 2882.6, 3314.3] p50 3275.5
+tei-direct batch 32 ms [7556.2, 7921.9, 7801.7] p50 7801.7
+fd concurrent 4x8 elapsed_ms 9071.4 individual_ms [3409.1, 9062.6, 9063.9, 6370.6]

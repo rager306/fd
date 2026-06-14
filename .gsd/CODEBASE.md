@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T06:29:24Z | Files: 201 | Described: 0/201
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T06:29:24Z","fingerprint":"3802e316994bbc9040de562d71818ab8dc95aec6","fileCount":201,"truncated":false} -->
+Generated: 2026-06-14T07:22:43Z | Files: 254 | Described: 0/254
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T07:22:43Z","fingerprint":"6019be567a5ee38cf6e04911d7e40576d238732a","fileCount":254,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -21,7 +21,9 @@ Generated: 2026-06-14T06:29:24Z | Files: 201 | Described: 0/201
 - `api/.dockerignore`
 - `api/Dockerfile`
 - `api/Dockerfile.tests`
+- `api/fd_v2_cache_integration_test.go`
 - `api/fd_v2_lifecycle_integration_test.go`
+- `api/fd_v2_observability_integration_test.go`
 - `api/go.mod`
 - `api/go.sum`
 - `api/main_test.go`
@@ -34,6 +36,8 @@ Generated: 2026-06-14T06:29:24Z | Files: 201 | Described: 0/201
 ### api/cache/
 - `api/cache/local_test.go`
 - `api/cache/local.go`
+- `api/cache/lru_test.go`
+- `api/cache/lru.go`
 - `api/cache/redis_bench_test.go`
 - `api/cache/redis_binary_test.go`
 - `api/cache/redis_test.go`
@@ -70,10 +74,14 @@ Generated: 2026-06-14T06:29:24Z | Files: 201 | Described: 0/201
 - `api/handlers/health_test.go`
 - `api/handlers/health.go`
 - `api/handlers/notfound.go`
+- `api/handlers/observability_test.go`
+- `api/handlers/observability.go`
 - `api/handlers/probes_test.go`
 - `api/handlers/probes.go`
 - `api/handlers/recovery_test.go`
 - `api/handlers/recovery.go`
+- `api/handlers/warmup_test.go`
+- `api/handlers/warmup.go`
 
 ### api/lifecycle/
 - `api/lifecycle/shutdown_test.go`
@@ -84,13 +92,19 @@ Generated: 2026-06-14T06:29:24Z | Files: 201 | Described: 0/201
 - `api/lifecycle/warmup.go`
 
 ### api/middleware/
+- `api/middleware/headers_test.go`
+- `api/middleware/headers.go`
 - `api/middleware/lifecycle_test.go`
 - `api/middleware/lifecycle.go`
 - `api/middleware/validation_test.go`
 - `api/middleware/validation.go`
 
+### api/observability/
+- `api/observability/metrics_test.go`
+- `api/observability/metrics.go`
+
 ### benchmark-results/
-- *(102 files: 98 .txt, 4 .md)*
+- *(142 files: 137 .txt, 5 .md)*
 
 ### docs/
 - `docs/fd-v2.md`
@@ -131,6 +145,7 @@ Generated: 2026-06-14T06:29:24Z | Files: 201 | Described: 0/201
 - `tools/profile_legal_divergence.py`
 - `tools/provision_onnx_artifacts.py`
 - `tools/run_m040_s02_docker_restart_proof.sh`
+- `tools/verify_fd_v2_perf.sh`
 - `tools/verify_legal_model_quick_gate_artifact.py`
 - `tools/verify_m040_s02_artifacts.py`
 - `tools/verify_m040_s04_recommendation.py`

@@ -7,18 +7,18 @@ Overall: FAIL
 
 | batch | count | p50 ms | p95 ms | p99 ms | threshold ms | errors | verdict |
 |---:|---:|---:|---:|---:|---:|---:|---|
-| 1 | 50 | 175.089 | 302.094 | 381.255 | 50 | 0 | FAIL |
-| 10 | 20 | 1659.292 | 1984.886 | 1984.886 | 200 | 0 | FAIL |
-| 32 | 10 | 5128.126 | 5649.237 | 5649.237 | 1000 | 0 | FAIL |
+| 1 | 50 | 198.107 | 425.410 | 481.560 | 50 | 0 | FAIL |
+| 10 | 20 | 1721.886 | 1993.474 | 1993.474 | 200 | 0 | FAIL |
+| 32 | 10 | 5198.921 | 5670.721 | 5670.721 | 1000 | 0 | FAIL |
 
 ## Sequential and concurrent
 
 - 100 sequential zero errors: PASS (0 errors)
-- 4 concurrent × 8 input < 2s: FAIL (4.841s, 0 errors)
+- 4 concurrent × 8 input < 2s: FAIL (6.987s, 0 errors)
 
 ## Cache effectiveness
 
-- Repeated input X-Cache HIT and <5ms: FAIL (X-Cache='', latency=2.728ms)
+- Repeated input X-Cache HIT and <5ms: PASS (X-Cache='HIT', latency=2.039ms)
 
 ## Raw summary
 
@@ -29,9 +29,9 @@ Overall: FAIL
       "batch": 1,
       "count": 50,
       "threshold_ms": 50,
-      "p50": 175.0894351862371,
-      "p95": 302.09397058933973,
-      "p99": 381.25533098354936,
+      "p50": 198.10728775337338,
+      "p95": 425.40979385375977,
+      "p99": 481.5601799637079,
       "errors": 0,
       "passed": false,
       "error_samples": []
@@ -40,9 +40,9 @@ Overall: FAIL
       "batch": 10,
       "count": 20,
       "threshold_ms": 200,
-      "p50": 1659.2916268855333,
-      "p95": 1984.8855827003717,
-      "p99": 1984.8855827003717,
+      "p50": 1721.8861137516797,
+      "p95": 1993.474179878831,
+      "p99": 1993.474179878831,
       "errors": 0,
       "passed": false,
       "error_samples": []
@@ -51,9 +51,9 @@ Overall: FAIL
       "batch": 32,
       "count": 10,
       "threshold_ms": 1000,
-      "p50": 5128.125797957182,
-      "p95": 5649.236569181085,
-      "p99": 5649.236569181085,
+      "p50": 5198.921129107475,
+      "p95": 5670.721202623099,
+      "p99": 5670.721202623099,
       "errors": 0,
       "passed": false,
       "error_samples": []
@@ -68,7 +68,7 @@ Overall: FAIL
   "concurrent": {
     "workers": 4,
     "batch": 8,
-    "elapsed_s": 4.841265654191375,
+    "elapsed_s": 6.986875114031136,
     "errors": 0,
     "passed": false,
     "error_samples": []
@@ -76,9 +76,9 @@ Overall: FAIL
   "cache": {
     "first_status": 200,
     "second_status": 200,
-    "x_cache": "",
-    "hit_latency_ms": 2.7281506918370724,
-    "passed": false
+    "x_cache": "HIT",
+    "hit_latency_ms": 2.0385878160595894,
+    "passed": true
   }
 }
 ```
