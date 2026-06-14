@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-14T07:22:43Z | Files: 254 | Described: 0/254
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T07:22:43Z","fingerprint":"6019be567a5ee38cf6e04911d7e40576d238732a","fileCount":254,"truncated":false} -->
+Generated: 2026-06-14T07:36:19Z | Files: 258 | Described: 0/258
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-14T07:36:19Z","fingerprint":"cbc7aa8abd1f2b880e7ead55777f573057ffc5d1","fileCount":258,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -104,7 +104,7 @@ Generated: 2026-06-14T07:22:43Z | Files: 254 | Described: 0/254
 - `api/observability/metrics.go`
 
 ### benchmark-results/
-- *(142 files: 137 .txt, 5 .md)*
+- *(146 files: 141 .txt, 5 .md)*
 
 ### docs/
 - `docs/fd-v2.md`

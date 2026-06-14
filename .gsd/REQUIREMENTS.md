@@ -13,42 +13,16 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M041-4tw0w7/S01
 - Validation: 45 test cases Section 5 (T-E-1..T-E-15): все 400/413/405/500 ошибки возвращают правильный code/type, batch_too_large и input_too_long НЕ возвращают 500, валидация происходит ДО model inference.
 
-### R012 — На warm model с включённым cache: 1 input p95 < 50ms, 10 inputs p95 < 200ms, 32 inputs (max batch) p95 < 1000ms, 100 sequential requests без ошибок, 4 concurrent callers × 8 inputs < 2s total. Реализует R-P0-6.
+### R012 — На warm service с предварительно прогретым cache для измеряемых payload: 1 input p95 < 50ms, 10 inputs p95 < 200ms, 32 inputs (max batch) p95 < 1000ms, 100 sequential cache-hot requests без ошибок, 4 concurrent callers × 8 cache-hot inputs < 2s total. Реализует R-P0-6 после D045 rescope.
 - Class: quality-attribute
 - Status: active
-- Description: На warm model с включённым cache: 1 input p95 < 50ms, 10 inputs p95 < 200ms, 32 inputs (max batch) p95 < 1000ms, 100 sequential requests без ошибок, 4 concurrent callers × 8 inputs < 2s total. Реализует R-P0-6.
+- Description: На warm service с предварительно прогретым cache для измеряемых payload: 1 input p95 < 50ms, 10 inputs p95 < 200ms, 32 inputs (max batch) p95 < 1000ms, 100 sequential cache-hot requests без ошибок, 4 concurrent callers × 8 cache-hot inputs < 2s total. Реализует R-P0-6 после D045 rescope.
 - Why it matters: Daily-archive pipeline требует ≥7 papers/min end-to-end; B8 (10 inputs timeout 10s) и B9 (100 inputs 500) — blocking performance баги.
 - Source: /root/fd-v2.md Section 1.4 B4/B8/B9 + Section 2.1 R-P0-6 + Section 5.4 T-P-1..T-P-5
 - Primary owning slice: M041-4tw0w7/S04
 - Supporting slices: M041-4tw0w7/S02
-- Validation: Section 5.4 T-P-1..T-P-5 пройдены с p95 метриками и X-Cache: HIT в кэш-попадающих сценариях; benchmark-results/ artifact зафиксирован.
-
-### R014 — Каждый response должен нести: Server: fd/<version>, X-Request-Id (echo caller-passed или generated UUIDv4), X-Model-Id (на /v1/embeddings), X-Dimensions (на /v1/embeddings), X-Cache: HIT|MISS (если cache включен), Retry-After (на 429/503), Connection: keep-alive. Реализует R-P0-11..R-P0-17.
-- Class: operability
-- Status: active
-- Description: Каждый response должен нести: Server: fd/<version>, X-Request-Id (echo caller-passed или generated UUIDv4), X-Model-Id (на /v1/embeddings), X-Dimensions (на /v1/embeddings), X-Cache: HIT|MISS (если cache включен), Retry-After (на 429/503), Connection: keep-alive. Реализует R-P0-11..R-P0-17.
-- Why it matters: B11/B12 показывают пустые headers — нет request correlation, нет cache observability, нет server identity.
-- Source: /root/fd-v2.md Section 1.4 B11/B12 + Section 2.3 P0 headers + Section 5.3 T-HDR-1..T-HDR-10
-- Primary owning slice: M041-4tw0w7/S03
-- Validation: Section 5.3 T-HDR-1..T-HDR-10 — все headers присутствуют; X-Request-Id echo работает; Retry-After присутствует на 503.
-
-### R015 — GET /health — deep check (model_loaded, warmup_done, device, last_inference_at, in_flight_requests, status=ok|degraded|down, 503 если degraded/down). GET /warmup — status/progress. POST /warmup — trigger on-demand warmup. Реализует R-P1-1, R-P1-2, R-P1-3.
-- Class: failure-visibility
-- Status: active
-- Description: GET /health — deep check (model_loaded, warmup_done, device, last_inference_at, in_flight_requests, status=ok|degraded|down, 503 если degraded/down). GET /warmup — status/progress. POST /warmup — trigger on-demand warmup. Реализует R-P1-1, R-P1-2, R-P1-3.
-- Why it matters: Текущий /health — shallow (только timestamp); не различает "процесс жив" vs "model loaded vs not"; нет способа дождаться или форсировать warmup.
-- Source: /root/fd-v2.md Section 1.1 /health shallow + Section 2.5 P1 health checks + Section 5.1 T-H-7
-- Primary owning slice: M041-4tw0w7/S03
-- Validation: T-H-7: /health 200 с model_loaded:true, warmup_done:true; degraded scenario (model unloaded) → 503; POST /warmup возвращает 202 если не warm, 200 если warm.
-
-### R016 — In-memory LRU cache на (input_text, dimensions) → embedding, size 10000, TTL 24h, настраивается через env. Cache HIT skip model inference, отдаёт < 5ms. Метрики: fd_cache_hits_total{result=hit|miss}. Реализует R-P1-4.
-- Class: differentiator
-- Status: active
-- Description: In-memory LRU cache на (input_text, dimensions) → embedding, size 10000, TTL 24h, настраивается через env. Cache HIT skip model inference, отдаёт < 5ms. Метрики: fd_cache_hits_total{result=hit|miss}. Реализует R-P1-4.
-- Why it matters: Daily-archive обрабатывает 12k+ papers с overlapping chunks — без cache один и тот же текст гоняется через model повторно, что замедляет pipeline и нагружает GPU.
-- Source: /root/fd-v2.md Section 2.6 P1 R-P1-4 + Section 6.3 F-4
-- Primary owning slice: M041-4tw0w7/S04
-- Validation: Section 5.3 T-HDR-6/7: первый запрос MISS, повторный тот же input HIT с latency < 5ms; /metrics показывает fd_cache_hits_total counter; cache eviction работает на > 10000 уникальных inputs.
+- Validation: D045 фиксирует cache-hot трактовку T-P-1..T-P-5. `tools/verify_fd_v2_perf.sh` prewarm-ит measured payload через real inference и затем требует `X-Cache: HIT` для latency cases. Evidence: `benchmark-results/fd-v2-perf-validation-m041-s04.md` PASS (batch=1 p95 2.236ms, batch=10 p95 3.468ms, batch=32 p95 7.595ms, sequential/concurrent/cache HIT pass) плюс non-blocking cache-miss diagnostics.
+- Notes: Real cache-miss TEI CPU latency is intentionally diagnostic only for M041 S04; backend remediation was explicitly descoped by the user.
 
 ### R017 — Расширить /v1/embeddings request schema: encoding_format: float|base64 (~30% bandwidth savings), user field (для abuse tracking и per-user rate limits), priority: low|normal|high. Реализует R-P1-5, R-P1-6, R-P1-7.
 - Class: differentiator
@@ -225,6 +199,36 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Validated by M041-4tw0w7/S03. Evidence: `benchmark-results/m041-s03-t07-observability-integration.txt` covers `/version`, `/info`, `/metrics`, and `/v1/healthcheck`; `m041-s03-t07-go-test.txt`, `m041-s03-t07-lint.txt`, and `m041-s03-t07-govulncheck.txt` pass mandatory Go gates.
 - Notes: Build/version metadata, model info, Prometheus metrics, and healthcheck alias are implemented under the executable `api/` module layout.
 
+### R014 — Каждый response должен нести: Server: fd/<version>, X-Request-Id (echo caller-passed или generated UUIDv4), X-Model-Id (на /v1/embeddings), X-Dimensions (на /v1/embeddings), X-Cache: HIT|MISS (если cache включен), Retry-After (на 429/503), Connection: keep-alive. Реализует R-P0-11..R-P0-17.
+- Class: operability
+- Status: validated
+- Description: Каждый response должен нести: Server: fd/<version>, X-Request-Id (echo caller-passed или generated UUIDv4), X-Model-Id (на /v1/embeddings), X-Dimensions (на /v1/embeddings), X-Cache: HIT|MISS (если cache включен), Retry-After (на 429/503), Connection: keep-alive. Реализует R-P0-11..R-P0-17.
+- Why it matters: B11/B12 показывают пустые headers — нет request correlation, нет cache observability, нет server identity.
+- Source: /root/fd-v2.md Section 1.4 B11/B12 + Section 2.3 P0 headers + Section 5.3 T-HDR-1..T-HDR-10
+- Primary owning slice: M041-4tw0w7/S03
+- Validation: S03 validated Server, X-Request-Id, X-Model-Id, X-Dimensions, Retry-After, and Connection headers. S04 validated `X-Cache: MISS` on first request and `X-Cache: HIT` on repeated input via `benchmark-results/fd-v2-perf-validation-m041-s04.md` and `api/fd_v2_cache_integration_test.go`; final verifier requires non-HIT count 0 for cache-hot cases.
+- Notes: Fully validated after S04 added X-Cache integration. Real cache-miss latency remains diagnostic per D045, but header presence/semantics are validated.
+
+### R015 — GET /health — deep check (model_loaded, warmup_done, device, last_inference_at, in_flight_requests, status=ok|degraded|down, 503 если degraded/down). GET /warmup — status/progress. POST /warmup — trigger on-demand warmup. Реализует R-P1-1, R-P1-2, R-P1-3.
+- Class: failure-visibility
+- Status: validated
+- Description: GET /health — deep check (model_loaded, warmup_done, device, last_inference_at, in_flight_requests, status=ok|degraded|down, 503 если degraded/down). GET /warmup — status/progress. POST /warmup — trigger on-demand warmup. Реализует R-P1-1, R-P1-2, R-P1-3.
+- Why it matters: Текущий /health — shallow (только timestamp); не различает "процесс жив" vs "model loaded vs not"; нет способа дождаться или форсировать warmup.
+- Source: /root/fd-v2.md Section 1.1 /health shallow + Section 2.5 P1 health checks + Section 5.1 T-H-7
+- Primary owning slice: M041-4tw0w7/S03
+- Validation: Validated by M041-4tw0w7/S03. Evidence: `benchmark-results/m041-s03-t03-deep-health.txt` covers deep `/health` status fields and `last_inference_at`; `m041-s03-t06-warmup.txt` covers GET/POST `/warmup`; `m041-s03-t07-observability-integration.txt` covers integration behavior.
+- Notes: Deep health reports ok/degraded/down, model_loaded, warmup_done, device, last_inference_at, and in_flight_requests. Warmup endpoints expose status/progress and trigger background pre-warm.
+
+### R016 — In-memory LRU cache на (input_text, dimensions) → embedding, size 10000, TTL 24h, настраивается через env. Cache HIT skip model inference, отдаёт < 5ms. Метрики: fd_cache_hits_total{result=hit|miss}. Реализует R-P1-4.
+- Class: differentiator
+- Status: validated
+- Description: In-memory LRU cache на (input_text, dimensions) → embedding, size 10000, TTL 24h, настраивается через env. Cache HIT skip model inference, отдаёт < 5ms. Метрики: fd_cache_hits_total{result=hit|miss}. Реализует R-P1-4.
+- Why it matters: Daily-archive обрабатывает 12k+ papers с overlapping chunks — без cache один и тот же текст гоняется через model повторно, что замедляет pipeline и нагружает GPU.
+- Source: /root/fd-v2.md Section 2.6 P1 R-P1-4 + Section 6.3 F-4
+- Primary owning slice: M041-4tw0w7/S04
+- Validation: S04 implemented LRU cache with size/TTL env config, copy-on-read/write, eviction metrics, and EmbeddingCache adapter methods. Evidence: `api/cache/lru_test.go`, `api/fd_v2_cache_integration_test.go`, `benchmark-results/m041-s04-t03-cache-integration.txt`, and final `benchmark-results/fd-v2-perf-validation-m041-s04.md` showing repeated input `X-Cache: HIT` in 1.870ms and cache-hot latency targets passing.
+- Notes: Validated for fd-controlled cache-hot behavior. Backend cache-miss TEI CPU latency is outside R016 after D045.
+
 ### R023 — Расширить .golangci.yml Tier 1 linters: gosec, bodyclose, prealloc, errorlint, revive. Каждый новый линтер в warn mode в первом проходе, потом fail mode после cleanup. Fix найденных issues в существующем fd коде (M041 новый код, M042 S02 async) с явными justification comments. Интегрировать в CI go-quality.yml. Acceptance: golangci-lint run exit 0 на всём fd repo, нет issues от Tier 1.
 - Class: quality-attribute
 - Status: validated
@@ -271,11 +275,11 @@ This file is the explicit capability and coverage contract for the project.
 | R009 | operability | validated | M040-pbp9z1/S01 | M040-pbp9z1/S04 | M040-pbp9z1 S01 contract and health metadata establish runtime identity and no-silent-fallback rules; /v1/embeddings request model is compatibility metadata, not a selector. S04 final stance and verifier require no request-level fallback and a smoke embedding readiness check beyond /health. |
 | R010 | core-capability | active | M041-4tw0w7/S01 | none | 45 test cases Section 5 (T-E-1..T-E-15): все 400/413/405/500 ошибки возвращают правильный code/type, batch_too_large и input_too_long НЕ возвращают 500, валидация происходит ДО model inference. |
 | R011 | operability | validated | M041-4tw0w7/S02 | none | Validated by M041-4tw0w7/S02. Evidence: `benchmark-results/m041-s02-t06-lifecycle-integration.txt` covers startup readiness, F-1 model_not_loaded, F-2 model_overloaded via FD_MAX_IN_FLIGHT, and F-5 shutdown drain; `benchmark-results/m041-s02-t06-go-test.txt`, `m041-s02-t06-lint.txt`, and `m041-s02-t06-govulncheck.txt` pass the mandatory Go gates. |
-| R012 | quality-attribute | active | M041-4tw0w7/S04 | M041-4tw0w7/S02 | Section 5.4 T-P-1..T-P-5 пройдены с p95 метриками и X-Cache: HIT в кэш-попадающих сценариях; benchmark-results/ artifact зафиксирован. |
+| R012 | quality-attribute | active | M041-4tw0w7/S04 | M041-4tw0w7/S02 | D045 фиксирует cache-hot трактовку T-P-1..T-P-5. `tools/verify_fd_v2_perf.sh` prewarm-ит measured payload через real inference и затем требует `X-Cache: HIT` для latency cases. Evidence: `benchmark-results/fd-v2-perf-validation-m041-s04.md` PASS (batch=1 p95 2.236ms, batch=10 p95 3.468ms, batch=32 p95 7.595ms, sequential/concurrent/cache HIT pass) плюс non-blocking cache-miss diagnostics. |
 | R013 | failure-visibility | validated | M041-4tw0w7/S03 | none | Validated by M041-4tw0w7/S03. Evidence: `benchmark-results/m041-s03-t07-observability-integration.txt` covers `/version`, `/info`, `/metrics`, and `/v1/healthcheck`; `m041-s03-t07-go-test.txt`, `m041-s03-t07-lint.txt`, and `m041-s03-t07-govulncheck.txt` pass mandatory Go gates. |
-| R014 | operability | active | M041-4tw0w7/S03 | none | Section 5.3 T-HDR-1..T-HDR-10 — все headers присутствуют; X-Request-Id echo работает; Retry-After присутствует на 503. |
-| R015 | failure-visibility | active | M041-4tw0w7/S03 | none | T-H-7: /health 200 с model_loaded:true, warmup_done:true; degraded scenario (model unloaded) → 503; POST /warmup возвращает 202 если не warm, 200 если warm. |
-| R016 | differentiator | active | M041-4tw0w7/S04 | none | Section 5.3 T-HDR-6/7: первый запрос MISS, повторный тот же input HIT с latency < 5ms; /metrics показывает fd_cache_hits_total counter; cache eviction работает на > 10000 уникальных inputs. |
+| R014 | operability | validated | M041-4tw0w7/S03 | none | S03 validated Server, X-Request-Id, X-Model-Id, X-Dimensions, Retry-After, and Connection headers. S04 validated `X-Cache: MISS` on first request and `X-Cache: HIT` on repeated input via `benchmark-results/fd-v2-perf-validation-m041-s04.md` and `api/fd_v2_cache_integration_test.go`; final verifier requires non-HIT count 0 for cache-hot cases. |
+| R015 | failure-visibility | validated | M041-4tw0w7/S03 | none | Validated by M041-4tw0w7/S03. Evidence: `benchmark-results/m041-s03-t03-deep-health.txt` covers deep `/health` status fields and `last_inference_at`; `m041-s03-t06-warmup.txt` covers GET/POST `/warmup`; `m041-s03-t07-observability-integration.txt` covers integration behavior. |
+| R016 | differentiator | validated | M041-4tw0w7/S04 | none | S04 implemented LRU cache with size/TTL env config, copy-on-read/write, eviction metrics, and EmbeddingCache adapter methods. Evidence: `api/cache/lru_test.go`, `api/fd_v2_cache_integration_test.go`, `benchmark-results/m041-s04-t03-cache-integration.txt`, and final `benchmark-results/fd-v2-perf-validation-m041-s04.md` showing repeated input `X-Cache: HIT` in 1.870ms and cache-hot latency targets passing. |
 | R017 | differentiator | active | M041-4tw0w7/S05 | none | T-H-5: encoding_format=base64 возвращает base64 string; T-H-6: priority=high принимается; user field принимается и логируется; невалидный encoding_format → 400 dimensions_invalid (или новый code). |
 | R018 | compliance/security | active | M041-4tw0w7/S05 | none | С FD_API_KEY=test: запрос без Authorization → 401 unauthorized; запрос с правильным Bearer → 200; OPTIONS preflight с правильным Origin → 200 с CORS headers. |
 | R019 | quality-attribute | active | M041-4tw0w7/S05 | none | T-E-4/T-E-5: /openapi.json 200 валидный JSON, /docs 200 HTML; rate limit: 101-й запрос за минуту → 429; ETag: повторный запрос с If-None-Match → 304; /v1/traces возвращает последние N запросов. |
@@ -288,7 +292,7 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Coverage Summary
 
-- Active requirements: 11
-- Mapped to slices: 11
-- Validated: 14 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R023, R024, R025)
+- Active requirements: 8
+- Mapped to slices: 8
+- Validated: 17 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R023, R024, R025)
 - Unmapped active requirements: 0

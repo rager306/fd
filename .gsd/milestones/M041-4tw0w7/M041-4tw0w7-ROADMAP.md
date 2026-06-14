@@ -25,7 +25,7 @@
 - [x] **S03: Observability surface endpoints headers and deep health** `risk:low` `depends:[S01,S02]`
   > After this: After this, /version, /info, /metrics, /v1/healthcheck, deep /health, /warmup, and response headers are implemented and tested; new exported observability APIs have godoc and pass M043 lint/test/govulncheck gates.
 
-- [ ] **S04: Performance baseline and LRU cache** `risk:medium` `depends:[S02,S03]`
+- [x] **S04: Performance baseline and LRU cache** `risk:medium` `depends:[S02,S03]`
   > After this: After this, cache/perf validation includes warm/cold baseline plus M043 gates; cache code must keep context propagation, gocyclo <=15 for production functions, and no new static-analysis suppressions without justification.
 
 - [ ] **S05: OpenAI v2 compat features OpenAPI schema and P2 enhancements** `risk:low` `depends:[S01]`

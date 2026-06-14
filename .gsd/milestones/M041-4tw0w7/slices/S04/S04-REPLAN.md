@@ -3,12 +3,12 @@
 **Milestone:** M041-4tw0w7
 **Slice:** S04
 **Blocker Task:** T04
-**Created:** 2026-06-14T07:33:20.247Z
+**Created:** 2026-06-14T07:41:16.441Z
 
 ## Blocker Description
 
-T04 confirmed real cache-miss inference against current fd + TEI CPU fails T-P latency targets in an isolated Redis namespace, while fd latency matches direct TEI backend latency.
+T04 found TEI CPU cache-miss latency cannot meet original real-inference T-P targets; user explicitly chose to rescope targets to cache-hot steady-state rather than pursue backend remediation.
 
 ## What Changed
 
-T05 is updated to remain pending until backend/runtime remediation or explicit requirement rescope. Cache-hot validation is insufficient for T05 completion because the user explicitly requested real inference integration tests.
+T05 is updated to validate D045 cache-hot steady-state semantics: verifier prewarms measured payloads through real inference, then latency cases require X-Cache HIT and target p95 thresholds. Cache-miss latency remains diagnostic only.

@@ -47,10 +47,10 @@ Cache слой между validation (S01) и model inference. Cache key = SHA25
   - Files: `api/embed/optimizations.go`, `api/embed/optimizations_test.go`, `api/embed/perf_test.go`
   - Verify: После optimization: повторный baseline показывает p95 latency в target. benchmark-results/fd-v2-perf-m041-s04.md содержит before/after numbers и какие optimization сработали.
 
-- [ ] **T05: Final perf validation after backend remediation** `est:1`
-  Run tools/verify_fd_v2_perf.sh against a current fd instance backed by real inference and an isolated Redis cache namespace. Passing cache-hot runs are insufficient. This task remains pending while the current TEI CPU backend misses T-P latency targets; complete only after backend/runtime remediation (for example ONNX/GPU/faster TEI runtime) or explicit requirement rescope.
-  - Files: `tools/verify_fd_v2_perf.sh`, `benchmark-results/fd-v2-perf-validation-m041-s04.md`
-  - Verify: FD_BASE_URL=http://localhost:8000 tools/verify_fd_v2_perf.sh exits 0 against current fd with isolated EMBEDDING_CACHE_VERSION and real inference. Artifact contains p50/p95/p99 for T-P cases, 100 sequential 0 errors, 4x8 concurrent <2s, and cache HIT <5ms.
+- [x] **T05: Validated S04 performance under the accepted D045 cache-hot steady-state contract, with real cache-miss diagnostics preserved.** `est:1`
+  Run tools/verify_fd_v2_perf.sh against a current fd instance backed by real inference. The verifier must prewarm each measured payload through real inference, then validate cache-hot T-P-1..T-P-5 latency/error targets with `X-Cache: HIT`. It must also include non-blocking cache-miss diagnostics so TEI CPU miss latency remains visible without blocking S04.
+  - Files: `tools/verify_fd_v2_perf.sh`, `docs/fd-v2.md`, `benchmark-results/fd-v2-perf-validation-m041-s04.md`
+  - Verify: FD_BASE_URL=http://localhost:8000 tools/verify_fd_v2_perf.sh exits 0 against current fd. Artifact contains p50/p95/p99 for cache-hot T-P cases, 100 sequential 0 errors, 4x8 concurrent <2s, cache HIT <5ms, and non-blocking cache-miss diagnostics.
 
 ## Files Likely Touched
 
@@ -64,4 +64,5 @@ Cache слой между validation (S01) и model inference. Cache key = SHA25
 - api/embed/optimizations_test.go
 - api/embed/perf_test.go
 - tools/verify_fd_v2_perf.sh
+- docs/fd-v2.md
 - benchmark-results/fd-v2-perf-validation-m041-s04.md

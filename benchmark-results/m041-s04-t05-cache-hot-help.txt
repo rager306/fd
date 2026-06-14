@@ -1,0 +1,14 @@
+Usage: FD_BASE_URL=http://localhost:8000 tools/verify_fd_v2_perf.sh
+
+Runs fd v2 cache-hot steady-state performance checks:
+- prewarm each measured payload through real inference
+- batch=1 cache HIT p95 < 50ms
+- batch=10 cache HIT p95 < 200ms
+- batch=32 cache HIT p95 < 1000ms
+- 100 sequential cache-hot requests: 0 errors
+- 4 concurrent callers x 8 cached inputs complete < 2s total
+- repeated identical input returns X-Cache: HIT with latency < 5ms
+
+The report also includes non-blocking cache-miss diagnostics for real TEI/ONNX
+inference latency. Writes markdown results to
+benchmark-results/fd-v2-perf-validation-m041-s04.md by default.
