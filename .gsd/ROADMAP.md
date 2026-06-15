@@ -50,4 +50,4 @@
 - ✅ **M043-dpr0cq: Static analysis quality hardening** (`depends:[—]`)
 - 🔄 **M044-9vahk2: Upgrade OpenAPI contract to OAS 3.2.0** (`depends:[M041-4tw0w7]`)
 - ✅ **M045-d0e5xq: Stabilize TEI startup** (`depends:[—]`)
-- 🔄 **M046-zqzcu6: Audit remediation waves** (`depends:[—]`)
+- ✅ **M046-zqzcu6: Audit remediation waves** (`depends:[—]`)
