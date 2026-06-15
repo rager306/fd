@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fd-api/lifecycle"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -63,6 +65,45 @@ func TestStartModelWarmupStoresError(t *testing.T) {
 	})
 	if state.IsReady() {
 		t.Fatal("state should not be ready after warmup failure")
+	}
+}
+
+func TestReportHTTPServerErrorIgnoresWrappedServerClosed(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	shutdownCh := make(chan os.Signal, 1)
+
+	reportHTTPServerError(logger, "127.0.0.1:0", func() error {
+		return fmt.Errorf("wrapped: %w", http.ErrServerClosed)
+	}, shutdownCh)
+
+	select {
+	case sig := <-shutdownCh:
+		t.Fatalf("unexpected shutdown signal for ErrServerClosed: %v", sig)
+	default:
+	}
+}
+
+func TestReportHTTPServerErrorSignalsFatalError(t *testing.T) {
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	shutdownCh := make(chan os.Signal, 1)
+	boom := errors.New("accept failed")
+
+	reportHTTPServerError(logger, "127.0.0.1:0", func() error { return boom }, shutdownCh)
+
+	select {
+	case sig := <-shutdownCh:
+		serverSig, ok := sig.(serverErrorSignal)
+		if !ok {
+			t.Fatalf("signal type = %T, want serverErrorSignal", sig)
+		}
+		if !errors.Is(serverSig.err, boom) {
+			t.Fatalf("signal error = %v, want %v", serverSig.err, boom)
+		}
+		if got := sig.String(); got != "server_error" {
+			t.Fatalf("signal string = %q, want server_error", got)
+		}
+	default:
+		t.Fatal("expected fatal listener error to trigger shutdown signal")
 	}
 }
 

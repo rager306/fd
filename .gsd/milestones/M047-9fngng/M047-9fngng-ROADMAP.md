@@ -17,7 +17,7 @@
 - [x] **S01: Contract cleanup baseline** `risk:medium` `depends:[]`
   > After this: Issue #6 small contract findings have red tests and fixes for env integer parsing and error code registry policy.
 
-- [ ] **S02: Graceful server error path** `risk:high` `depends:[S01]`
+- [x] **S02: Graceful server error path** `risk:high` `depends:[S01]`
   > After this: Fatal listener errors enter controlled shutdown handling instead of exiting inside the listener goroutine.
 
 - [ ] **S03: TEI retry and fast fail** `risk:high` `depends:[S01]`

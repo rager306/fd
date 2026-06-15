@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -118,6 +119,29 @@ func closeResource(name string, resource interface{ Close() error }, logger *slo
 	}
 	if err := resource.Close(); err != nil {
 		logger.Warn(name+" close failed", "error", err)
+	}
+}
+
+type serverErrorSignal struct {
+	err error
+}
+
+func (serverErrorSignal) Signal() {}
+
+func (serverErrorSignal) String() string { return "server_error" }
+
+func reportHTTPServerError(logger *slog.Logger, addr string, listen func() error, shutdownCh chan<- os.Signal) {
+	logger.Info("listening", "addr", addr)
+	if err := listen(); err != nil {
+		if errors.Is(err, http.ErrServerClosed) {
+			return
+		}
+		logger.Error("server error", "error", err)
+		select {
+		case shutdownCh <- serverErrorSignal{err: err}:
+		default:
+			logger.Error("server error shutdown signal dropped", "error", err)
+		}
 	}
 }
 
@@ -288,18 +312,12 @@ func main() {
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
-	go func() {
-		logger.Info("listening", "addr", addr)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	startModelWarmup(logger, lifecycleState, embeddingClient, defaultWarmupTimeout)
-
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
+
+	go reportHTTPServerError(logger, addr, srv.ListenAndServe, sigCh)
+
+	startModelWarmup(logger, lifecycleState, embeddingClient, defaultWarmupTimeout)
 
 	if err := lifecycle.AwaitSignalAndShutdown(
 		context.Background(),
