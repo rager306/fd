@@ -1,0 +1,130 @@
+{
+  "runId": "uat:M049-7dn2gp:S01:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M049-7dn2gp",
+  "sliceId": "S01",
+  "uatType": "artifact-driven",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-15T12:54:08.406Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": []
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Redis invalidation is namespace-scoped and does not call FlushDB.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "94ea4377-4e0a-4327-a167-76d5bcf0404c",
+          "note": "Verified Redis namespace-scoped flush source invariants.",
+          "tool": "gsd_uat_exec",
+          "executionId": "94ea4377-4e0a-4327-a167-76d5bcf0404c"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "Cache invalidation routes are registered after API key auth middleware.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "6d55b34d-006b-431c-8045-cb8e5f639981",
+          "note": "Verified route registration follows global auth middleware.",
+          "tool": "gsd_uat_exec",
+          "executionId": "6d55b34d-006b-431c-8045-cb8e5f639981"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "S01 artifact records implementation and test proof.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "8707655c-51b1-452e-9af3-1efd9ba08dda",
+          "note": "Verified S01 evidence artifact includes implementation/test proof.",
+          "tool": "gsd_uat_exec",
+          "executionId": "8707655c-51b1-452e-9af3-1efd9ba08dda"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S01 validates backend cache primitives and source artifacts, not a browser UI."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Runtime live cache proof is planned for S03 after all code changes are rebuilt into the container.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S01 implements AN-A cache invalidation source/test contract. Runtime container proof deferred to S03."
+}

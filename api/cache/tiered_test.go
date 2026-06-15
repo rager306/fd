@@ -18,6 +18,48 @@ func floatsToBytes(t *testing.T, emb []float32) []byte {
 	return buf.Bytes()
 }
 
+func TestTieredCacheDeleteRemovesLocalEntryWithoutRedis(t *testing.T) {
+	ctx := context.Background()
+	local := NewLocalCache(100, time.Minute)
+	defer func() { require.NoError(t, local.Close()) }()
+	tc := NewTieredCacheWithLogger(local, nil, time.Minute, newDiscardLogger())
+	vec := make([]float32, 1024)
+	vec[0] = 42
+	data, err := marshalEmbedding(vec, 1024)
+	require.NoError(t, err)
+	local.Set(ctx, localCacheKey("hello", 1024), data, time.Minute)
+
+	require.NoError(t, tc.Delete(ctx, "hello", 1024))
+	if _, ok := local.Get(ctx, localCacheKey("hello", 1024)); ok {
+		t.Fatal("local entry survived tiered delete")
+	}
+}
+
+func TestTieredCacheFlushRemovesLocalEntriesWithoutRedis(t *testing.T) {
+	ctx := context.Background()
+	local := NewLocalCache(100, time.Minute)
+	defer func() { require.NoError(t, local.Close()) }()
+	tc := NewTieredCacheWithLogger(local, nil, time.Minute, newDiscardLogger())
+	local.Set(ctx, localCacheKey("a", 1024), []byte{1}, time.Minute)
+	local.Set(ctx, localCacheKey("b", 1024), []byte{2}, time.Minute)
+
+	deleted, err := tc.Flush(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), deleted)
+	assert.Equal(t, 0, local.currentSize())
+}
+
+func TestTieredCacheLocalSizeReportsLocalEntries(t *testing.T) {
+	ctx := context.Background()
+	local := NewLocalCache(100, time.Minute)
+	defer func() { require.NoError(t, local.Close()) }()
+	tc := NewTieredCacheWithLogger(local, nil, time.Minute, newDiscardLogger())
+	local.Set(ctx, localCacheKey("a", 1024), []byte{1}, time.Minute)
+	if got := tc.LocalSize(); got != 1 {
+		t.Fatalf("LocalSize = %d, want 1", got)
+	}
+}
+
 func TestTieredCacheGetManyIfPresentUsesLocalHitsByIndex(t *testing.T) {
 	ctx := context.Background()
 	local := NewLocalCache(100, time.Minute)

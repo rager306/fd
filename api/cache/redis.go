@@ -185,6 +185,10 @@ func (c *RedisCache) key(text string, dim int) string {
 	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
+func (c *RedisCache) namespacePattern() string {
+	return c.prefix + c.namespace + ":*"
+}
+
 // marshalEmbedding encodes [dim:uint16][float32*dim] — 2+4*dim bytes.
 // Replaces JSON (~8KB for 1024d → 4098 bytes).
 func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
@@ -318,6 +322,48 @@ func (c *RedisCache) Set(ctx context.Context, text string, embedding []float32, 
 // SetBytes stores pre-marshaled binary embedding.
 func (c *RedisCache) SetBytes(ctx context.Context, text string, data []byte, dim int) error {
 	return c.client.Set(ctx, c.key(text, dim), data, c.expiration()).Err()
+}
+
+// Delete removes the cached embedding for (text, dim). No-op if absent.
+func (c *RedisCache) Delete(ctx context.Context, text string, dim int) error {
+	return c.client.Del(ctx, c.key(text, dim)).Err()
+}
+
+// FlushNamespace removes only keys in this RedisCache namespace. It never calls
+// FLUSHDB, so unrelated Redis data and other embedding namespaces are preserved.
+func (c *RedisCache) FlushNamespace(ctx context.Context) (int64, error) {
+	iter := c.client.Scan(ctx, 0, c.namespacePattern(), 500).Iterator()
+	var keys []string
+	var deleted int64
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+		if len(keys) >= 500 {
+			n, err := c.deleteKeys(ctx, keys)
+			deleted += n
+			if err != nil {
+				return deleted, err
+			}
+			keys = keys[:0]
+		}
+	}
+	if err := iter.Err(); err != nil {
+		return deleted, err
+	}
+	if len(keys) > 0 {
+		n, err := c.deleteKeys(ctx, keys)
+		deleted += n
+		if err != nil {
+			return deleted, err
+		}
+	}
+	return deleted, nil
+}
+
+func (c *RedisCache) deleteKeys(ctx context.Context, keys []string) (int64, error) {
+	if len(keys) == 0 {
+		return 0, nil
+	}
+	return c.client.Del(ctx, keys...).Result()
 }
 
 // Ping checks Redis liveness. Used by fd's startup preflight (after the

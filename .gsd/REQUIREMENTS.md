@@ -33,6 +33,34 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
+### R040 — Expose authenticated cache invalidation primitives so a solo operator/agent can purge stale embedding cache entries or flush the embedding cache without restarting fd or reaching into Redis manually.
+- Class: core-capability
+- Status: active
+- Description: Expose authenticated cache invalidation primitives so a solo operator/agent can purge stale embedding cache entries or flush the embedding cache without restarting fd or reaching into Redis manually.
+- Why it matters: Issue #8 AN-A identifies cache invalidation as the highest-leverage agent-native action parity gap; stale vectors can persist until TTL and poison all callers.
+- Source: GitHub issue #8 / M049
+- Primary owning slice: M049-7dn2gp/S01
+- Validation: M049 S01 implemented cache invalidation primitives and HTTP routes. Focused tests passed (`go test ./cache ./handlers`, 127 tests), full tests passed (`go test ./...`, 293 tests), and static proof `3670b28f-8bce-433e-8306-987102db98cb` verified namespace-scoped invalidation and route registration. Runtime live container proof remains for S03 before marking fully validated.
+- Notes: Advanced by S01; keep active until rebuilt-container HIT->flush->MISS proof passes.
+
+### R041 — Expose last lifecycle error and dependency reachability/latency in health output, plus capacity/cache occupancy signals in health/metrics.
+- Class: failure-visibility
+- Status: active
+- Description: Expose last lifecycle error and dependency reachability/latency in health output, plus capacity/cache occupancy signals in health/metrics.
+- Why it matters: Issue #8 AN-B/AN-C require agent clients to diagnose warmup/runtime dependency failures and understand capacity/cache pressure without shell access.
+- Source: GitHub issue #8 / M049
+- Primary owning slice: M049-7dn2gp/S02
+- Validation: Health/metrics tests prove last_error, dependencies, in_flight_capacity, in-flight gauge, and cache occupancy gauges; live container health/metrics smoke confirms fields are observable.
+
+### R042 — Keep trace hardening and broad config/options extraction out of M049 unless required by AN-A or AN-B/C implementation; optimize for a solo deployment and avoid premature multi-tenant/admin abstraction.
+- Class: constraint
+- Status: active
+- Description: Keep trace hardening and broad config/options extraction out of M049 unless required by AN-A or AN-B/C implementation; optimize for a solo deployment and avoid premature multi-tenant/admin abstraction.
+- Why it matters: User explicitly asked not to complicate AN-D and to decide AN-E/F optimally for solo use. The current deployment is single-tenant, so adding admin-token/multi-client abstractions now would add complexity without immediate operational value.
+- Source: User direction / M049
+- Primary owning slice: M049-7dn2gp
+- Validation: Milestone summary records AN-D deferred and AN-E/F scoped to minimal config seams needed for implemented work only.
+
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -440,10 +468,13 @@ This file is the explicit capability and coverage contract for the project.
 | R037 | quality-attribute | validated | none | none | M048 S01: removed dead LRUCache source/tests, replaced the only LRU integration-test scaffold with a LocalCache-backed adapter, unified duplicate cache short hash helpers into `shortHash`, and replaced duplicated active env integer parsers with `internal/envutil`. Evidence: `benchmark-results/m048-s01-cache-cleanup.md`, `go test ./cache` passed with 36 tests, `go test ./...` passed with 282 tests, static proof `1453b735-d079-4ce7-9282-08805c13a318`. |
 | R038 | quality-attribute | validated | none | none | M048 S02: removed inactive ONNX-only RuntimeHealth fields, unified duplicate embed/warmup interfaces behind `embed.Embedder`, removed lifecycle default singleton, and updated main to construct lifecycle state explicitly. Evidence: `benchmark-results/m048-s02-runtime-contract-cleanup.md`, focused tests passed with 101 tests, full `go test ./...` passed with 280 tests, static proof `d75568af-277e-40e2-a28b-e6ee373d28dd`. |
 | R039 | quality-attribute | validated | none | none | M048 S03: validation now emits a well-formed message for non-string array input when `json.UnmarshalTypeError.Field` is empty, and `openapi.m()` panics on non-string keys instead of silently dropping schema fields. Evidence: `benchmark-results/m048-s03-api-polish-closure.md`, focused tests passed with 53 tests, full `go test ./...` passed with 281 tests, lint 0 issues, govulncheck 0 reachable vulnerabilities, static proof `50f7f673-a2db-4367-bb1b-aad08226a683`. |
+| R040 | core-capability | active | M049-7dn2gp/S01 | none | M049 S01 implemented cache invalidation primitives and HTTP routes. Focused tests passed (`go test ./cache ./handlers`, 127 tests), full tests passed (`go test ./...`, 293 tests), and static proof `3670b28f-8bce-433e-8306-987102db98cb` verified namespace-scoped invalidation and route registration. Runtime live container proof remains for S03 before marking fully validated. |
+| R041 | failure-visibility | active | M049-7dn2gp/S02 | none | Health/metrics tests prove last_error, dependencies, in_flight_capacity, in-flight gauge, and cache occupancy gauges; live container health/metrics smoke confirms fields are observable. |
+| R042 | constraint | active | M049-7dn2gp | none | Milestone summary records AN-D deferred and AN-E/F scoped to minimal config seams needed for implemented work only. |
 
 ## Coverage Summary
 
-- Active requirements: 3
-- Mapped to slices: 2
+- Active requirements: 6
+- Mapped to slices: 4
 - Validated: 34 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039)
 - Unmapped active requirements: 1

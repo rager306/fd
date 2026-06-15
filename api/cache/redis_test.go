@@ -58,6 +58,21 @@ func TestHashText_Deterministic(t *testing.T) {
 	}
 }
 
+func TestRedisCacheNamespacePatternIsScoped(t *testing.T) {
+	c := &RedisCache{prefix: "embed:cache:", namespace: "v2:mabc"}
+	if got, want := c.namespacePattern(), "embed:cache:v2:mabc:*"; got != want {
+		t.Fatalf("namespacePattern = %q, want %q", got, want)
+	}
+}
+
+func TestRedisCacheDeleteUsesDimensionedKey(t *testing.T) {
+	c := &RedisCache{prefix: "embed:cache:", namespace: "v2"}
+	key := c.key("hello", 512)
+	if !strings.HasPrefix(key, "embed:cache:v2:") || !strings.HasSuffix(key, ":d512") {
+		t.Fatalf("key = %q, want namespace and dimension scoped key", key)
+	}
+}
+
 func TestRedisCacheDefaultOptionsPreserveLegacyKey(t *testing.T) {
 	opts := DefaultRedisCacheOptions("embed:cache:", 50)
 	c, err := NewRedisCacheWithOptions("127.0.0.1:0", opts)

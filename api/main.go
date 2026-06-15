@@ -317,6 +317,7 @@ func main() {
 	embedHandler := handlers.NewEmbeddingsHandler(embeddingClient, tiered, modelID, logger)
 	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
 	v1BatchHandler := handlers.NewV1BatchHandler(embeddingClient, tiered, logger)
+	cacheHandler := handlers.NewCacheHandler(tiered)
 
 	runtimeHealth := runtimeConfig.Health(modelID, redisOptions.Namespace.String())
 	healthHandler := handlers.NewHealthHandlerWithState(runtimeHealth, lifecycleState)
@@ -331,6 +332,8 @@ func main() {
 	r.GET("/v1/traces", traces.Handler())
 	r.GET("/warmup", warmupHandler.Status)
 	r.POST("/warmup", warmupHandler.Trigger)
+	r.POST("/v1/cache/flush", cacheHandler.Flush)
+	r.POST("/v1/cache/delete", cacheHandler.Delete)
 	r.GET("/health", healthHandler)
 	r.GET("/v1/healthcheck", healthHandler)
 	// /v1/embeddings: validation middleware runs BEFORE the handler so

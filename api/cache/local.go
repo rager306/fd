@@ -94,6 +94,18 @@ func (c *LocalCache) Delete(_ context.Context, key string) {
 	c.mu.Unlock()
 }
 
+// Flush removes all entries from the local cache.
+func (c *LocalCache) Flush(_ context.Context) {
+	c.mu.Lock()
+	c.data = make(map[string]l1Entry)
+	c.mu.Unlock()
+}
+
+// Size returns the current number of local cache entries.
+func (c *LocalCache) Size() int {
+	return c.currentSize()
+}
+
 func (c *LocalCache) enforceMaxSizeLocked(protectedKey string) {
 	if c.maxSize <= 0 {
 		return

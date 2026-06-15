@@ -109,6 +109,36 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 	return r.([]float32), nil
 }
 
+// Delete removes the cached embedding for (key, dim) from both cache tiers.
+func (tc *TieredCache) Delete(ctx context.Context, key string, dim int) error {
+	if tc.local != nil {
+		tc.local.Delete(ctx, localCacheKey(key, dim))
+	}
+	if tc.redis == nil {
+		return nil
+	}
+	return tc.redis.Delete(ctx, key, dim)
+}
+
+// Flush removes all local entries and all Redis entries in this cache namespace.
+func (tc *TieredCache) Flush(ctx context.Context) (int64, error) {
+	if tc.local != nil {
+		tc.local.Flush(ctx)
+	}
+	if tc.redis == nil {
+		return 0, nil
+	}
+	return tc.redis.FlushNamespace(ctx)
+}
+
+// LocalSize returns the number of current L1 entries.
+func (tc *TieredCache) LocalSize() int {
+	if tc.local == nil {
+		return 0
+	}
+	return tc.local.Size()
+}
+
 // Ping checks L2 (Redis) connectivity.
 func (tc *TieredCache) Ping(ctx context.Context) error {
 	return tc.redis.Ping(ctx)

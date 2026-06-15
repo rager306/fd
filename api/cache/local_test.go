@@ -17,6 +17,43 @@ func TestLocalCache_CloseIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestLocalCacheFlushRemovesAllEntries(t *testing.T) {
+	c := NewLocalCache(1000, time.Minute)
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Fatalf("Close returned error: %v", err)
+		}
+	}()
+	ctx := context.Background()
+	c.Set(ctx, "a", []byte{1}, time.Minute)
+	c.Set(ctx, "b", []byte{2}, time.Minute)
+	if c.currentSize() != 2 {
+		t.Fatalf("size before flush = %d, want 2", c.currentSize())
+	}
+	c.Flush(ctx)
+	if c.currentSize() != 0 {
+		t.Fatalf("size after flush = %d, want 0", c.currentSize())
+	}
+	if _, ok := c.Get(ctx, "a"); ok {
+		t.Fatal("key a survived flush")
+	}
+}
+
+func TestLocalCacheSizeReportsCurrentEntries(t *testing.T) {
+	c := NewLocalCache(1000, time.Minute)
+	defer func() {
+		if err := c.Close(); err != nil {
+			t.Fatalf("Close returned error: %v", err)
+		}
+	}()
+	ctx := context.Background()
+	c.Set(ctx, "a", []byte{1}, time.Minute)
+	c.Set(ctx, "b", []byte{2}, time.Minute)
+	if got := c.Size(); got != 2 {
+		t.Fatalf("Size = %d, want 2", got)
+	}
+}
+
 func TestLocalCache_ConcurrentOverwriteKeepsSingleEntry(t *testing.T) {
 	c := NewLocalCache(1000, time.Minute)
 	defer func() {
