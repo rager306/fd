@@ -1,3 +1,4 @@
+// Package envutil centralizes safe environment variable parsing helpers.
 package envutil
 
 import (

@@ -33,14 +33,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
-### R039 — Make low-level API contract helpers fail clearly for bad inputs instead of producing malformed messages or silently dropping schema fields.
-- Class: quality-attribute
-- Status: active
-- Description: Make low-level API contract helpers fail clearly for bad inputs instead of producing malformed messages or silently dropping schema fields.
-- Why it matters: Issue #7 findings #24 and #31 are small but user-facing maintainability gaps in validation errors and OpenAPI generation.
-- Source: GitHub issue #7 / M048
-- Validation: Tests prove array-element validation errors are well-formed and OpenAPI helper misuse fails loudly.
-
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -372,6 +364,15 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M048 S02: removed inactive ONNX-only RuntimeHealth fields, unified duplicate embed/warmup interfaces behind `embed.Embedder`, removed lifecycle default singleton, and updated main to construct lifecycle state explicitly. Evidence: `benchmark-results/m048-s02-runtime-contract-cleanup.md`, focused tests passed with 101 tests, full `go test ./...` passed with 280 tests, static proof `d75568af-277e-40e2-a28b-e6ee373d28dd`.
 - Notes: Validated for issue #7 findings #26, #29, and #30.
 
+### R039 — Make low-level API contract helpers fail clearly for bad inputs instead of producing malformed messages or silently dropping schema fields.
+- Class: quality-attribute
+- Status: validated
+- Description: Make low-level API contract helpers fail clearly for bad inputs instead of producing malformed messages or silently dropping schema fields.
+- Why it matters: Issue #7 findings #24 and #31 are small but user-facing maintainability gaps in validation errors and OpenAPI generation.
+- Source: GitHub issue #7 / M048
+- Validation: M048 S03: validation now emits a well-formed message for non-string array input when `json.UnmarshalTypeError.Field` is empty, and `openapi.m()` panics on non-string keys instead of silently dropping schema fields. Evidence: `benchmark-results/m048-s03-api-polish-closure.md`, focused tests passed with 53 tests, full `go test ./...` passed with 281 tests, lint 0 issues, govulncheck 0 reachable vulnerabilities, static proof `50f7f673-a2db-4367-bb1b-aad08226a683`.
+- Notes: Validated for issue #7 findings #24 and #31.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -438,11 +439,11 @@ This file is the explicit capability and coverage contract for the project.
 | R036 | quality-attribute | validated | none | none | M047 S01: `getEnvInt` uses `strconv.Atoi` and falls back on invalid/overflowing/negative values; un-emitted `dimensions_required`, `dimensions_mismatch`, and `request_timeout` registry rows were removed; `TestAllErrorCodesHaveNonTestEmitters` enforces future registry emitter coverage. Evidence: `benchmark-results/m047-s01-contract-cleanup.md`, `go test ./...` passed with 283 tests, static proof `60cf4abe-6f44-4527-8b7a-1017cbd03e71`. |
 | R037 | quality-attribute | validated | none | none | M048 S01: removed dead LRUCache source/tests, replaced the only LRU integration-test scaffold with a LocalCache-backed adapter, unified duplicate cache short hash helpers into `shortHash`, and replaced duplicated active env integer parsers with `internal/envutil`. Evidence: `benchmark-results/m048-s01-cache-cleanup.md`, `go test ./cache` passed with 36 tests, `go test ./...` passed with 282 tests, static proof `1453b735-d079-4ce7-9282-08805c13a318`. |
 | R038 | quality-attribute | validated | none | none | M048 S02: removed inactive ONNX-only RuntimeHealth fields, unified duplicate embed/warmup interfaces behind `embed.Embedder`, removed lifecycle default singleton, and updated main to construct lifecycle state explicitly. Evidence: `benchmark-results/m048-s02-runtime-contract-cleanup.md`, focused tests passed with 101 tests, full `go test ./...` passed with 280 tests, static proof `d75568af-277e-40e2-a28b-e6ee373d28dd`. |
-| R039 | quality-attribute | active | none | none | Tests prove array-element validation errors are well-formed and OpenAPI helper misuse fails loudly. |
+| R039 | quality-attribute | validated | none | none | M048 S03: validation now emits a well-formed message for non-string array input when `json.UnmarshalTypeError.Field` is empty, and `openapi.m()` panics on non-string keys instead of silently dropping schema fields. Evidence: `benchmark-results/m048-s03-api-polish-closure.md`, focused tests passed with 53 tests, full `go test ./...` passed with 281 tests, lint 0 issues, govulncheck 0 reachable vulnerabilities, static proof `50f7f673-a2db-4367-bb1b-aad08226a683`. |
 
 ## Coverage Summary
 
-- Active requirements: 4
+- Active requirements: 3
 - Mapped to slices: 2
-- Validated: 33 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038)
-- Unmapped active requirements: 2
+- Validated: 34 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039)
+- Unmapped active requirements: 1

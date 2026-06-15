@@ -137,8 +137,11 @@ func handleBindError(c *gin.Context, err error) {
 	// Go internals like "cannot unmarshal array into Go value".
 	var typeErr *json.UnmarshalTypeError
 	if errors.As(err, &typeErr) {
-		handlers.WriteError(c, handlers.CodeInputRequired, "input",
-			fmt.Sprintf("input[%s] must be string, got %s", typeErr.Field, typeErr.Value))
+		message := fmt.Sprintf("input[%s] must be string, got %s", typeErr.Field, typeErr.Value)
+		if typeErr.Field == "" {
+			message = fmt.Sprintf("input must be an array of strings, got %s", typeErr.Value)
+		}
+		handlers.WriteError(c, handlers.CodeInputRequired, "input", message)
 		return
 	}
 	handlers.WriteError(c, handlers.CodeInvalidJSON, "", "invalid JSON: "+err.Error())

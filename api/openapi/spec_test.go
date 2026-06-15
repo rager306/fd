@@ -5,6 +5,15 @@ import (
 	"testing"
 )
 
+func TestMapHelperPanicsOnNonStringKey(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("m accepted non-string key without panic")
+		}
+	}()
+	_ = m(123, "value")
+}
+
 func TestSpecIsOpenAPI31JSONWithExpectedPaths(t *testing.T) {
 	spec := Spec()
 	if got := spec["openapi"]; got != "3.1.0" {

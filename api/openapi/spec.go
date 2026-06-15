@@ -139,7 +139,7 @@ func m(pairs ...any) map[string]any {
 	for i := 0; i+1 < len(pairs); i += 2 {
 		key, ok := pairs[i].(string)
 		if !ok {
-			continue
+			panic("openapi m key must be string")
 		}
 		out[key] = pairs[i+1]
 	}

@@ -1,0 +1,160 @@
+{
+  "runId": "uat:M048-l4sctg:S03:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M048-l4sctg",
+  "sliceId": "S03",
+  "uatType": "artifact-driven",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-15T11:33:07.389Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": []
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Validation message handles empty UnmarshalTypeError.Field cleanly.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "1bcf0284-7454-4bbd-b74f-002923420418",
+          "note": "Verified clean validation message branch exists.",
+          "tool": "gsd_uat_exec",
+          "executionId": "1bcf0284-7454-4bbd-b74f-002923420418"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "openapi.m panics on non-string key instead of continuing.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "f520b4b1-cb18-401d-b551-ec0c15ad0caf",
+          "note": "Verified fail-loud panic and no continue branch in helper.",
+          "tool": "gsd_uat_exec",
+          "executionId": "f520b4b1-cb18-401d-b551-ec0c15ad0caf"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "Closure matrix covers all issue #7 findings as fixed.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "e620ec62-a3ef-4a95-a1d9-1402bfa1816b",
+          "note": "Verified closure rows for all eight issue #7 findings.",
+          "tool": "gsd_uat_exec",
+          "executionId": "e620ec62-a3ef-4a95-a1d9-1402bfa1816b"
+        }
+      ]
+    },
+    {
+      "id": "UAT-04",
+      "description": "R037-R039 are present and validated.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "7f9ae1b2-2d4e-48d0-8142-4b4f82b2c79f",
+          "note": "Verified M048 requirements validated in GSD artifacts.",
+          "tool": "gsd_uat_exec",
+          "executionId": "7f9ae1b2-2d4e-48d0-8142-4b4f82b2c79f"
+        }
+      ]
+    },
+    {
+      "id": "UAT-05",
+      "description": "Final gate evidence is recorded in S03 artifact.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "2cfdef9e-4ed9-4b4a-ab42-5291254fa4ac",
+          "note": "Verified final test/lint/vuln evidence is present.",
+          "tool": "gsd_uat_exec",
+          "executionId": "2cfdef9e-4ed9-4b4a-ab42-5291254fa4ac"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S03 validates backend API contract artifacts, not browser UI."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Artifact-driven UAT is sufficient for backend cleanup closure.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S03 validates issue #7 findings #24/#31 and full M048 closure."
+}

@@ -222,13 +222,20 @@ func TestValidationInvalidJSONNonString(t *testing.T) {
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("status = %d, want 400", w.Code)
 	}
+	var resp handlers.ErrorResponse
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal envelope: %v; body=%s", err, w.Body.String())
+	}
+	if resp.Error.Message != "input must be an array of strings, got array" {
+		t.Fatalf("message = %q, want clean array element message", resp.Error.Message)
+	}
+	if strings.Contains(resp.Error.Message, "input[") {
+		t.Fatalf("message should not contain malformed input[ prefix: %q", resp.Error.Message)
+	}
+
 	// Body must NOT contain the leaky "json: cannot unmarshal" string.
 	if strings.Contains(w.Body.String(), "json: cannot unmarshal") {
 		t.Errorf("body leaks Go internals: %s", w.Body.String())
-	}
-	var resp handlers.ErrorResponse
-	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
-		t.Errorf("body is not valid OpenAI envelope: %s; err=%v", w.Body.String(), err)
 	}
 }
 

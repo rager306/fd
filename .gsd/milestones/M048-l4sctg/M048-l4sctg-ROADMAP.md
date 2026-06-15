@@ -19,7 +19,7 @@
 - [x] **S02: Runtime contract simplification** `risk:medium` `depends:[S01]`
   > After this: Health and lifecycle contracts expose only active TEI runtime surfaces and one embedding interface contract.
 
-- [ ] **S03: API polish and closure** `risk:medium` `depends:[S01,S02]`
+- [x] **S03: API polish and closure** `risk:medium` `depends:[S01,S02]`
   > After this: Validation messages and OpenAPI helper failures are clear, then issue #7 closes with final gates and closure matrix.
 
 ## Boundary Map
