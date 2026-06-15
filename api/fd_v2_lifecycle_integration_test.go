@@ -53,6 +53,16 @@ func (c *lifecycleTestCache) Set(_ context.Context, key string, _ int, emb []flo
 	c.store[key] = copyEmb
 }
 
+func (c *lifecycleTestCache) GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32 {
+	hits := make(map[int][]float32, len(keys))
+	for i, key := range keys {
+		if emb, ok := c.GetIfPresent(ctx, key, dim); ok {
+			hits[i] = emb
+		}
+	}
+	return hits
+}
+
 func (c *lifecycleTestCache) GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
 	if emb, ok := c.GetIfPresent(ctx, key, dim); ok {
 		return emb, nil

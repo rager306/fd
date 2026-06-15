@@ -132,21 +132,59 @@ func (tc *TieredCache) Close() error {
 // results in zero TEI traffic. Returns (vec, true) on hit, (nil, false)
 // on miss.
 func (tc *TieredCache) GetIfPresent(ctx context.Context, key string, dim int) ([]float32, bool) {
-	localKey := localCacheKey(key, dim)
-	data, ok := tc.local.Get(ctx, localKey)
-	if !ok {
-		// L2 fallback (without backfilling L1)
-		emb, lok, err := tc.redis.Get(ctx, key, dim)
-		if err != nil || !lok {
-			return nil, false
+	hits := tc.GetManyIfPresent(ctx, []string{key}, dim)
+	emb, ok := hits[0]
+	return emb, ok
+}
+
+// GetManyIfPresent returns cached embeddings for keys without triggering a
+// model load. L1 is checked first for each key; L2 misses are fetched with a
+// single Redis MGET and backfilled into L1. Hits are keyed by input index so
+// callers can preserve duplicate text positions and response order.
+func (tc *TieredCache) GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32 {
+	hits := make(map[int][]float32, len(keys))
+	missIndexes := make([]int, 0, len(keys))
+	missKeys := make([]string, 0, len(keys))
+
+	for i, key := range keys {
+		localKey := localCacheKey(key, dim)
+		data, ok := tc.local.Get(ctx, localKey)
+		if !ok {
+			missIndexes = append(missIndexes, i)
+			missKeys = append(missKeys, key)
+			continue
 		}
-		return emb[:dim], true
+		emb, d := unmarshalEmbedding(data)
+		if d != dim {
+			missIndexes = append(missIndexes, i)
+			missKeys = append(missKeys, key)
+			continue
+		}
+		hits[i] = emb[:dim]
 	}
-	emb, d := unmarshalEmbedding(data)
-	if d != dim {
-		return nil, false
+	if len(missKeys) == 0 || tc.redis == nil {
+		return hits
 	}
-	return emb[:dim], true
+
+	redisHits, err := tc.redis.GetMany(ctx, missKeys, dim)
+	if err != nil {
+		tc.logger.Warn("cache l2 mget failed", "event", "cache_l2_mget_failed", "dim", dim, "miss_count", len(missKeys), "error", err)
+		return hits
+	}
+	for missOffset, emb := range redisHits {
+		if len(emb) < dim {
+			continue
+		}
+		originalIndex := missIndexes[missOffset]
+		key := keys[originalIndex]
+		localKey := localCacheKey(key, dim)
+		data, err := marshalEmbedding(emb[:dim], dim)
+		if err == nil {
+			tc.local.Set(ctx, localKey, data, tc.localTTL)
+		}
+		hits[originalIndex] = emb[:dim]
+	}
+	return hits
 }
 
 // Set stores an embedding in both L1 and L2 caches. Used by the

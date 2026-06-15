@@ -300,6 +300,16 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Validated by M046-zqzcu6/S05. Evidence: `benchmark-results/m046-s05-localcache-correctness.md`; targeted LocalCache lifecycle/concurrency tests pass; `go test -race ./cache -run TestLocalCache` passes; full `go test ./...` passes with 281 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; static proof confirms no `sync.Map` or separate size counter and API shutdown closes LocalCache.
 - Notes: S05 closes issue #3 P1 #10. LocalCache now has a single lock-owned map, derived size, idempotent Close, and shutdown integration.
 
+### R032 — Embedding cache peeks for `/v1/embeddings` must batch L2 lookups per bounded chunk rather than issuing per-input Redis RTTs.
+- Class: quality-attribute
+- Status: validated
+- Description: Embedding cache peeks for `/v1/embeddings` must batch L2 lookups per bounded chunk rather than issuing per-input Redis RTTs.
+- Why it matters: Sequential Redis GETs amplify latency for cache-hit batches and were issue #3 P1 #6.
+- Source: M046-zqzcu6/S06
+- Primary owning slice: M046-zqzcu6/S06
+- Validation: Validated by S06 batched cache peek implementation: `/v1/embeddings` calls `GetManyIfPresent` once per bounded chunk, `TieredCache` uses Redis MGET for L2 misses, handler/cache tests pass, and static proof `43c16c32-c290-499a-a42a-b8602a0ce6ee` confirms the code path.
+- Notes: Closes issue #3 P1 #6.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -359,10 +369,11 @@ This file is the explicit capability and coverage contract for the project.
 | R029 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S02 and S03. S02 proved body, rate-limit, lifecycle, and input guardrails before backend work. S03 proved batch endpoints now batch cache misses into bounded TEI calls, preserve response ordering, backfill cache, and retain valid runtime behavior. |
 | R030 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S04. Evidence: `benchmark-results/m046-s04-exposure-posture.md`; targeted auth/rate-limit/proxy tests pass; `go test ./...` passes with 279 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verifies probes public, `/v1/embeddings` protected without `FD_API_KEY`, `/metrics` protected, and OpenAPI public. |
 | R031 | quality-attribute | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S05. Evidence: `benchmark-results/m046-s05-localcache-correctness.md`; targeted LocalCache lifecycle/concurrency tests pass; `go test -race ./cache -run TestLocalCache` passes; full `go test ./...` passes with 281 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; static proof confirms no `sync.Map` or separate size counter and API shutdown closes LocalCache. |
+| R032 | quality-attribute | validated | M046-zqzcu6/S06 | none | Validated by S06 batched cache peek implementation: `/v1/embeddings` calls `GetManyIfPresent` once per bounded chunk, `TieredCache` uses Redis MGET for L2 misses, handler/cache tests pass, and static proof `43c16c32-c290-499a-a42a-b8602a0ce6ee` confirms the code path. |
 
 ## Coverage Summary
 
 - Active requirements: 3
 - Mapped to slices: 2
-- Validated: 26 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031)
+- Validated: 27 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032)
 - Unmapped active requirements: 1

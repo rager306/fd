@@ -264,6 +264,50 @@ func (c *RedisCache) Get(ctx context.Context, text string, dim int) (embedding [
 	return emb, true, nil
 }
 
+// GetMany retrieves cached embeddings for texts using one Redis MGET call.
+// Returned hits are keyed by the input index. Missing keys, malformed values,
+// and dimension mismatches are omitted from the result map.
+func (c *RedisCache) GetMany(ctx context.Context, texts []string, dim int) (map[int][]float32, error) {
+	if len(texts) == 0 {
+		return map[int][]float32{}, nil
+	}
+	keys := make([]string, len(texts))
+	for i, text := range texts {
+		keys[i] = c.key(text, dim)
+	}
+	values, err := c.client.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	hits := make(map[int][]float32, len(values))
+	for i, raw := range values {
+		data, ok := redisBulkBytes(raw)
+		if !ok {
+			continue
+		}
+		emb, gotDim := unmarshalEmbedding(data)
+		if gotDim != dim {
+			continue
+		}
+		hits[i] = emb
+	}
+	return hits, nil
+}
+
+func redisBulkBytes(raw any) ([]byte, bool) {
+	switch v := raw.(type) {
+	case nil:
+		return nil, false
+	case string:
+		return []byte(v), true
+	case []byte:
+		return v, true
+	default:
+		return nil, false
+	}
+}
+
 // Set stores the embedding vector for (text, dim). If no-expire is
 // configured the value is written without TTL; otherwise the configured
 // TTL is applied. The embedding is encoded via marshalEmbedding before

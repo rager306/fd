@@ -53,7 +53,7 @@ Corrective direction:
 | 3 | S03 Batch backend work shaping | P1 #4, P1 #5 | DONE: `benchmark-results/m046-s03-batch-backend-chunking.md` proves `/embeddings/batch` and `/v1/batch` now batch cache misses into bounded TEI calls and preserve response order/cache hits. P1 #6 remains for later triage because it concerns `/v1/embeddings` Redis peek sequencing, not batch endpoint N+1. |
 | 4 | S04 Exposure posture policy | P0 #1, P1 #7, P1 #8 | DONE: `benchmark-results/m046-s04-exposure-posture.md` proves protected endpoints fail closed without `FD_API_KEY`, `/metrics` is protected, Gin does not trust forwarded headers by default, and rate limiter state is bounded/pruned. |
 | 5 | S05 LocalCache correctness | P1 #10 | DONE: `benchmark-results/m046-s05-localcache-correctness.md` proves LocalCache now uses one lock-owned map with derived size, idempotent `Close`, API shutdown integration, and race-enabled LocalCache tests. |
-| 6 | S06 Audit closure | Remaining P1 plus P2/P3 triage | Closure matrix and future requirements/non-goals |
+| 6 | S06 Audit closure | Remaining P1 plus P2/P3 triage | DONE: `benchmark-results/m046-s06-audit-closure.md` fixes residual P1 #6 and #9, records all 32 issue #3 findings, and identifies P2/P3 follow-up candidates. |
 
 ## S02 Starting Checklist
 

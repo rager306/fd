@@ -32,6 +32,7 @@ type Embedder interface {
 // use GetIfPresent. GetOrLoad remains for tests/back-compat.
 type EmbeddingCache interface {
 	GetIfPresent(ctx context.Context, key string, dim int) ([]float32, bool)
+	GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32
 	Set(ctx context.Context, key string, dim int, emb []float32)
 	GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error)
 }
@@ -212,8 +213,9 @@ func (h *EmbeddingsHandler) fillEmbeddingChunk(ctx context.Context, texts []stri
 func (h *EmbeddingsHandler) collectCacheMisses(ctx context.Context, chunk []string, embeddings [][]float32, chunkStart, dims int) (missIdx []int, missTexts []string, promptTokens int) {
 	missIdx = make([]int, 0, len(chunk))
 	missTexts = make([]string, 0, len(chunk))
+	hits := h.cache.GetManyIfPresent(ctx, chunk, dims)
 	for j, text := range chunk {
-		if emb, ok := h.cache.GetIfPresent(ctx, text, dims); ok {
+		if emb, ok := hits[j]; ok {
 			embeddings[chunkStart+j] = truncateEmbedding(emb, dims)
 			promptTokens += len(text) / 4
 			continue

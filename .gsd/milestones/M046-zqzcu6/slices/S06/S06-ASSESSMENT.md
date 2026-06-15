@@ -1,0 +1,97 @@
+---
+sliceId: S06
+uatType: artifact-driven
+verdict: PASS
+attempt: 1
+runId: uat:M046-zqzcu6:S06:attempt-1
+worktreeRoot: /root/fd
+date: 2026-06-15T05:55:01.106Z
+---
+
+# UAT Result - S06
+
+## Checks
+
+| Check | Mode | Result | Evidence | Notes |
+|-------|------|--------|----------|-------|
+| Closure matrix covers all 32 issue #3 findings. | artifact | PASS | gsd_uat_exec:2912d887-d003-4340-ae7b-74c901258f74 |  |
+| Residual P1 #6 is fixed by batched cache peek and Redis MGET code path. | artifact | PASS | gsd_uat_exec:574e9de5-fbc5-4cbc-bb18-48387e86b1b9 |  |
+| Residual P1 #9 is fixed by registered method_not_allowed and WriteError. | artifact | PASS | gsd_uat_exec:961e2e5a-4de9-410e-ab4a-e522bceb0311 |  |
+| M046 requirements R029-R032 are present and validated. | artifact | PASS | gsd_uat_exec:b7d6f086-2972-4b17-85d9-8cd8449f6419 |  |
+
+## Overall Verdict
+
+PASS - PASS: S06 closes residual P1 #6/#9 and records all issue #3 findings in the closure matrix.
+
+## Tool Presentation
+
+```json
+{
+  "surface": "provider-tools",
+  "presentedTools": [
+    "gsd_resume",
+    "gsd_milestone_status",
+    "gsd_journal_query",
+    "gsd_uat_exec",
+    "gsd_uat_result_save",
+    "find",
+    "glob",
+    "grep",
+    "ls",
+    "read"
+  ],
+  "blockedTools": [
+    {
+      "name": "gsd_exec",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "gsd_summary_save",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "gsd_save_gate_result",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "browser",
+      "reason": "S06 validates backend code/artifact closure, not browser UI."
+    },
+    {
+      "name": "edit",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "write",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "search-the-web",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "WebSearch",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "Bash",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "Write",
+      "reason": "forbidden during run-uat"
+    },
+    {
+      "name": "Edit",
+      "reason": "forbidden during run-uat"
+    }
+  ],
+  "fallbackToolsUsed": [],
+  "notes": "S06 UAT is artifact-driven because closure matrix and code invariants are the user-visible outcome.",
+  "toolPresentationPlanId": "run-uat/default-v1"
+}
+```
+
+## Gate
+
+Aggregate UAT gate saved as pass.

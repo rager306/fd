@@ -18,6 +18,7 @@ const (
 	CodeInvalidJSON        = "invalid_json"
 	CodeUnauthorized       = "unauthorized"
 	CodeNotFound           = "not_found"
+	CodeMethodNotAllowed   = "method_not_allowed"
 	CodePayloadTooLarge    = "payload_too_large"
 	CodeRateLimitExceeded  = "rate_limit_exceeded"
 	CodeInternalError      = "internal_error"
@@ -71,6 +72,7 @@ var errorCodeRegistry = map[string]struct {
 	CodeInvalidJSON:        {TypeInvalidRequest, http.StatusBadRequest},
 	CodeUnauthorized:       {TypeAuthError, http.StatusUnauthorized},
 	CodeNotFound:           {TypeNotFoundError, http.StatusNotFound},
+	CodeMethodNotAllowed:   {TypeInvalidRequest, http.StatusMethodNotAllowed},
 	CodePayloadTooLarge:    {TypeInvalidRequest, http.StatusRequestEntityTooLarge},
 	CodeRateLimitExceeded:  {TypeRateLimitError, http.StatusTooManyRequests},
 	CodeInternalError:      {TypeInternalError, http.StatusInternalServerError},
@@ -132,6 +134,7 @@ func AllErrorCodes() []string {
 		CodeInvalidJSON,
 		CodeUnauthorized,
 		CodeNotFound,
+		CodeMethodNotAllowed,
 		CodePayloadTooLarge,
 		CodeRateLimitExceeded,
 		CodeInternalError,

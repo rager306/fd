@@ -37,18 +37,36 @@ func (m *mockEmbedder) Embed(ctx context.Context, texts []string) ([][]float32, 
 }
 
 type mockEmbeddingCache struct {
-	getOrLoadFunc func(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error)
+	getOrLoadFunc        func(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error)
+	getManyIfPresentFunc func(ctx context.Context, keys []string, dim int) map[int][]float32
+	getIfPresentCalls    int
+	getManyCalls         int
 	// In-memory store for GetIfPresent / Set pair (mirrors the
 	// production TieredCache shape closely enough for handler tests).
 	store map[string][]float32
 }
 
 func (m *mockEmbeddingCache) GetIfPresent(ctx context.Context, key string, dim int) ([]float32, bool) {
+	m.getIfPresentCalls++
 	if m.store == nil {
 		return nil, false
 	}
 	v, ok := m.store[fmt.Sprintf("%s:d%d", key, dim)]
 	return v, ok
+}
+
+func (m *mockEmbeddingCache) GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32 {
+	m.getManyCalls++
+	if m.getManyIfPresentFunc != nil {
+		return m.getManyIfPresentFunc(ctx, keys, dim)
+	}
+	hits := make(map[int][]float32)
+	for i, key := range keys {
+		if v, ok := m.GetIfPresent(ctx, key, dim); ok {
+			hits[i] = v
+		}
+	}
+	return hits
 }
 
 func (m *mockEmbeddingCache) Set(ctx context.Context, key string, dim int, emb []float32) {
@@ -82,6 +100,55 @@ func postJSON(router *gin.Engine, path, body string) *httptest.ResponseRecorder 
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	return w
+}
+
+func TestCreateEmbeddingUsesBatchedCachePeek(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cache := &mockEmbeddingCache{
+		getManyIfPresentFunc: func(ctx context.Context, keys []string, dim int) map[int][]float32 {
+			if dim != 1024 {
+				t.Fatalf("dim = %d, want 1024", dim)
+			}
+			if fmt.Sprint(keys) != "[a b c]" {
+				t.Fatalf("keys = %v, want [a b c]", keys)
+			}
+			vec := make([]float32, 1024)
+			vec[0] = 20
+			return map[int][]float32{1: vec}
+		},
+	}
+	var seen [][]string
+	embedder := &mockEmbedder{embedFunc: func(ctx context.Context, texts []string) ([][]float32, error) {
+		seen = append(seen, append([]string(nil), texts...))
+		vectors := make([][]float32, len(texts))
+		for i, text := range texts {
+			vec := make([]float32, 1024)
+			vec[0] = float32(len(text))
+			vec[1] = float32(i)
+			vectors[i] = vec
+		}
+		return vectors, nil
+	}}
+	handler := NewEmbeddingsHandler(embedder, cache, "test-model", testLogger())
+	router := gin.New()
+	router.POST("/v1/embeddings", handler.CreateEmbedding)
+
+	w := postJSON(router, "/v1/embeddings", `{"model":"test","input":["a","b","c"]}`)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body=%s", w.Code, w.Body.String())
+	}
+	if cache.getManyCalls != 1 {
+		t.Fatalf("GetManyIfPresent calls = %d, want 1", cache.getManyCalls)
+	}
+	if cache.getIfPresentCalls != 0 {
+		t.Fatalf("GetIfPresent calls = %d, want 0", cache.getIfPresentCalls)
+	}
+	if embedder.calls != 1 {
+		t.Fatalf("embedder calls = %d, want 1", embedder.calls)
+	}
+	if fmt.Sprint(seen) != "[[a c]]" {
+		t.Fatalf("embedder texts = %v, want [[a c]]", seen)
+	}
 }
 
 //nolint:gocyclo // table-driven production integration coverage intentionally exercises many request/error/cache paths in one matrix.

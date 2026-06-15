@@ -28,7 +28,7 @@
 - [x] **S05: LocalCache correctness** `risk:medium` `depends:[S01]`
   > After this: Race-enabled cache tests prove bounded size/accounting and clean shutdown under concurrent access.
 
-- [ ] **S06: Audit closure and residual plan** `risk:medium` `depends:[S02,S03,S04,S05]`
+- [x] **S06: Audit closure and residual plan** `risk:medium` `depends:[S02,S03,S04,S05]`
   > After this: Issue #3 has a validated closure matrix showing which P0/P1 findings are fixed, which lower-priority items remain, and what future work is needed.
 
 ## Boundary Map

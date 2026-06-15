@@ -49,8 +49,8 @@ func TestMethodNotAllowedMiddlewareWritesEnvelope(t *testing.T) {
 	if err := json.Unmarshal(w.Body.Bytes(), &body); err != nil {
 		t.Fatalf("decode body: %v", err)
 	}
-	if body.Error.Code != "method_not_allowed" {
-		t.Fatalf("code = %q, want method_not_allowed", body.Error.Code)
+	if body.Error.Code != CodeMethodNotAllowed {
+		t.Fatalf("code = %q, want %q", body.Error.Code, CodeMethodNotAllowed)
 	}
 	if body.Error.Param != "method" {
 		t.Fatalf("param = %q, want method", body.Error.Param)

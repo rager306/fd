@@ -108,6 +108,17 @@ func (c *LRUCache) GetIfPresent(_ context.Context, key string, dimensions int) (
 	return c.Get(key, dimensions)
 }
 
+// GetManyIfPresent returns cached embedding copies keyed by input index.
+func (c *LRUCache) GetManyIfPresent(ctx context.Context, keys []string, dimensions int) map[int][]float32 {
+	hits := make(map[int][]float32, len(keys))
+	for i, key := range keys {
+		if emb, ok := c.GetIfPresent(ctx, key, dimensions); ok {
+			hits[i] = emb
+		}
+	}
+	return hits
+}
+
 // Set stores an embedding copy under key/dimensions.
 func (c *LRUCache) Set(_ context.Context, key string, dimensions int, value []float32) {
 	c.Put(key, dimensions, value)
