@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"fd-api/embed"
 	"fd-api/handlers"
 	"fd-api/lifecycle"
 	"fd-api/middleware"
@@ -222,7 +223,7 @@ func TestFdV2LifecycleF5ShutdownRejectsNewAndDrainsInflight(t *testing.T) {
 	}
 }
 
-func newLifecycleTestRouter(state *lifecycle.State, maxInFlight int64, embedder handlers.Embedder) *gin.Engine {
+func newLifecycleTestRouter(state *lifecycle.State, maxInFlight int64, embedder embed.Embedder) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))

@@ -1,6 +1,14 @@
 package embed
 
-import "encoding/json"
+import (
+	"context"
+	"encoding/json"
+)
+
+// Embedder is the minimal inference interface shared by handlers and lifecycle warmup.
+type Embedder interface {
+	Embed(ctx context.Context, texts []string) ([][]float32, error)
+}
 
 // EmbeddingsRequest is the OpenAI-compatible /v1/embeddings request body.
 // Input accepts either a single string or []string via custom JSON unmarshaling.

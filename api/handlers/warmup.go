@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"fd-api/embed"
 	"fd-api/lifecycle"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,7 @@ const (
 // WarmupHandler serves manual warmup status and trigger endpoints.
 type WarmupHandler struct {
 	state      *lifecycle.State
-	model      lifecycle.WarmupModel
+	model      embed.Embedder
 	timeout    time.Duration
 	inProgress atomic.Bool
 }
@@ -32,7 +33,7 @@ type WarmupResponse struct {
 }
 
 // NewWarmupHandler wires lifecycle state and model warmup behavior.
-func NewWarmupHandler(state *lifecycle.State, model lifecycle.WarmupModel, timeout time.Duration) *WarmupHandler {
+func NewWarmupHandler(state *lifecycle.State, model embed.Embedder, timeout time.Duration) *WarmupHandler {
 	return &WarmupHandler{state: state, model: model, timeout: timeout}
 }
 

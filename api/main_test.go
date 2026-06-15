@@ -228,17 +228,4 @@ func TestEmbeddingRuntimeConfigHealthReturnsSafeTEIMetadata(t *testing.T) {
 	if health.CacheNamespace != "v2" {
 		t.Fatalf("cache_namespace = %q", health.CacheNamespace)
 	}
-	// ONNX-only fields must be nil (omitted from JSON)
-	if health.ArtifactVerified != nil {
-		t.Fatal("artifact_verified should be nil for TEI")
-	}
-	if health.TokenizerVerified != nil {
-		t.Fatal("tokenizer_verified should be nil for TEI")
-	}
-	if health.RuntimeLibraryVerified != nil {
-		t.Fatal("runtime_library_verified should be nil for TEI")
-	}
-	if health.Provider != "" {
-		t.Fatalf("provider = %q, want empty for TEI", health.Provider)
-	}
 }

@@ -17,7 +17,7 @@ import (
 // BatchHandler serves the legacy /embeddings/batch endpoint used by
 // FalkorDB integrations that expect base64 vectors by default.
 type BatchHandler struct {
-	teiClient Embedder
+	teiClient embed.Embedder
 	cache     EmbeddingCache
 	modelID   string
 	logger    *slog.Logger
@@ -25,7 +25,7 @@ type BatchHandler struct {
 
 // NewBatchHandler wires the embedder, cache, model ID, and logger used by
 // the legacy batch embeddings endpoint.
-func NewBatchHandler(teiClient Embedder, c EmbeddingCache, modelID string, logger *slog.Logger) *BatchHandler {
+func NewBatchHandler(teiClient embed.Embedder, c EmbeddingCache, modelID string, logger *slog.Logger) *BatchHandler {
 	return &BatchHandler{
 		teiClient: teiClient,
 		cache:     c,

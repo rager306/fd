@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"fd-api/embed"
 	"fd-api/lifecycle"
 
 	"github.com/gin-gonic/gin"
@@ -119,7 +120,7 @@ func TestWarmupTriggerStoresError(t *testing.T) {
 	})
 }
 
-func serveWarmup(t *testing.T, state *lifecycle.State, model lifecycle.WarmupModel, method string) *httptest.ResponseRecorder {
+func serveWarmup(t *testing.T, state *lifecycle.State, model embed.Embedder, method string) *httptest.ResponseRecorder {
 	t.Helper()
 	r := warmupRouter(NewWarmupHandler(state, model, time.Second))
 	w := httptest.NewRecorder()

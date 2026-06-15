@@ -31,17 +31,10 @@ type errorSnapshot struct {
 
 type contextKey struct{}
 
-var defaultState = NewState()
-
 // NewState returns a zero-value lifecycle state. A new state starts unready,
 // not shutting down, with no in-flight requests and no recorded error.
 func NewState() *State {
 	return &State{}
-}
-
-// DefaultState returns the process-wide lifecycle state singleton.
-func DefaultState() *State {
-	return defaultState
 }
 
 // WithState stores state in ctx for handlers and middleware that need lifecycle

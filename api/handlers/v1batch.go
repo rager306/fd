@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"fd-api/embed"
+
 	"github.com/gin-gonic/gin"
 	"log/slog"
 )
@@ -18,13 +20,13 @@ const (
 
 // V1BatchHandler serves the OpenAI-compatible fd extension POST /v1/batch.
 type V1BatchHandler struct {
-	embedder Embedder
+	embedder embed.Embedder
 	cache    EmbeddingCache
 	logger   *slog.Logger
 }
 
 // NewV1BatchHandler wires the embedder/cache/logger used by /v1/batch.
-func NewV1BatchHandler(embedder Embedder, cache EmbeddingCache, logger *slog.Logger) *V1BatchHandler {
+func NewV1BatchHandler(embedder embed.Embedder, cache EmbeddingCache, logger *slog.Logger) *V1BatchHandler {
 	return &V1BatchHandler{embedder: embedder, cache: cache, logger: logger}
 }
 

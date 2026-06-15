@@ -20,11 +20,6 @@ const (
 	cacheMiss   = "MISS"
 )
 
-// Embedder is the minimal inference interface shared by TEI and ONNX backends.
-type Embedder interface {
-	Embed(ctx context.Context, texts []string) ([][]float32, error)
-}
-
 // EmbeddingCache is the cache surface used by the embeddings handler.
 // GetIfPresent is used to peek without triggering a model load, so a
 // fully-cached batch can skip the TEI call entirely. Set backfills the
@@ -39,7 +34,7 @@ type EmbeddingCache interface {
 
 // EmbeddingsHandler serves the OpenAI-compatible /v1/embeddings endpoint.
 type EmbeddingsHandler struct {
-	teiClient Embedder
+	teiClient embed.Embedder
 	cache     EmbeddingCache
 	modelID   string
 	logger    *slog.Logger
@@ -47,7 +42,7 @@ type EmbeddingsHandler struct {
 
 // NewEmbeddingsHandler wires the embedder, cache, model ID, and logger used by
 // the OpenAI-compatible /v1/embeddings endpoint.
-func NewEmbeddingsHandler(teiClient Embedder, c EmbeddingCache, modelID string, logger *slog.Logger) *EmbeddingsHandler {
+func NewEmbeddingsHandler(teiClient embed.Embedder, c EmbeddingCache, modelID string, logger *slog.Logger) *EmbeddingsHandler {
 	return &EmbeddingsHandler{
 		teiClient: teiClient,
 		cache:     c,

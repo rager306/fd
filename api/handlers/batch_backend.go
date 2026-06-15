@@ -3,13 +3,15 @@ package handlers
 import (
 	"context"
 	"errors"
+
+	"fd-api/embed"
 )
 
 const batchTEISubBatchSize = 32
 
 var errBatchEmbeddingCountMismatch = errors.New("embedding backend returned wrong vector count")
 
-func loadBatchEmbeddings(ctx context.Context, cache EmbeddingCache, embedder Embedder, texts []string, dims, chunkSize int) ([][]float32, error) {
+func loadBatchEmbeddings(ctx context.Context, cache EmbeddingCache, embedder embed.Embedder, texts []string, dims, chunkSize int) ([][]float32, error) {
 	if chunkSize <= 0 {
 		chunkSize = batchTEISubBatchSize
 	}
@@ -24,7 +26,7 @@ func loadBatchEmbeddings(ctx context.Context, cache EmbeddingCache, embedder Emb
 	return vectors, nil
 }
 
-func loadBatchEmbeddingChunk(ctx context.Context, cache EmbeddingCache, embedder Embedder, texts []string, vectors [][]float32, chunkStart, chunkEnd, dims int) error {
+func loadBatchEmbeddingChunk(ctx context.Context, cache EmbeddingCache, embedder embed.Embedder, texts []string, vectors [][]float32, chunkStart, chunkEnd, dims int) error {
 	missIdx := make([]int, 0, chunkEnd-chunkStart)
 	missTexts := make([]string, 0, chunkEnd-chunkStart)
 

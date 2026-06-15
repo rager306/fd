@@ -147,11 +147,11 @@ func defaultWarmupRetryPolicy() warmupRetryPolicy {
 	}
 }
 
-func startModelWarmup(logger *slog.Logger, state *lifecycle.State, model lifecycle.WarmupModel, timeout time.Duration) {
+func startModelWarmup(logger *slog.Logger, state *lifecycle.State, model embed.Embedder, timeout time.Duration) {
 	startModelWarmupWithPolicy(logger, state, model, timeout, defaultWarmupRetryPolicy())
 }
 
-func startModelWarmupWithPolicy(logger *slog.Logger, state *lifecycle.State, model lifecycle.WarmupModel, timeout time.Duration, policy warmupRetryPolicy) {
+func startModelWarmupWithPolicy(logger *slog.Logger, state *lifecycle.State, model embed.Embedder, timeout time.Duration, policy warmupRetryPolicy) {
 	if policy.maxAttempts < 1 {
 		policy.maxAttempts = 1
 	}
@@ -270,7 +270,7 @@ func main() {
 		},
 	}
 
-	lifecycleState := lifecycle.DefaultState()
+	lifecycleState := lifecycle.NewState()
 	buildInfo := buildinfo.New(buildinfo.Info{
 		Version:   Version,
 		Model:     modelID,
@@ -283,7 +283,7 @@ func main() {
 	}
 
 	teiClient := embed.NewTEIClient(teiURL, modelID, httpClient)
-	embeddingClient := handlers.Embedder(teiClient)
+	embeddingClient := embed.Embedder(teiClient)
 	logger.Info("tei client configured", "url", teiURL, "model", modelID)
 
 	if os.Getenv("GIN_MODE") == "release" {
