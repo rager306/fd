@@ -20,7 +20,7 @@
 - [x] **S02: Graceful server error path** `risk:high` `depends:[S01]`
   > After this: Fatal listener errors enter controlled shutdown handling instead of exiting inside the listener goroutine.
 
-- [ ] **S03: TEI retry and fast fail** `risk:high` `depends:[S01]`
+- [x] **S03: TEI retry and fast fail** `risk:high` `depends:[S01]`
   > After this: TEI transient dependency failures retry within a bounded policy and repeated outages fail quickly with a clear error.
 
 - [ ] **S04: Warmup retry and closure** `risk:medium` `depends:[S02,S03]`

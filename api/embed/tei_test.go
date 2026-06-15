@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -71,6 +73,77 @@ func TestTEIClientEmbedReturnsStatusError(t *testing.T) {
 	client := NewTEIClient(server.URL, "model-a", server.Client())
 	if _, err := client.Embed(context.Background(), []string{"x"}); err == nil {
 		t.Fatal("Embed status error = nil, want error")
+	}
+}
+
+func TestTEIClientEmbedRetriesRetriableStatus(t *testing.T) {
+	var attempts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempt := attempts.Add(1)
+		if attempt == 1 {
+			http.Error(w, "unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"object":"list","data":[{"embedding":[1,2,3]}]}`))
+	}))
+	defer server.Close()
+
+	client := NewTEIClient(server.URL, "model-a", server.Client())
+	got, err := client.Embed(context.Background(), []string{"x"})
+	if err != nil {
+		t.Fatalf("Embed returned error after retry: %v", err)
+	}
+	if attempts.Load() != 2 {
+		t.Fatalf("attempts = %d, want 2", attempts.Load())
+	}
+	if len(got) != 1 || len(got[0]) != 3 {
+		t.Fatalf("embeddings = %#v, want one 3-dim vector", got)
+	}
+}
+
+func TestTEIClientEmbedDoesNotRetryBadRequest(t *testing.T) {
+	var attempts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts.Add(1)
+		http.Error(w, "bad request", http.StatusBadRequest)
+	}))
+	defer server.Close()
+
+	client := NewTEIClient(server.URL, "model-a", server.Client())
+	if _, err := client.Embed(context.Background(), []string{"x"}); err == nil {
+		t.Fatal("Embed bad request error = nil, want error")
+	}
+	if attempts.Load() != 1 {
+		t.Fatalf("attempts = %d, want 1", attempts.Load())
+	}
+}
+
+func TestTEIClientEmbedFastFailsAfterRepeatedRetriableFailures(t *testing.T) {
+	var attempts atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		attempts.Add(1)
+		http.Error(w, "unavailable", http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	client := NewTEIClient(server.URL, "model-a", server.Client())
+	for i := 0; i < 3; i++ {
+		if _, err := client.Embed(context.Background(), []string{"x"}); err == nil {
+			t.Fatal("Embed retriable failure = nil, want error")
+		}
+	}
+	beforeFastFail := attempts.Load()
+
+	_, err := client.Embed(context.Background(), []string{"x"})
+	if err == nil {
+		t.Fatal("Embed circuit-open error = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "TEI circuit open") {
+		t.Fatalf("error = %v, want TEI circuit open", err)
+	}
+	if attempts.Load() != beforeFastFail {
+		t.Fatalf("attempts after circuit open = %d, want unchanged %d", attempts.Load(), beforeFastFail)
 	}
 }
 

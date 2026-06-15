@@ -33,14 +33,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
-### R033 — TEI dependency calls should tolerate transient failures with bounded retry/backoff and an explicit fast-fail mode during repeated outages.
-- Class: quality-attribute
-- Status: active
-- Description: TEI dependency calls should tolerate transient failures with bounded retry/backoff and an explicit fast-fail mode during repeated outages.
-- Why it matters: TEI is the only active embedding backend; transient dependency failures should not immediately become noisy 500s or consume the full client timeout on every request.
-- Source: GitHub issue #6 / M047
-- Validation: Tests prove retriable TEI errors are retried with bounded attempts, non-retriable failures are not retried, and repeated failures short-circuit predictably.
-
 ### R034 — Model warmup should retry bounded transient failures with backoff and clear readiness error state after a later success.
 - Class: continuity
 - Status: active
@@ -326,6 +318,15 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Validated by S06 batched cache peek implementation: `/v1/embeddings` calls `GetManyIfPresent` once per bounded chunk, `TieredCache` uses Redis MGET for L2 misses, handler/cache tests pass, and static proof `43c16c32-c290-499a-a42a-b8602a0ce6ee` confirms the code path.
 - Notes: Closes issue #3 P1 #6.
 
+### R033 — TEI dependency calls should tolerate transient failures with bounded retry/backoff and an explicit fast-fail mode during repeated outages.
+- Class: quality-attribute
+- Status: validated
+- Description: TEI dependency calls should tolerate transient failures with bounded retry/backoff and an explicit fast-fail mode during repeated outages.
+- Why it matters: TEI is the only active embedding backend; transient dependency failures should not immediately become noisy 500s or consume the full client timeout on every request.
+- Source: GitHub issue #6 / M047
+- Validation: M047 S03: TEIClient retries retriable network errors and 502/503/504 statuses with bounded attempts/context-aware backoff, does not retry non-retriable paths, and opens a cooldown circuit after repeated retriable call failures. Evidence: `benchmark-results/m047-s03-tei-retry-fast-fail.md`, `go test ./embed` passed with 21 tests, `go test ./...` passed with 288 tests, static proof `06c49705-07f9-4c63-add2-85eb6ef673c9`.
+- Notes: Validated for issue #6 finding #11.
+
 ### R035 — Fatal HTTP server errors should enter the same graceful shutdown path as signal-triggered shutdown instead of calling os.Exit from the listener goroutine.
 - Class: operability
 - Status: validated
@@ -404,14 +405,14 @@ This file is the explicit capability and coverage contract for the project.
 | R030 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S04. Evidence: `benchmark-results/m046-s04-exposure-posture.md`; targeted auth/rate-limit/proxy tests pass; `go test ./...` passes with 279 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verifies probes public, `/v1/embeddings` protected without `FD_API_KEY`, `/metrics` protected, and OpenAPI public. |
 | R031 | quality-attribute | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S05. Evidence: `benchmark-results/m046-s05-localcache-correctness.md`; targeted LocalCache lifecycle/concurrency tests pass; `go test -race ./cache -run TestLocalCache` passes; full `go test ./...` passes with 281 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; static proof confirms no `sync.Map` or separate size counter and API shutdown closes LocalCache. |
 | R032 | quality-attribute | validated | M046-zqzcu6/S06 | none | Validated by S06 batched cache peek implementation: `/v1/embeddings` calls `GetManyIfPresent` once per bounded chunk, `TieredCache` uses Redis MGET for L2 misses, handler/cache tests pass, and static proof `43c16c32-c290-499a-a42a-b8602a0ce6ee` confirms the code path. |
-| R033 | quality-attribute | active | none | none | Tests prove retriable TEI errors are retried with bounded attempts, non-retriable failures are not retried, and repeated failures short-circuit predictably. |
+| R033 | quality-attribute | validated | none | none | M047 S03: TEIClient retries retriable network errors and 502/503/504 statuses with bounded attempts/context-aware backoff, does not retry non-retriable paths, and opens a cooldown circuit after repeated retriable call failures. Evidence: `benchmark-results/m047-s03-tei-retry-fast-fail.md`, `go test ./embed` passed with 21 tests, `go test ./...` passed with 288 tests, static proof `06c49705-07f9-4c63-add2-85eb6ef673c9`. |
 | R034 | continuity | active | none | none | Tests prove warmup retries after failure, marks ready on later success, and records bounded terminal errors after configured attempts. |
 | R035 | operability | validated | none | none | M047 S02: listener fatal errors now flow through `reportHTTPServerError`, which ignores wrapped `http.ErrServerClosed` with `errors.Is` and sends a synthetic `server_error` signal into the existing lifecycle shutdown path instead of calling `os.Exit(1)` from the listener goroutine. Evidence: `benchmark-results/m047-s02-graceful-listener-shutdown.md`, `go test ./...` passed with 285 tests, static proof `519aee78-cfa7-47d0-9fdf-aee5cddd1f83`. |
 | R036 | quality-attribute | validated | none | none | M047 S01: `getEnvInt` uses `strconv.Atoi` and falls back on invalid/overflowing/negative values; un-emitted `dimensions_required`, `dimensions_mismatch`, and `request_timeout` registry rows were removed; `TestAllErrorCodesHaveNonTestEmitters` enforces future registry emitter coverage. Evidence: `benchmark-results/m047-s01-contract-cleanup.md`, `go test ./...` passed with 283 tests, static proof `60cf4abe-6f44-4527-8b7a-1017cbd03e71`. |
 
 ## Coverage Summary
 
-- Active requirements: 5
+- Active requirements: 4
 - Mapped to slices: 2
-- Validated: 29 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R035, R036)
-- Unmapped active requirements: 3
+- Validated: 30 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R035, R036)
+- Unmapped active requirements: 2

@@ -1,0 +1,130 @@
+{
+  "runId": "uat:M047-9fngng:S03:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M047-9fngng",
+  "sliceId": "S03",
+  "uatType": "artifact-driven",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-15T08:27:30.138Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": []
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "TEI client includes bounded retry policy and retriable status classification.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "b7f0d8fc-6db3-4e92-833a-ccf4ac74796c",
+          "note": "Verified retry fields and retriable 502/503/504 status classification.",
+          "tool": "gsd_uat_exec",
+          "executionId": "b7f0d8fc-6db3-4e92-833a-ccf4ac74796c"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "TEI client includes repeated-outage fast-fail circuit behavior.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "d606b15c-39eb-46f3-a785-e7867d2a4a3f",
+          "note": "Verified circuit state and TEI circuit open error path.",
+          "tool": "gsd_uat_exec",
+          "executionId": "d606b15c-39eb-46f3-a785-e7867d2a4a3f"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "S03 evidence artifact covers #11 and R033.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "8ed72f5f-2c26-4a22-bbe6-5d9b134f47c8",
+          "note": "Verified S03 artifact includes finding ID, test evidence, and requirement outcome.",
+          "tool": "gsd_uat_exec",
+          "executionId": "8ed72f5f-2c26-4a22-bbe6-5d9b134f47c8"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S03 validates backend dependency resilience, not browser UI."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Artifact-driven UAT is sufficient for S03 TEI retry/fast-fail contract.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S03 validates issue #6 finding #11."
+}
