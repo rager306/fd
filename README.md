@@ -324,22 +324,28 @@ Go module root:
 cd api
 ```
 
-Run tests:
+Run the regular API test suite:
 
 ```bash
 go test ./...
 ```
 
+Run the CI-equivalent short suite:
+
+```bash
+go test ./... -short
+```
+
 Run lint with the pinned tool version used by the project:
 
 ```bash
-go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run ./...
+go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --config ../.golangci.yml ./...
 ```
 
 Run vulnerability analysis:
 
 ```bash
-go run golang.org/x/vuln/cmd/govulncheck@v1.3.0 ./...
+go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 ```
 
 Run the Docker stack from the repository root:
@@ -348,7 +354,30 @@ Run the Docker stack from the repository root:
 docker compose up -d
 ```
 
-The current closeout gate for M045 passed with 270 Go tests, 0 lint issues, and 0 reachable vulnerabilities.
+Run the black-box integration suite from its standalone module:
+
+```bash
+cd tests/integration && go test -v .
+```
+
+Without `FD_INTEGRATION_API_KEY`, the suite verifies public diagnostics and auth fail-closed behavior, while protected happy-path checks skip. For full authenticated Docker e2e coverage, recreate or run the API with a matching local `FD_API_KEY`, then pass the same value as `FD_INTEGRATION_API_KEY` without printing it:
+
+```bash
+cd tests/integration && FD_INTEGRATION_API_KEY=<matching local key> go test -v .
+```
+
+Run the bounded mutation baseline from `api/` when checking assertion strength on critical cache, handler, and lifecycle files:
+
+```bash
+go run github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest \
+  --exec 'go test ./cache ./handlers ./lifecycle' \
+  --exec-timeout 45 \
+  ./cache/hash.go ./cache/keys.go ./handlers/cache.go ./handlers/health.go ./lifecycle/state.go
+```
+
+This mutation command is an informational local/manual gate, not a mandatory CI hard gate. It currently requires the Go 1.25.11 toolchain via automatic toolchain switching and takes roughly a minute on the bounded scope.
+
+The current M050 closeout evidence includes 295 passing Go tests, 0 lint issues, 0 reachable vulnerabilities, an authenticated Docker e2e suite with 9 passing checks, and a bounded mutation score of 1.0 on 143 mutants in scope.
 
 ## Performance
 

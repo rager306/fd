@@ -403,6 +403,36 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M049 decision D051 and closure artifact record solo-scope decision: AN-D trace hardening deferred by explicit user direction; AN-E/F broad config/options extraction avoided unless needed. Implemented only minimal seams required by AN-A/AN-B/C: cache invalidation routes, HealthOptions, dependency probes, and metrics observers.
 - Notes: Validated as a scope/constraint requirement for solo deployment.
 
+### R043 — Все существующие тесты должны быть проверены на актуальность относительно текущей версии API, auth-политики, runtime-контракта и Docker Compose окружения перед добавлением новых e2e/mutation слоёв.
+- Class: quality-attribute
+- Status: validated
+- Description: Все существующие тесты должны быть проверены на актуальность относительно текущей версии API, auth-политики, runtime-контракта и Docker Compose окружения перед добавлением новых e2e/mutation слоёв.
+- Why it matters: Иначе новые тестовые слои могут закрепить устаревшие ожидания и скрыть реальные регрессии текущего сервиса.
+- Source: user M050 test-quality direction
+- Primary owning slice: M050-rfqm1p/S01
+- Validation: M050/S01 validated existing test actuality: `benchmark-results/m050-s01-test-actuality.md`; final `cd api && go test ./...` passed with 295 tests in 10 packages; final `cd tests/integration && go test -v .` passed public/fail-closed checks after root integration module/auth update.
+- Notes: Root integration protected happy-path checks now require explicit `FD_INTEGRATION_API_KEY` and skip without it; full authenticated Docker Compose e2e coverage is deferred to R044/S02.
+
+### R044 — Сервис должен иметь поддерживаемый black-box integration suite, который проверяет реальный Docker Compose runtime с актуальной auth-схемой и основными функциональными потоками.
+- Class: failure-visibility
+- Status: validated
+- Description: Сервис должен иметь поддерживаемый black-box integration suite, который проверяет реальный Docker Compose runtime с актуальной auth-схемой и основными функциональными потоками.
+- Why it matters: In-process Go tests не доказывают, что собранный контейнер, TEI, Redis, auth и HTTP-контракты работают вместе как продукт.
+- Source: user M050 test-quality direction
+- Primary owning slice: M050-rfqm1p/S02
+- Validation: M050/S02 implemented and verified `tests/integration` Docker Compose e2e suite. Authenticated proof recreated `fd_api` with a temporary nonprinted key and passed: SUMMARY pass=9 fail=0 skip=0 across public diagnostics, auth fail-closed, authenticated metrics, embeddings dimensions/batch/validation, and cache HIT/flush/delete invalidation.
+- Notes: Evidence artifact: `benchmark-results/m050-s02-docker-e2e.md`. The e2e client uses `FD_INTEGRATION_API_KEY`; local proof used a temporary compose override and did not print or commit secrets.
+
+### R045 — Критичные backend-пакеты должны получить начальный mutation-testing gate или документированно ограниченный mutation baseline с явным списком покрытых пакетов и выживших мутантов.
+- Class: quality-attribute
+- Status: validated
+- Description: Критичные backend-пакеты должны получить начальный mutation-testing gate или документированно ограниченный mutation baseline с явным списком покрытых пакетов и выживших мутантов.
+- Why it matters: Statement coverage 75.2% не показывает силу assertions; mutation testing нужен для проверки, что тесты ловят реальные изменения поведения.
+- Source: user M050 test-quality direction
+- Primary owning slice: M050-rfqm1p/S03
+- Validation: M050/S03 selected `github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest` and ran bounded mutation baseline over `api/cache/hash.go`, `api/cache/keys.go`, `api/handlers/cache.go`, `api/handlers/health.go`, `api/lifecycle/state.go`. Result: mutation score 1.000000 (143 passed/killed, 0 failed/survived, 4 duplicated, 0 skipped, total 143). Fresh `cd api && go test ./...` passed afterward.
+- Notes: Evidence artifact: `benchmark-results/m050-s03-mutation-baseline.md`. Baseline is informational/local for now; future CI hard gate should pin runner/toolchain or run manually due runtime cost.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -473,10 +503,13 @@ This file is the explicit capability and coverage contract for the project.
 | R040 | core-capability | validated | M049-7dn2gp/S01 | none | M049 S01+S03: cache invalidation primitives/routes implemented and proven. Focused tests passed (`go test ./cache ./handlers`, 127 tests), full tests passed (295 tests), static proof `3670b28f-8bce-433e-8306-987102db98cb`, UAT evidence `94ea4377-4e0a-4327-a167-76d5bcf0404c`/`6d55b34d-006b-431c-8045-cb8e5f639981`, and live rebuilt-container proof `benchmark-results/m049-s03-live-container-proof.md` shows auth-protected flush plus MISS->HIT->flush->MISS and MISS->HIT->delete->MISS. |
 | R041 | failure-visibility | validated | M049-7dn2gp/S02 | none | M049 S02+S03: health last_error/dependencies/in_flight_capacity and metrics gauges implemented and proven. Focused tests passed (`go test ./handlers ./observability`, 92 tests), full tests passed (295 tests), static proof `7b258850-f9dc-4b91-a7bf-706f4872eff5`, UAT evidence `14dc034d-e147-49b6-9a35-0723f3553065`/`00a1dc71-1adb-469e-bdb2-c7af7b58e15b`, and live rebuilt-container proof shows `/health` capacity/dependency context plus `/metrics` runtime/cache gauges. |
 | R042 | constraint | validated | M049-7dn2gp | none | M049 decision D051 and closure artifact record solo-scope decision: AN-D trace hardening deferred by explicit user direction; AN-E/F broad config/options extraction avoided unless needed. Implemented only minimal seams required by AN-A/AN-B/C: cache invalidation routes, HealthOptions, dependency probes, and metrics observers. |
+| R043 | quality-attribute | validated | M050-rfqm1p/S01 | none | M050/S01 validated existing test actuality: `benchmark-results/m050-s01-test-actuality.md`; final `cd api && go test ./...` passed with 295 tests in 10 packages; final `cd tests/integration && go test -v .` passed public/fail-closed checks after root integration module/auth update. |
+| R044 | failure-visibility | validated | M050-rfqm1p/S02 | none | M050/S02 implemented and verified `tests/integration` Docker Compose e2e suite. Authenticated proof recreated `fd_api` with a temporary nonprinted key and passed: SUMMARY pass=9 fail=0 skip=0 across public diagnostics, auth fail-closed, authenticated metrics, embeddings dimensions/batch/validation, and cache HIT/flush/delete invalidation. |
+| R045 | quality-attribute | validated | M050-rfqm1p/S03 | none | M050/S03 selected `github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest` and ran bounded mutation baseline over `api/cache/hash.go`, `api/cache/keys.go`, `api/handlers/cache.go`, `api/handlers/health.go`, `api/lifecycle/state.go`. Result: mutation score 1.000000 (143 passed/killed, 0 failed/survived, 4 duplicated, 0 skipped, total 143). Fresh `cd api && go test ./...` passed afterward. |
 
 ## Coverage Summary
 
 - Active requirements: 3
 - Mapped to slices: 2
-- Validated: 37 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042)
+- Validated: 40 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045)
 - Unmapped active requirements: 1
