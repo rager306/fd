@@ -180,7 +180,7 @@ Batch embeddings endpoint used by FalkorDB-oriented local workflows.
 
 ## Configuration
 
-The Docker stack sets safe local defaults. Override values through `docker-compose.override.yaml`, shell environment, or `api/.env` when running locally.
+The Docker stack sets safe local defaults. Override values through `docker-compose.override.yaml`, shell environment, or an optional root `.env` copied from `.env.example`. The real `.env` file is gitignored and should not be committed.
 
 ### Core runtime
 
@@ -314,7 +314,7 @@ If a backend/model/tokenizer/chunking change is under test, isolate the Redis na
 
 ### API returns auth or CORS errors
 
-Check whether `FD_API_KEY` or `FD_CORS_ORIGINS` is set in `api/.env`, shell environment, or compose override. Never commit secret values.
+Check whether `FD_API_KEY` or `FD_CORS_ORIGINS` is set in the root `.env`, shell environment, or compose override. Never commit secret values.
 
 ## Development
 
