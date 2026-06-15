@@ -10,25 +10,22 @@ import (
 // Adding a new code here requires adding a row in errorCodeRegistry AND a test
 // in errors_test.go.
 const (
-	CodeInputRequired      = "input_required"
-	CodeInputTooLong       = "input_too_long"
-	CodeBatchTooLarge      = "batch_too_large"
-	CodeDimensionsInvalid  = "dimensions_invalid"
-	CodeDimensionsRequired = "dimensions_required"
-	CodeInvalidJSON        = "invalid_json"
-	CodeUnauthorized       = "unauthorized"
-	CodeNotFound           = "not_found"
-	CodeMethodNotAllowed   = "method_not_allowed"
-	CodePayloadTooLarge    = "payload_too_large"
-	CodeRateLimitExceeded  = "rate_limit_exceeded"
-	CodeInternalError      = "internal_error"
-	CodeModelNotLoaded     = "model_not_loaded"
-	CodeModelOverloaded    = "model_overloaded"
-	CodeShuttingDown       = "shutting_down"
-	CodeRequestTimeout     = "request_timeout"
-	CodeDimensionsMismatch = "dimensions_mismatch"
-	CodeEncodingInvalid    = "encoding_format_invalid"
-	CodePriorityInvalid    = "priority_invalid"
+	CodeInputRequired     = "input_required"
+	CodeInputTooLong      = "input_too_long"
+	CodeBatchTooLarge     = "batch_too_large"
+	CodeDimensionsInvalid = "dimensions_invalid"
+	CodeInvalidJSON       = "invalid_json"
+	CodeUnauthorized      = "unauthorized"
+	CodeNotFound          = "not_found"
+	CodeMethodNotAllowed  = "method_not_allowed"
+	CodePayloadTooLarge   = "payload_too_large"
+	CodeRateLimitExceeded = "rate_limit_exceeded"
+	CodeInternalError     = "internal_error"
+	CodeModelNotLoaded    = "model_not_loaded"
+	CodeModelOverloaded   = "model_overloaded"
+	CodeShuttingDown      = "shutting_down"
+	CodeEncodingInvalid   = "encoding_format_invalid"
+	CodePriorityInvalid   = "priority_invalid"
 )
 
 // OpenAI-style error types. Values match docs/fd-v2.md Section 3 catalog.
@@ -61,25 +58,22 @@ var errorCodeRegistry = map[string]struct {
 	Type       string
 	HTTPStatus int
 }{
-	CodeInputRequired:      {TypeInvalidRequest, http.StatusBadRequest},
-	CodeInputTooLong:       {TypeInvalidRequest, http.StatusRequestEntityTooLarge},
-	CodeBatchTooLarge:      {TypeInvalidRequest, http.StatusRequestEntityTooLarge},
-	CodeDimensionsInvalid:  {TypeInvalidRequest, http.StatusBadRequest},
-	CodeDimensionsRequired: {TypeInvalidRequest, http.StatusBadRequest},
-	CodeDimensionsMismatch: {TypeInvalidRequest, http.StatusBadRequest},
-	CodeEncodingInvalid:    {TypeInvalidRequest, http.StatusBadRequest},
-	CodePriorityInvalid:    {TypeInvalidRequest, http.StatusBadRequest},
-	CodeInvalidJSON:        {TypeInvalidRequest, http.StatusBadRequest},
-	CodeUnauthorized:       {TypeAuthError, http.StatusUnauthorized},
-	CodeNotFound:           {TypeNotFoundError, http.StatusNotFound},
-	CodeMethodNotAllowed:   {TypeInvalidRequest, http.StatusMethodNotAllowed},
-	CodePayloadTooLarge:    {TypeInvalidRequest, http.StatusRequestEntityTooLarge},
-	CodeRateLimitExceeded:  {TypeRateLimitError, http.StatusTooManyRequests},
-	CodeInternalError:      {TypeInternalError, http.StatusInternalServerError},
-	CodeModelNotLoaded:     {TypeOverloadedError, http.StatusServiceUnavailable},
-	CodeModelOverloaded:    {TypeOverloadedError, http.StatusServiceUnavailable},
-	CodeShuttingDown:       {TypeOverloadedError, http.StatusServiceUnavailable},
-	CodeRequestTimeout:     {TypeOverloadedError, http.StatusGatewayTimeout},
+	CodeInputRequired:     {TypeInvalidRequest, http.StatusBadRequest},
+	CodeInputTooLong:      {TypeInvalidRequest, http.StatusRequestEntityTooLarge},
+	CodeBatchTooLarge:     {TypeInvalidRequest, http.StatusRequestEntityTooLarge},
+	CodeDimensionsInvalid: {TypeInvalidRequest, http.StatusBadRequest},
+	CodeEncodingInvalid:   {TypeInvalidRequest, http.StatusBadRequest},
+	CodePriorityInvalid:   {TypeInvalidRequest, http.StatusBadRequest},
+	CodeInvalidJSON:       {TypeInvalidRequest, http.StatusBadRequest},
+	CodeUnauthorized:      {TypeAuthError, http.StatusUnauthorized},
+	CodeNotFound:          {TypeNotFoundError, http.StatusNotFound},
+	CodeMethodNotAllowed:  {TypeInvalidRequest, http.StatusMethodNotAllowed},
+	CodePayloadTooLarge:   {TypeInvalidRequest, http.StatusRequestEntityTooLarge},
+	CodeRateLimitExceeded: {TypeRateLimitError, http.StatusTooManyRequests},
+	CodeInternalError:     {TypeInternalError, http.StatusInternalServerError},
+	CodeModelNotLoaded:    {TypeOverloadedError, http.StatusServiceUnavailable},
+	CodeModelOverloaded:   {TypeOverloadedError, http.StatusServiceUnavailable},
+	CodeShuttingDown:      {TypeOverloadedError, http.StatusServiceUnavailable},
 }
 
 // HTTPStatusFor returns the canonical HTTP status for a code, or 500 if unknown.
@@ -127,8 +121,6 @@ func AllErrorCodes() []string {
 		CodeInputTooLong,
 		CodeBatchTooLarge,
 		CodeDimensionsInvalid,
-		CodeDimensionsRequired,
-		CodeDimensionsMismatch,
 		CodeEncodingInvalid,
 		CodePriorityInvalid,
 		CodeInvalidJSON,
@@ -141,7 +133,6 @@ func AllErrorCodes() []string {
 		CodeModelNotLoaded,
 		CodeModelOverloaded,
 		CodeShuttingDown,
-		CodeRequestTimeout,
 	}
 }
 

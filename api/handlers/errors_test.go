@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -28,6 +31,61 @@ func TestAllErrorCodesRegistered(t *testing.T) {
 	}
 }
 
+func TestAllErrorCodesHaveNonTestEmitters(t *testing.T) {
+	var source strings.Builder
+	if err := filepath.WalkDir("..", func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		if filepath.Base(path) == "errors.go" && filepath.Base(filepath.Dir(path)) == "handlers" {
+			return nil
+		}
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		source.Write(content)
+		source.WriteByte('\n')
+		return nil
+	}); err != nil {
+		t.Fatalf("walk api source: %v", err)
+	}
+	allHandlers := source.String()
+
+	codeNames := map[string]string{
+		CodeInputRequired:     "CodeInputRequired",
+		CodeInputTooLong:      "CodeInputTooLong",
+		CodeBatchTooLarge:     "CodeBatchTooLarge",
+		CodeDimensionsInvalid: "CodeDimensionsInvalid",
+		CodeInvalidJSON:       "CodeInvalidJSON",
+		CodeUnauthorized:      "CodeUnauthorized",
+		CodeNotFound:          "CodeNotFound",
+		CodeMethodNotAllowed:  "CodeMethodNotAllowed",
+		CodePayloadTooLarge:   "CodePayloadTooLarge",
+		CodeRateLimitExceeded: "CodeRateLimitExceeded",
+		CodeInternalError:     "CodeInternalError",
+		CodeModelNotLoaded:    "CodeModelNotLoaded",
+		CodeModelOverloaded:   "CodeModelOverloaded",
+		CodeShuttingDown:      "CodeShuttingDown",
+		CodeEncodingInvalid:   "CodeEncodingInvalid",
+		CodePriorityInvalid:   "CodePriorityInvalid",
+	}
+
+	for _, code := range AllErrorCodes() {
+		name, ok := codeNames[code]
+		if !ok {
+			t.Errorf("registered error code %q has no constant-name mapping in this test", code)
+			continue
+		}
+		if !strings.Contains(allHandlers, name) {
+			t.Errorf("registered error code %q (%s) has no non-test handler emitter", code, name)
+		}
+	}
+}
+
 func TestErrorEnvelopeShape(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	cases := []struct {
@@ -42,8 +100,6 @@ func TestErrorEnvelopeShape(t *testing.T) {
 		{CodeInputTooLong, paramInput, "input[0] exceeds max length 512 tokens", "input_too_long", TypeInvalidRequest, http.StatusRequestEntityTooLarge},
 		{CodeBatchTooLarge, paramInput, "batch size 100 exceeds max 32", "batch_too_large", TypeInvalidRequest, http.StatusRequestEntityTooLarge},
 		{CodeDimensionsInvalid, paramDimensions, "dimensions must be 1024 or 512, got 99999", "dimensions_invalid", TypeInvalidRequest, http.StatusBadRequest},
-		{CodeDimensionsRequired, paramDimensions, "dimensions is required", "dimensions_required", TypeInvalidRequest, http.StatusBadRequest},
-		{CodeDimensionsMismatch, paramDimensions, "model does not support 512-dim", "dimensions_mismatch", TypeInvalidRequest, http.StatusBadRequest},
 		{CodeEncodingInvalid, paramEncodingFormat, "encoding_format must be float or base64", "encoding_format_invalid", TypeInvalidRequest, http.StatusBadRequest},
 		{CodePriorityInvalid, paramPriority, "priority must be low, normal, or high", "priority_invalid", TypeInvalidRequest, http.StatusBadRequest},
 		{CodeInvalidJSON, "", "invalid JSON: unexpected end of JSON input", "invalid_json", TypeInvalidRequest, http.StatusBadRequest},
@@ -55,7 +111,6 @@ func TestErrorEnvelopeShape(t *testing.T) {
 		{CodeModelNotLoaded, "", "model not loaded; retry after 5s", "model_not_loaded", TypeOverloadedError, http.StatusServiceUnavailable},
 		{CodeModelOverloaded, "", "model overloaded; retry after 5s", "model_overloaded", TypeOverloadedError, http.StatusServiceUnavailable},
 		{CodeShuttingDown, "", "service shutting down; retry after 30s", "shutting_down", TypeOverloadedError, http.StatusServiceUnavailable},
-		{CodeRequestTimeout, "", "request timed out after 30s", "request_timeout", TypeOverloadedError, http.StatusGatewayTimeout},
 	}
 
 	for _, tc := range cases {

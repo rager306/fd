@@ -33,6 +33,30 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
+### R033 — TEI dependency calls should tolerate transient failures with bounded retry/backoff and an explicit fast-fail mode during repeated outages.
+- Class: quality-attribute
+- Status: active
+- Description: TEI dependency calls should tolerate transient failures with bounded retry/backoff and an explicit fast-fail mode during repeated outages.
+- Why it matters: TEI is the only active embedding backend; transient dependency failures should not immediately become noisy 500s or consume the full client timeout on every request.
+- Source: GitHub issue #6 / M047
+- Validation: Tests prove retriable TEI errors are retried with bounded attempts, non-retriable failures are not retried, and repeated failures short-circuit predictably.
+
+### R034 — Model warmup should retry bounded transient failures with backoff and clear readiness error state after a later success.
+- Class: continuity
+- Status: active
+- Description: Model warmup should retry bounded transient failures with backoff and clear readiness error state after a later success.
+- Why it matters: A single warmup blip should not permanently degrade readiness until process restart.
+- Source: GitHub issue #6 / M047
+- Validation: Tests prove warmup retries after failure, marks ready on later success, and records bounded terminal errors after configured attempts.
+
+### R035 — Fatal HTTP server errors should enter the same graceful shutdown path as signal-triggered shutdown instead of calling os.Exit from the listener goroutine.
+- Class: operability
+- Status: active
+- Description: Fatal HTTP server errors should enter the same graceful shutdown path as signal-triggered shutdown instead of calling os.Exit from the listener goroutine.
+- Why it matters: In-flight requests and cache resources should drain/close consistently on server failure paths.
+- Source: GitHub issue #6 / M047
+- Validation: Tests prove server error handling calls lifecycle shutdown semantics and uses errors.Is for http.ErrServerClosed.
+
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -310,6 +334,15 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: Validated by S06 batched cache peek implementation: `/v1/embeddings` calls `GetManyIfPresent` once per bounded chunk, `TieredCache` uses Redis MGET for L2 misses, handler/cache tests pass, and static proof `43c16c32-c290-499a-a42a-b8602a0ce6ee` confirms the code path.
 - Notes: Closes issue #3 P1 #6.
 
+### R036 — Environment integer parsing and canonical error code registry should fail safely and avoid un-emitted public contract rows.
+- Class: quality-attribute
+- Status: validated
+- Description: Environment integer parsing and canonical error code registry should fail safely and avoid un-emitted public contract rows.
+- Why it matters: Overflowing FD_MAX_IN_FLIGHT can silently disable capacity protection; registered-but-never-emitted error codes add misleading contract/cardinality surface.
+- Source: GitHub issue #6 / M047
+- Validation: M047 S01: `getEnvInt` uses `strconv.Atoi` and falls back on invalid/overflowing/negative values; un-emitted `dimensions_required`, `dimensions_mismatch`, and `request_timeout` registry rows were removed; `TestAllErrorCodesHaveNonTestEmitters` enforces future registry emitter coverage. Evidence: `benchmark-results/m047-s01-contract-cleanup.md`, `go test ./...` passed with 283 tests, static proof `60cf4abe-6f44-4527-8b7a-1017cbd03e71`.
+- Notes: Validated for issue #6 findings #15 and #25.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -370,10 +403,14 @@ This file is the explicit capability and coverage contract for the project.
 | R030 | compliance/security | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S04. Evidence: `benchmark-results/m046-s04-exposure-posture.md`; targeted auth/rate-limit/proxy tests pass; `go test ./...` passes with 279 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; runtime UAT verifies probes public, `/v1/embeddings` protected without `FD_API_KEY`, `/metrics` protected, and OpenAPI public. |
 | R031 | quality-attribute | validated | M046-zqzcu6 | none | Validated by M046-zqzcu6/S05. Evidence: `benchmark-results/m046-s05-localcache-correctness.md`; targeted LocalCache lifecycle/concurrency tests pass; `go test -race ./cache -run TestLocalCache` passes; full `go test ./...` passes with 281 tests; lint 0 issues; govulncheck 0 reachable vulnerabilities; static proof confirms no `sync.Map` or separate size counter and API shutdown closes LocalCache. |
 | R032 | quality-attribute | validated | M046-zqzcu6/S06 | none | Validated by S06 batched cache peek implementation: `/v1/embeddings` calls `GetManyIfPresent` once per bounded chunk, `TieredCache` uses Redis MGET for L2 misses, handler/cache tests pass, and static proof `43c16c32-c290-499a-a42a-b8602a0ce6ee` confirms the code path. |
+| R033 | quality-attribute | active | none | none | Tests prove retriable TEI errors are retried with bounded attempts, non-retriable failures are not retried, and repeated failures short-circuit predictably. |
+| R034 | continuity | active | none | none | Tests prove warmup retries after failure, marks ready on later success, and records bounded terminal errors after configured attempts. |
+| R035 | operability | active | none | none | Tests prove server error handling calls lifecycle shutdown semantics and uses errors.Is for http.ErrServerClosed. |
+| R036 | quality-attribute | validated | none | none | M047 S01: `getEnvInt` uses `strconv.Atoi` and falls back on invalid/overflowing/negative values; un-emitted `dimensions_required`, `dimensions_mismatch`, and `request_timeout` registry rows were removed; `TestAllErrorCodesHaveNonTestEmitters` enforces future registry emitter coverage. Evidence: `benchmark-results/m047-s01-contract-cleanup.md`, `go test ./...` passed with 283 tests, static proof `60cf4abe-6f44-4527-8b7a-1017cbd03e71`. |
 
 ## Coverage Summary
 
-- Active requirements: 3
+- Active requirements: 6
 - Mapped to slices: 2
-- Validated: 27 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032)
-- Unmapped active requirements: 1
+- Validated: 28 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R036)
+- Unmapped active requirements: 4

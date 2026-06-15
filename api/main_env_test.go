@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"pgregory.net/rapid"
@@ -39,7 +40,7 @@ func TestGetEnvIntParsesDigits_Rapid(t *testing.T) {
 }
 
 func TestGetEnvIntFallsBackForInvalidValues(t *testing.T) {
-	for _, value := range []string{"", "-1", "12ms", " 12", "12 "} {
+	for _, value := range []string{"", "-1", "12ms", " 12", "12 ", strings.Repeat("9", 100)} {
 		t.Run(value, func(t *testing.T) {
 			t.Setenv("FD_TEST_ENV_INT", value)
 			if got := getEnvInt("FD_TEST_ENV_INT", 7); got != 7 {

@@ -1,0 +1,130 @@
+{
+  "runId": "uat:M047-9fngng:S01:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M047-9fngng",
+  "sliceId": "S01",
+  "uatType": "artifact-driven",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-15T08:11:50.090Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": []
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "getEnvInt uses safe strconv parsing with fallback on error/negative.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "823eb0b8-5e8e-40ad-b30c-124dd1beafa1",
+          "note": "Verified getEnvInt uses strconv.Atoi and no manual overflow-prone multiply loop.",
+          "tool": "gsd_uat_exec",
+          "executionId": "823eb0b8-5e8e-40ad-b30c-124dd1beafa1"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "Dead issue #6 error codes are no longer registered.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "d0bf2547-6034-433c-9014-ffb9d61fa0a8",
+          "note": "Verified dead codes/tokens are absent from handlers error registry.",
+          "tool": "gsd_uat_exec",
+          "executionId": "d0bf2547-6034-433c-9014-ffb9d61fa0a8"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "S01 evidence artifact covers #15/#25 and R036.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "a4460fc3-c2dc-44e4-8da9-6716496b3b98",
+          "note": "Verified S01 artifact includes finding IDs, test evidence, and R036 outcome.",
+          "tool": "gsd_uat_exec",
+          "executionId": "a4460fc3-c2dc-44e4-8da9-6716496b3b98"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S01 validates backend code/artifact contracts, not browser UI."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Artifact-driven UAT is sufficient for S01 contract cleanup.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S01 validates issue #6 findings #15 and #25."
+}

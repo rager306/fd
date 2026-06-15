@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -54,12 +55,9 @@ func getEnvInt(key string, defaultValue int) int {
 	if value == "" {
 		return defaultValue
 	}
-	var n int
-	for _, c := range []byte(value) {
-		if c < '0' || c > '9' {
-			return defaultValue
-		}
-		n = n*10 + int(c-'0')
+	n, err := strconv.Atoi(value)
+	if err != nil || n < 0 {
+		return defaultValue
 	}
 	return n
 }
