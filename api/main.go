@@ -145,22 +145,76 @@ func reportHTTPServerError(logger *slog.Logger, addr string, listen func() error
 	}
 }
 
+type warmupRetryPolicy struct {
+	maxAttempts int
+	backoff     func(attempt int) time.Duration
+}
+
+func defaultWarmupRetryPolicy() warmupRetryPolicy {
+	return warmupRetryPolicy{
+		maxAttempts: 3,
+		backoff: func(attempt int) time.Duration {
+			return 2 * time.Second << max(attempt-1, 0)
+		},
+	}
+}
+
 func startModelWarmup(logger *slog.Logger, state *lifecycle.State, model lifecycle.WarmupModel, timeout time.Duration) {
+	startModelWarmupWithPolicy(logger, state, model, timeout, defaultWarmupRetryPolicy())
+}
+
+func startModelWarmupWithPolicy(logger *slog.Logger, state *lifecycle.State, model lifecycle.WarmupModel, timeout time.Duration, policy warmupRetryPolicy) {
+	if policy.maxAttempts < 1 {
+		policy.maxAttempts = 1
+	}
+	if policy.backoff == nil {
+		policy.backoff = func(int) time.Duration { return 0 }
+	}
+
 	go func() {
 		started := time.Now()
-		logger.Info("model warmup started", "timeout", timeout.String())
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
+		logger.Info("model warmup started", "timeout", timeout.String(), "max_attempts", policy.maxAttempts)
+		var lastErr error
+		for attempt := 1; attempt <= policy.maxAttempts; attempt++ {
+			attemptStarted := time.Now()
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			err := lifecycle.PreWarm(ctx, model)
+			cancel()
+			if err == nil {
+				state.MarkWarmupDone()
+				logger.Info("model warmup done", "attempt", attempt, "latency_ms", time.Since(started).Milliseconds())
+				return
+			}
 
-		if err := lifecycle.PreWarm(ctx, model); err != nil {
+			lastErr = err
 			state.SetLastError(err)
-			logger.Error("model warmup failed", "error", err, "latency_ms", time.Since(started).Milliseconds())
-			return
+			logger.Warn("model warmup attempt failed", "attempt", attempt, "max_attempts", policy.maxAttempts, "error", err, "latency_ms", time.Since(attemptStarted).Milliseconds())
+			if attempt == policy.maxAttempts {
+				break
+			}
+			if err := sleepWarmupBackoff(context.Background(), policy.backoff(attempt)); err != nil {
+				lastErr = err
+				state.SetLastError(err)
+				break
+			}
 		}
 
-		state.MarkWarmupDone()
-		logger.Info("model warmup done", "latency_ms", time.Since(started).Milliseconds())
+		logger.Error("model warmup failed", "error", lastErr, "attempts", policy.maxAttempts, "latency_ms", time.Since(started).Milliseconds())
 	}()
+}
+
+func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return nil
+	}
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func main() {

@@ -123,7 +123,7 @@ func (c *TEIClient) Embed(ctx context.Context, texts []string) ([][]float32, err
 	return nil, lastErr
 }
 
-func (c *TEIClient) doEmbedRequest(ctx context.Context, jsonBody []byte) ([][]float32, bool, error) {
+func (c *TEIClient) doEmbedRequest(ctx context.Context, jsonBody []byte) (embeddings [][]float32, retriable bool, err error) {
 	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/embeddings", bytes.NewReader(jsonBody))
 	if err != nil {
 		return nil, false, err
@@ -152,7 +152,7 @@ func (c *TEIClient) doEmbedRequest(ctx context.Context, jsonBody []byte) ([][]fl
 		return nil, false, fmt.Errorf("TEI returned empty data")
 	}
 
-	embeddings := make([][]float32, len(result.Data))
+	embeddings = make([][]float32, len(result.Data))
 	for i, d := range result.Data {
 		embeddings[i] = d.Embedding
 	}

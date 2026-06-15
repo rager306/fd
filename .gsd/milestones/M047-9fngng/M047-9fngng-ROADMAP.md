@@ -23,7 +23,7 @@
 - [x] **S03: TEI retry and fast fail** `risk:high` `depends:[S01]`
   > After this: TEI transient dependency failures retry within a bounded policy and repeated outages fail quickly with a clear error.
 
-- [ ] **S04: Warmup retry and closure** `risk:medium` `depends:[S02,S03]`
+- [x] **S04: Warmup retry and closure** `risk:medium` `depends:[S02,S03]`
   > After this: Warmup transient failures retry and the milestone closes issue #6 with final gates and closure matrix.
 
 ## Boundary Map

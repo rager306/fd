@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -48,7 +49,7 @@ func TestStartModelWarmupMarksStateReady(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	startModelWarmup(logger, state, model, time.Second)
-	waitForCondition(t, time.Second, state.IsReady)
+	waitForCondition(t, state.IsReady)
 }
 
 func TestStartModelWarmupStoresError(t *testing.T) {
@@ -60,11 +61,61 @@ func TestStartModelWarmupStoresError(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	startModelWarmup(logger, state, model, time.Second)
-	waitForCondition(t, time.Second, func() bool {
+	waitForCondition(t, func() bool {
 		return errors.Is(state.LastError(), boom)
 	})
 	if state.IsReady() {
 		t.Fatal("state should not be ready after warmup failure")
+	}
+}
+
+func TestStartModelWarmupRetriesAndMarksReady(t *testing.T) {
+	state := lifecycle.NewState()
+	boom := errors.New("boom")
+	var attempts atomic.Int32
+	model := warmupModelFunc(func(_ context.Context, _ []string) ([][]float32, error) {
+		if attempts.Add(1) == 1 {
+			return nil, boom
+		}
+		return [][]float32{{1}}, nil
+	})
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	startModelWarmupWithPolicy(logger, state, model, time.Second, warmupRetryPolicy{
+		maxAttempts: 3,
+		backoff:     func(int) time.Duration { return 0 },
+	})
+
+	waitForCondition(t, state.IsReady)
+	if attempts.Load() != 2 {
+		t.Fatalf("attempts = %d, want 2", attempts.Load())
+	}
+	if err := state.LastError(); err != nil {
+		t.Fatalf("LastError after successful retry = %v, want nil", err)
+	}
+}
+
+func TestStartModelWarmupRecordsTerminalErrorAfterMaxAttempts(t *testing.T) {
+	state := lifecycle.NewState()
+	boom := errors.New("boom")
+	var attempts atomic.Int32
+	model := warmupModelFunc(func(_ context.Context, _ []string) ([][]float32, error) {
+		attempts.Add(1)
+		return nil, boom
+	})
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	startModelWarmupWithPolicy(logger, state, model, time.Second, warmupRetryPolicy{
+		maxAttempts: 3,
+		backoff:     func(int) time.Duration { return 0 },
+	})
+
+	waitForCondition(t, func() bool { return attempts.Load() == 3 })
+	if !errors.Is(state.LastError(), boom) {
+		t.Fatalf("LastError = %v, want boom", state.LastError())
+	}
+	if state.IsReady() {
+		t.Fatal("state should not be ready after terminal warmup failure")
 	}
 }
 
@@ -107,16 +158,16 @@ func TestReportHTTPServerErrorSignalsFatalError(t *testing.T) {
 	}
 }
 
-func waitForCondition(t *testing.T, timeout time.Duration, condition func() bool) {
+func waitForCondition(t *testing.T, condition func() bool) {
 	t.Helper()
-	deadline := time.Now().Add(timeout)
+	deadline := time.Now().Add(time.Second)
 	for time.Now().Before(deadline) {
 		if condition() {
 			return
 		}
 		time.Sleep(time.Millisecond)
 	}
-	t.Fatalf("condition not met within %s", timeout)
+	t.Fatal("condition not met within 1s")
 }
 
 func TestGetEnvIntReturnsDefaultWhenUnset(t *testing.T) {

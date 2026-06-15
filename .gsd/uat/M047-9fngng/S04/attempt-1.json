@@ -1,0 +1,145 @@
+{
+  "runId": "uat:M047-9fngng:S04:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M047-9fngng",
+  "sliceId": "S04",
+  "uatType": "artifact-driven",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-15T08:37:34.970Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": []
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Warmup retry policy and success readiness behavior are present.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "19a0bc3e-9186-40ba-98ce-c456535bae8d",
+          "note": "Verified warmup retry policy, attempt logging, and MarkWarmupDone path.",
+          "tool": "gsd_uat_exec",
+          "executionId": "19a0bc3e-9186-40ba-98ce-c456535bae8d"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "Closure matrix covers all issue #6 findings as fixed.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "81114e5d-c0a5-423c-8d73-0e40fceed740",
+          "note": "Verified closure rows for #11, #14, #13, #32, #25, and #15.",
+          "tool": "gsd_uat_exec",
+          "executionId": "81114e5d-c0a5-423c-8d73-0e40fceed740"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "R033-R036 are present and validated.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "83eeafc9-ed6a-46ab-a427-7863a5f3fb51",
+          "note": "Verified M047 requirements validated in GSD artifacts.",
+          "tool": "gsd_uat_exec",
+          "executionId": "83eeafc9-ed6a-46ab-a427-7863a5f3fb51"
+        }
+      ]
+    },
+    {
+      "id": "UAT-04",
+      "description": "Final gate evidence is recorded in S04 artifact.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "0644ab40-ee81-4eb7-9481-22ab68329ab0",
+          "note": "Verified final test/lint/vuln evidence is present.",
+          "tool": "gsd_uat_exec",
+          "executionId": "0644ab40-ee81-4eb7-9481-22ab68329ab0"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S04 validates backend warmup and closure artifacts, not browser UI."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Artifact-driven UAT is sufficient for backend reliability closure.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S04 validates issue #6 finding #14 and full M047 closure."
+}

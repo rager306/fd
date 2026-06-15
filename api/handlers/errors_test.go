@@ -43,6 +43,7 @@ func TestAllErrorCodesHaveNonTestEmitters(t *testing.T) {
 		if filepath.Base(path) == "errors.go" && filepath.Base(filepath.Dir(path)) == "handlers" {
 			return nil
 		}
+		// #nosec G304,G122 -- test scans repo-local Go files discovered by filepath.WalkDir.
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return err

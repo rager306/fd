@@ -51,4 +51,4 @@
 - 🔄 **M044-9vahk2: Upgrade OpenAPI contract to OAS 3.2.0** (`depends:[M041-4tw0w7]`)
 - ✅ **M045-d0e5xq: Stabilize TEI startup** (`depends:[—]`)
 - ✅ **M046-zqzcu6: Audit remediation waves** (`depends:[—]`)
-- 🔄 **M047-9fngng: Audit followup resilience contract** (`depends:[M046-zqzcu6]`)
+- ✅ **M047-9fngng: Audit followup resilience contract** (`depends:[M046-zqzcu6]`)
