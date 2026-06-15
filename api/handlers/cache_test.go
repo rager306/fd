@@ -41,13 +41,13 @@ func (f *fakeCacheInvalidator) Flush(ctx context.Context) (int64, error) {
 	return f.flushN, nil
 }
 
-func serveCacheRequest(handler *CacheHandler, method, path, body string) *httptest.ResponseRecorder {
+func serveCacheRequest(handler *CacheHandler, path, body string) *httptest.ResponseRecorder {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.POST("/v1/cache/flush", handler.Flush)
 	r.POST("/v1/cache/delete", handler.Delete)
 
-	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(body))
 	if body != "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
@@ -58,7 +58,7 @@ func serveCacheRequest(handler *CacheHandler, method, path, body string) *httpte
 
 func TestCacheHandlerFlushReportsDeletedCount(t *testing.T) {
 	invalidator := &fakeCacheInvalidator{flushN: 7}
-	w := serveCacheRequest(NewCacheHandler(invalidator), http.MethodPost, "/v1/cache/flush", "")
+	w := serveCacheRequest(NewCacheHandler(invalidator), "/v1/cache/flush", "")
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200; body=%s", w.Code, w.Body.String())
 	}
@@ -80,7 +80,7 @@ func TestCacheHandlerFlushReportsDeletedCount(t *testing.T) {
 func TestCacheHandlerDeleteAcceptsStringAndArrayInput(t *testing.T) {
 	invalidator := &fakeCacheInvalidator{}
 	body := `{"input":["first","second"],"dimensions":512}`
-	w := serveCacheRequest(NewCacheHandler(invalidator), http.MethodPost, "/v1/cache/delete", body)
+	w := serveCacheRequest(NewCacheHandler(invalidator), "/v1/cache/delete", body)
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200; body=%s", w.Code, w.Body.String())
 	}
@@ -97,7 +97,7 @@ func TestCacheHandlerDeleteAcceptsStringAndArrayInput(t *testing.T) {
 
 func TestCacheHandlerDeleteDefaultsDimensionsTo1024(t *testing.T) {
 	invalidator := &fakeCacheInvalidator{}
-	w := serveCacheRequest(NewCacheHandler(invalidator), http.MethodPost, "/v1/cache/delete", `{"input":"hello"}`)
+	w := serveCacheRequest(NewCacheHandler(invalidator), "/v1/cache/delete", `{"input":"hello"}`)
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200; body=%s", w.Code, w.Body.String())
 	}
@@ -107,14 +107,14 @@ func TestCacheHandlerDeleteDefaultsDimensionsTo1024(t *testing.T) {
 }
 
 func TestCacheHandlerDeleteRejectsMalformedInput(t *testing.T) {
-	w := serveCacheRequest(NewCacheHandler(&fakeCacheInvalidator{}), http.MethodPost, "/v1/cache/delete", `{"input":[123]}`)
+	w := serveCacheRequest(NewCacheHandler(&fakeCacheInvalidator{}), "/v1/cache/delete", `{"input":[123]}`)
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want 400; body=%s", w.Code, w.Body.String())
 	}
 }
 
 func TestCacheHandlerMapsInvalidatorErrors(t *testing.T) {
-	w := serveCacheRequest(NewCacheHandler(&fakeCacheInvalidator{err: errors.New("boom")}), http.MethodPost, "/v1/cache/flush", "")
+	w := serveCacheRequest(NewCacheHandler(&fakeCacheInvalidator{err: errors.New("boom")}), "/v1/cache/flush", "")
 	if w.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want 500; body=%s", w.Code, w.Body.String())
 	}

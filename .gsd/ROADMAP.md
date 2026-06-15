@@ -53,4 +53,4 @@
 - ✅ **M046-zqzcu6: Audit remediation waves** (`depends:[—]`)
 - ✅ **M047-9fngng: Audit followup resilience contract** (`depends:[M046-zqzcu6]`)
 - ✅ **M048-l4sctg: Audit cleanup tail** (`depends:[M047-9fngng]`)
-- 🔄 **M049-7dn2gp: Agent native observability and cache controls** (`depends:[—]`)
+- ✅ **M049-7dn2gp: Agent native observability and cache controls** (`depends:[—]`)

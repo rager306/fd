@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const testRedisPrefix = "embed:cache:"
+
 func clearRedisCacheEnv(t *testing.T) {
 	t.Helper()
 	for _, key := range []string{
@@ -47,7 +49,7 @@ func TestHashText(t *testing.T) {
 }
 
 func TestHashText_Deterministic(t *testing.T) {
-	c := &RedisCache{prefix: "embed:cache:", namespace: "v2"}
+	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2"}
 	text := "test text for hashing"
 
 	hash1 := c.HashText(text)
@@ -59,16 +61,16 @@ func TestHashText_Deterministic(t *testing.T) {
 }
 
 func TestRedisCacheNamespacePatternIsScoped(t *testing.T) {
-	c := &RedisCache{prefix: "embed:cache:", namespace: "v2:mabc"}
-	if got, want := c.namespacePattern(), "embed:cache:v2:mabc:*"; got != want {
+	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2:mabc"}
+	if got, want := c.namespacePattern(), testRedisPrefix+"v2:mabc:*"; got != want {
 		t.Fatalf("namespacePattern = %q, want %q", got, want)
 	}
 }
 
 func TestRedisCacheDeleteUsesDimensionedKey(t *testing.T) {
-	c := &RedisCache{prefix: "embed:cache:", namespace: "v2"}
+	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2"}
 	key := c.key("hello", 512)
-	if !strings.HasPrefix(key, "embed:cache:v2:") || !strings.HasSuffix(key, ":d512") {
+	if !strings.HasPrefix(key, testRedisPrefix+"v2:") || !strings.HasSuffix(key, ":d512") {
 		t.Fatalf("key = %q, want namespace and dimension scoped key", key)
 	}
 }

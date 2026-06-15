@@ -33,35 +33,6 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
-### R040 — Expose authenticated cache invalidation primitives so a solo operator/agent can purge stale embedding cache entries or flush the embedding cache without restarting fd or reaching into Redis manually.
-- Class: core-capability
-- Status: active
-- Description: Expose authenticated cache invalidation primitives so a solo operator/agent can purge stale embedding cache entries or flush the embedding cache without restarting fd or reaching into Redis manually.
-- Why it matters: Issue #8 AN-A identifies cache invalidation as the highest-leverage agent-native action parity gap; stale vectors can persist until TTL and poison all callers.
-- Source: GitHub issue #8 / M049
-- Primary owning slice: M049-7dn2gp/S01
-- Validation: M049 S01 implemented cache invalidation primitives and HTTP routes. Focused tests passed (`go test ./cache ./handlers`, 127 tests), full tests passed (`go test ./...`, 293 tests), and static proof `3670b28f-8bce-433e-8306-987102db98cb` verified namespace-scoped invalidation and route registration. Runtime live container proof remains for S03 before marking fully validated.
-- Notes: Advanced by S01; keep active until rebuilt-container HIT->flush->MISS proof passes.
-
-### R041 — Expose last lifecycle error and dependency reachability/latency in health output, plus capacity/cache occupancy signals in health/metrics.
-- Class: failure-visibility
-- Status: active
-- Description: Expose last lifecycle error and dependency reachability/latency in health output, plus capacity/cache occupancy signals in health/metrics.
-- Why it matters: Issue #8 AN-B/AN-C require agent clients to diagnose warmup/runtime dependency failures and understand capacity/cache pressure without shell access.
-- Source: GitHub issue #8 / M049
-- Primary owning slice: M049-7dn2gp/S02
-- Validation: M049 S02 implemented health last_error/dependencies/in_flight_capacity and metrics gauges. Focused tests passed (`go test ./handlers ./observability`, 92 tests), full tests passed (`go test ./...`, 295 tests), and static proof `7b258850-f9dc-4b91-a7bf-706f4872eff5` verified source invariants. Runtime live container proof remains for S03 before marking fully validated.
-- Notes: Advanced by S02; keep active until rebuilt-container health/metrics smoke passes.
-
-### R042 — Keep trace hardening and broad config/options extraction out of M049 unless required by AN-A or AN-B/C implementation; optimize for a solo deployment and avoid premature multi-tenant/admin abstraction.
-- Class: constraint
-- Status: active
-- Description: Keep trace hardening and broad config/options extraction out of M049 unless required by AN-A or AN-B/C implementation; optimize for a solo deployment and avoid premature multi-tenant/admin abstraction.
-- Why it matters: User explicitly asked not to complicate AN-D and to decide AN-E/F optimally for solo use. The current deployment is single-tenant, so adding admin-token/multi-client abstractions now would add complexity without immediate operational value.
-- Source: User direction / M049
-- Primary owning slice: M049-7dn2gp
-- Validation: Milestone summary records AN-D deferred and AN-E/F scoped to minimal config seams needed for implemented work only.
-
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -402,6 +373,36 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M048 S03: validation now emits a well-formed message for non-string array input when `json.UnmarshalTypeError.Field` is empty, and `openapi.m()` panics on non-string keys instead of silently dropping schema fields. Evidence: `benchmark-results/m048-s03-api-polish-closure.md`, focused tests passed with 53 tests, full `go test ./...` passed with 281 tests, lint 0 issues, govulncheck 0 reachable vulnerabilities, static proof `50f7f673-a2db-4367-bb1b-aad08226a683`.
 - Notes: Validated for issue #7 findings #24 and #31.
 
+### R040 — Expose authenticated cache invalidation primitives so a solo operator/agent can purge stale embedding cache entries or flush the embedding cache without restarting fd or reaching into Redis manually.
+- Class: core-capability
+- Status: validated
+- Description: Expose authenticated cache invalidation primitives so a solo operator/agent can purge stale embedding cache entries or flush the embedding cache without restarting fd or reaching into Redis manually.
+- Why it matters: Issue #8 AN-A identifies cache invalidation as the highest-leverage agent-native action parity gap; stale vectors can persist until TTL and poison all callers.
+- Source: GitHub issue #8 / M049
+- Primary owning slice: M049-7dn2gp/S01
+- Validation: M049 S01+S03: cache invalidation primitives/routes implemented and proven. Focused tests passed (`go test ./cache ./handlers`, 127 tests), full tests passed (295 tests), static proof `3670b28f-8bce-433e-8306-987102db98cb`, UAT evidence `94ea4377-4e0a-4327-a167-76d5bcf0404c`/`6d55b34d-006b-431c-8045-cb8e5f639981`, and live rebuilt-container proof `benchmark-results/m049-s03-live-container-proof.md` shows auth-protected flush plus MISS->HIT->flush->MISS and MISS->HIT->delete->MISS.
+- Notes: Validated for issue #8 AN-A.
+
+### R041 — Expose last lifecycle error and dependency reachability/latency in health output, plus capacity/cache occupancy signals in health/metrics.
+- Class: failure-visibility
+- Status: validated
+- Description: Expose last lifecycle error and dependency reachability/latency in health output, plus capacity/cache occupancy signals in health/metrics.
+- Why it matters: Issue #8 AN-B/AN-C require agent clients to diagnose warmup/runtime dependency failures and understand capacity/cache pressure without shell access.
+- Source: GitHub issue #8 / M049
+- Primary owning slice: M049-7dn2gp/S02
+- Validation: M049 S02+S03: health last_error/dependencies/in_flight_capacity and metrics gauges implemented and proven. Focused tests passed (`go test ./handlers ./observability`, 92 tests), full tests passed (295 tests), static proof `7b258850-f9dc-4b91-a7bf-706f4872eff5`, UAT evidence `14dc034d-e147-49b6-9a35-0723f3553065`/`00a1dc71-1adb-469e-bdb2-c7af7b58e15b`, and live rebuilt-container proof shows `/health` capacity/dependency context plus `/metrics` runtime/cache gauges.
+- Notes: Validated for issue #8 AN-B and AN-C.
+
+### R042 — Keep trace hardening and broad config/options extraction out of M049 unless required by AN-A or AN-B/C implementation; optimize for a solo deployment and avoid premature multi-tenant/admin abstraction.
+- Class: constraint
+- Status: validated
+- Description: Keep trace hardening and broad config/options extraction out of M049 unless required by AN-A or AN-B/C implementation; optimize for a solo deployment and avoid premature multi-tenant/admin abstraction.
+- Why it matters: User explicitly asked not to complicate AN-D and to decide AN-E/F optimally for solo use. The current deployment is single-tenant, so adding admin-token/multi-client abstractions now would add complexity without immediate operational value.
+- Source: User direction / M049
+- Primary owning slice: M049-7dn2gp
+- Validation: M049 decision D051 and closure artifact record solo-scope decision: AN-D trace hardening deferred by explicit user direction; AN-E/F broad config/options extraction avoided unless needed. Implemented only minimal seams required by AN-A/AN-B/C: cache invalidation routes, HealthOptions, dependency probes, and metrics observers.
+- Notes: Validated as a scope/constraint requirement for solo deployment.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -469,13 +470,13 @@ This file is the explicit capability and coverage contract for the project.
 | R037 | quality-attribute | validated | none | none | M048 S01: removed dead LRUCache source/tests, replaced the only LRU integration-test scaffold with a LocalCache-backed adapter, unified duplicate cache short hash helpers into `shortHash`, and replaced duplicated active env integer parsers with `internal/envutil`. Evidence: `benchmark-results/m048-s01-cache-cleanup.md`, `go test ./cache` passed with 36 tests, `go test ./...` passed with 282 tests, static proof `1453b735-d079-4ce7-9282-08805c13a318`. |
 | R038 | quality-attribute | validated | none | none | M048 S02: removed inactive ONNX-only RuntimeHealth fields, unified duplicate embed/warmup interfaces behind `embed.Embedder`, removed lifecycle default singleton, and updated main to construct lifecycle state explicitly. Evidence: `benchmark-results/m048-s02-runtime-contract-cleanup.md`, focused tests passed with 101 tests, full `go test ./...` passed with 280 tests, static proof `d75568af-277e-40e2-a28b-e6ee373d28dd`. |
 | R039 | quality-attribute | validated | none | none | M048 S03: validation now emits a well-formed message for non-string array input when `json.UnmarshalTypeError.Field` is empty, and `openapi.m()` panics on non-string keys instead of silently dropping schema fields. Evidence: `benchmark-results/m048-s03-api-polish-closure.md`, focused tests passed with 53 tests, full `go test ./...` passed with 281 tests, lint 0 issues, govulncheck 0 reachable vulnerabilities, static proof `50f7f673-a2db-4367-bb1b-aad08226a683`. |
-| R040 | core-capability | active | M049-7dn2gp/S01 | none | M049 S01 implemented cache invalidation primitives and HTTP routes. Focused tests passed (`go test ./cache ./handlers`, 127 tests), full tests passed (`go test ./...`, 293 tests), and static proof `3670b28f-8bce-433e-8306-987102db98cb` verified namespace-scoped invalidation and route registration. Runtime live container proof remains for S03 before marking fully validated. |
-| R041 | failure-visibility | active | M049-7dn2gp/S02 | none | M049 S02 implemented health last_error/dependencies/in_flight_capacity and metrics gauges. Focused tests passed (`go test ./handlers ./observability`, 92 tests), full tests passed (`go test ./...`, 295 tests), and static proof `7b258850-f9dc-4b91-a7bf-706f4872eff5` verified source invariants. Runtime live container proof remains for S03 before marking fully validated. |
-| R042 | constraint | active | M049-7dn2gp | none | Milestone summary records AN-D deferred and AN-E/F scoped to minimal config seams needed for implemented work only. |
+| R040 | core-capability | validated | M049-7dn2gp/S01 | none | M049 S01+S03: cache invalidation primitives/routes implemented and proven. Focused tests passed (`go test ./cache ./handlers`, 127 tests), full tests passed (295 tests), static proof `3670b28f-8bce-433e-8306-987102db98cb`, UAT evidence `94ea4377-4e0a-4327-a167-76d5bcf0404c`/`6d55b34d-006b-431c-8045-cb8e5f639981`, and live rebuilt-container proof `benchmark-results/m049-s03-live-container-proof.md` shows auth-protected flush plus MISS->HIT->flush->MISS and MISS->HIT->delete->MISS. |
+| R041 | failure-visibility | validated | M049-7dn2gp/S02 | none | M049 S02+S03: health last_error/dependencies/in_flight_capacity and metrics gauges implemented and proven. Focused tests passed (`go test ./handlers ./observability`, 92 tests), full tests passed (295 tests), static proof `7b258850-f9dc-4b91-a7bf-706f4872eff5`, UAT evidence `14dc034d-e147-49b6-9a35-0723f3553065`/`00a1dc71-1adb-469e-bdb2-c7af7b58e15b`, and live rebuilt-container proof shows `/health` capacity/dependency context plus `/metrics` runtime/cache gauges. |
+| R042 | constraint | validated | M049-7dn2gp | none | M049 decision D051 and closure artifact record solo-scope decision: AN-D trace hardening deferred by explicit user direction; AN-E/F broad config/options extraction avoided unless needed. Implemented only minimal seams required by AN-A/AN-B/C: cache invalidation routes, HealthOptions, dependency probes, and metrics observers. |
 
 ## Coverage Summary
 
-- Active requirements: 6
-- Mapped to slices: 4
-- Validated: 34 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039)
+- Active requirements: 3
+- Mapped to slices: 2
+- Validated: 37 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042)
 - Unmapped active requirements: 1

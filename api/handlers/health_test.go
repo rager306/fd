@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	testModelID    = "deepvk/USER-bge-m3"
-	testTEIBackend = "tei"
-	testVersion200 = "2.0.0"
+	testModelID        = "deepvk/USER-bge-m3"
+	testTEIBackend     = "tei"
+	testVersion200     = "2.0.0"
+	testCacheNamespace = "m049"
 )
 
 func TestHealthHandlerDefaultShape(t *testing.T) {
@@ -170,7 +171,7 @@ func TestDeepHealthReportsLastErrorCapacityAndDependencies(t *testing.T) {
 	state := lifecycle.NewState()
 	state.SetLastError(errTestHealthBoom{})
 	capacity := int64(7)
-	runtime := &RuntimeHealth{Backend: testTEIBackend, Model: testModelID, Dimensions: 1024, ProductionDefault: true, CacheNamespace: "m049"}
+	runtime := &RuntimeHealth{Backend: testTEIBackend, Model: testModelID, Dimensions: 1024, ProductionDefault: true, CacheNamespace: testCacheNamespace}
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/health", NewHealthHandlerWithOptions(runtime, state, HealthOptions{
@@ -180,7 +181,7 @@ func TestDeepHealthReportsLastErrorCapacityAndDependencies(t *testing.T) {
 				return DependencyStatus{Reachable: true, LatencyMS: 3.5}
 			}),
 			Redis: DependencyProbeFunc(func(_ context.Context) DependencyStatus {
-				return DependencyStatus{Reachable: false, LatencyMS: 1.2, Namespace: "m049", Error: "dial refused"}
+				return DependencyStatus{Reachable: false, LatencyMS: 1.2, Namespace: testCacheNamespace, Error: "dial refused"}
 			}),
 		},
 	}))
@@ -200,7 +201,7 @@ func TestDeepHealthReportsLastErrorCapacityAndDependencies(t *testing.T) {
 	if body.Dependencies == nil || body.Dependencies.TEI == nil || !body.Dependencies.TEI.Reachable {
 		t.Fatalf("tei dependency = %+v", body.Dependencies)
 	}
-	if body.Dependencies.Redis == nil || body.Dependencies.Redis.Reachable || body.Dependencies.Redis.Namespace != "m049" || body.Dependencies.Redis.Error == "" {
+	if body.Dependencies.Redis == nil || body.Dependencies.Redis.Reachable || body.Dependencies.Redis.Namespace != testCacheNamespace || body.Dependencies.Redis.Error == "" {
 		t.Fatalf("redis dependency = %+v", body.Dependencies.Redis)
 	}
 }

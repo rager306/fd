@@ -337,7 +337,11 @@ func main() {
 				if err != nil {
 					return handlers.DependencyStatus{Reachable: false, LatencyMS: latencyMS, Error: err.Error()}
 				}
-				defer resp.Body.Close()
+				defer func() {
+					if closeErr := resp.Body.Close(); closeErr != nil {
+						logger.Debug("tei health response close failed", "error", closeErr)
+					}
+				}()
 				reachable := resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusInternalServerError
 				status := handlers.DependencyStatus{Reachable: reachable, LatencyMS: latencyMS}
 				if !reachable {

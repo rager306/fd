@@ -18,7 +18,7 @@
 - [x] **S02: Health and metrics context** `risk:medium` `depends:[S01]`
   > After this: After this slice, /health and /metrics expose last error, dependency, capacity, and cache occupancy signals agents can inspect.
 
-- [ ] **S03: Solo scope closure and live verification** `risk:low` `depends:[S01,S02]`
+- [x] **S03: Solo scope closure and live verification** `risk:low` `depends:[S01,S02]`
   > After this: After this slice, issue #8 has a closure matrix for implemented/deferred items and the rebuilt container passes live smoke.
 
 ## Boundary Map
