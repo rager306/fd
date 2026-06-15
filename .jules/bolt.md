@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2024-06-15 - Fast SHA256 string hashing without allocations
+**Learning:** Generating string hashes via `hex.EncodeToString` creates string allocations, and casting `string` to `[]byte` also creates a copy for `sha256.Sum256`. By using `unsafe.StringData` combined with `unsafe.Slice` we can pass the string's backing array directly to `sha256`. Furthermore, encoding into a local fixed-size array `var buf [12]byte` and converting that to string uses less heap allocation. This dropped the hash overhead from ~786ns/224B to ~600ns/16B.
+**Action:** When hashing strings, use `unsafe.StringData` to avoid the `[]byte` copy, and `hex.Encode` into a stack array rather than `hex.EncodeToString` if taking a substring of the hex.
