@@ -1,0 +1,130 @@
+{
+  "runId": "uat:M049-7dn2gp:S02:attempt-1",
+  "attempt": 1,
+  "milestoneId": "M049-7dn2gp",
+  "sliceId": "S02",
+  "uatType": "artifact-driven",
+  "verdict": "PASS",
+  "gateVerdict": "pass",
+  "evaluatedAt": "2026-06-15T13:05:57.251Z",
+  "worktreeRoot": "/root/fd",
+  "browserToolsPresented": false,
+  "modePolicy": {
+    "browserTools": false,
+    "partialEligible": false,
+    "passWithHumanFollowUp": false,
+    "requiredAnyModes": []
+  },
+  "checks": [
+    {
+      "id": "UAT-01",
+      "description": "Health response has last_error, dependencies, capacity, and option/probe plumbing.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "14dc034d-e147-49b6-9a35-0723f3553065",
+          "note": "Verified health diagnostic fields and probe plumbing source.",
+          "tool": "gsd_uat_exec",
+          "executionId": "14dc034d-e147-49b6-9a35-0723f3553065"
+        }
+      ]
+    },
+    {
+      "id": "UAT-02",
+      "description": "Metrics exposes in-flight and L1 cache gauges.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "00a1dc71-1adb-469e-bdb2-c7af7b58e15b",
+          "note": "Verified metrics gauge source invariants.",
+          "tool": "gsd_uat_exec",
+          "executionId": "00a1dc71-1adb-469e-bdb2-c7af7b58e15b"
+        }
+      ]
+    },
+    {
+      "id": "UAT-03",
+      "description": "S02 artifact records implementation and verification proof.",
+      "mode": "artifact",
+      "result": "PASS",
+      "evidence": [
+        {
+          "kind": "gsd_uat_exec",
+          "ref": "f7e110b0-1e20-4efa-82ba-de00341b696a",
+          "note": "Verified S02 evidence artifact completeness.",
+          "tool": "gsd_uat_exec",
+          "executionId": "f7e110b0-1e20-4efa-82ba-de00341b696a"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "surface": "provider-tools",
+    "presentedTools": [
+      "gsd_resume",
+      "gsd_milestone_status",
+      "gsd_journal_query",
+      "gsd_uat_exec",
+      "gsd_uat_result_save",
+      "find",
+      "glob",
+      "grep",
+      "ls",
+      "read"
+    ],
+    "blockedTools": [
+      {
+        "name": "gsd_exec",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_summary_save",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "gsd_save_gate_result",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "browser",
+        "reason": "S02 validates backend health/metrics artifacts, not a browser UI."
+      },
+      {
+        "name": "edit",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "search-the-web",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "WebSearch",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Bash",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Write",
+        "reason": "forbidden during run-uat"
+      },
+      {
+        "name": "Edit",
+        "reason": "forbidden during run-uat"
+      }
+    ],
+    "fallbackToolsUsed": [],
+    "notes": "Runtime health/metrics proof is planned for S03 after aggregate container rebuild.",
+    "toolPresentationPlanId": "run-uat/default-v1"
+  },
+  "notes": "PASS: S02 implements AN-B/AN-C source/test contract. Runtime container proof deferred to S03."
+}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -164,6 +165,49 @@ func TestDeepHealthIncludesLastInferenceAt(t *testing.T) {
 		t.Fatalf("last_inference_at missing: %#v", body.LastInferenceAt)
 	}
 }
+
+func TestDeepHealthReportsLastErrorCapacityAndDependencies(t *testing.T) {
+	state := lifecycle.NewState()
+	state.SetLastError(errTestHealthBoom{})
+	capacity := int64(7)
+	runtime := &RuntimeHealth{Backend: testTEIBackend, Model: testModelID, Dimensions: 1024, ProductionDefault: true, CacheNamespace: "m049"}
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.GET("/health", NewHealthHandlerWithOptions(runtime, state, HealthOptions{
+		InFlightCapacity: &capacity,
+		Dependencies: &DependencyChecks{
+			TEI: DependencyProbeFunc(func(_ context.Context) DependencyStatus {
+				return DependencyStatus{Reachable: true, LatencyMS: 3.5}
+			}),
+			Redis: DependencyProbeFunc(func(_ context.Context) DependencyStatus {
+				return DependencyStatus{Reachable: false, LatencyMS: 1.2, Namespace: "m049", Error: "dial refused"}
+			}),
+		},
+	}))
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/health", http.NoBody))
+	if w.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503; body=%s", w.Code, w.Body.String())
+	}
+	body := decodeDeepHealth(t, w)
+	if body.LastError == nil || body.LastError.Code != "lifecycle_error" || body.LastError.Message != "boom" || body.LastError.At == "" {
+		t.Fatalf("last_error = %+v, want lifecycle_error boom with timestamp", body.LastError)
+	}
+	if body.InFlightCapacity == nil || *body.InFlightCapacity != 7 {
+		t.Fatalf("in_flight_capacity = %+v, want 7", body.InFlightCapacity)
+	}
+	if body.Dependencies == nil || body.Dependencies.TEI == nil || !body.Dependencies.TEI.Reachable {
+		t.Fatalf("tei dependency = %+v", body.Dependencies)
+	}
+	if body.Dependencies.Redis == nil || body.Dependencies.Redis.Reachable || body.Dependencies.Redis.Namespace != "m049" || body.Dependencies.Redis.Error == "" {
+		t.Fatalf("redis dependency = %+v", body.Dependencies.Redis)
+	}
+}
+
+type errTestHealthBoom struct{}
+
+func (errTestHealthBoom) Error() string { return "boom" }
 
 func serveDeepHealth(state *lifecycle.State) *httptest.ResponseRecorder {
 	gin.SetMode(gin.TestMode)

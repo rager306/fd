@@ -50,7 +50,8 @@ This file is the explicit capability and coverage contract for the project.
 - Why it matters: Issue #8 AN-B/AN-C require agent clients to diagnose warmup/runtime dependency failures and understand capacity/cache pressure without shell access.
 - Source: GitHub issue #8 / M049
 - Primary owning slice: M049-7dn2gp/S02
-- Validation: Health/metrics tests prove last_error, dependencies, in_flight_capacity, in-flight gauge, and cache occupancy gauges; live container health/metrics smoke confirms fields are observable.
+- Validation: M049 S02 implemented health last_error/dependencies/in_flight_capacity and metrics gauges. Focused tests passed (`go test ./handlers ./observability`, 92 tests), full tests passed (`go test ./...`, 295 tests), and static proof `7b258850-f9dc-4b91-a7bf-706f4872eff5` verified source invariants. Runtime live container proof remains for S03 before marking fully validated.
+- Notes: Advanced by S02; keep active until rebuilt-container health/metrics smoke passes.
 
 ### R042 — Keep trace hardening and broad config/options extraction out of M049 unless required by AN-A or AN-B/C implementation; optimize for a solo deployment and avoid premature multi-tenant/admin abstraction.
 - Class: constraint
@@ -469,7 +470,7 @@ This file is the explicit capability and coverage contract for the project.
 | R038 | quality-attribute | validated | none | none | M048 S02: removed inactive ONNX-only RuntimeHealth fields, unified duplicate embed/warmup interfaces behind `embed.Embedder`, removed lifecycle default singleton, and updated main to construct lifecycle state explicitly. Evidence: `benchmark-results/m048-s02-runtime-contract-cleanup.md`, focused tests passed with 101 tests, full `go test ./...` passed with 280 tests, static proof `d75568af-277e-40e2-a28b-e6ee373d28dd`. |
 | R039 | quality-attribute | validated | none | none | M048 S03: validation now emits a well-formed message for non-string array input when `json.UnmarshalTypeError.Field` is empty, and `openapi.m()` panics on non-string keys instead of silently dropping schema fields. Evidence: `benchmark-results/m048-s03-api-polish-closure.md`, focused tests passed with 53 tests, full `go test ./...` passed with 281 tests, lint 0 issues, govulncheck 0 reachable vulnerabilities, static proof `50f7f673-a2db-4367-bb1b-aad08226a683`. |
 | R040 | core-capability | active | M049-7dn2gp/S01 | none | M049 S01 implemented cache invalidation primitives and HTTP routes. Focused tests passed (`go test ./cache ./handlers`, 127 tests), full tests passed (`go test ./...`, 293 tests), and static proof `3670b28f-8bce-433e-8306-987102db98cb` verified namespace-scoped invalidation and route registration. Runtime live container proof remains for S03 before marking fully validated. |
-| R041 | failure-visibility | active | M049-7dn2gp/S02 | none | Health/metrics tests prove last_error, dependencies, in_flight_capacity, in-flight gauge, and cache occupancy gauges; live container health/metrics smoke confirms fields are observable. |
+| R041 | failure-visibility | active | M049-7dn2gp/S02 | none | M049 S02 implemented health last_error/dependencies/in_flight_capacity and metrics gauges. Focused tests passed (`go test ./handlers ./observability`, 92 tests), full tests passed (`go test ./...`, 295 tests), and static proof `7b258850-f9dc-4b91-a7bf-706f4872eff5` verified source invariants. Runtime live container proof remains for S03 before marking fully validated. |
 | R042 | constraint | active | M049-7dn2gp | none | Milestone summary records AN-D deferred and AN-E/F scoped to minimal config seams needed for implemented work only. |
 
 ## Coverage Summary

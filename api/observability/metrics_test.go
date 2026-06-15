@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"fd-api/handlers"
+	"fd-api/lifecycle"
 	"fd-api/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,33 @@ func TestMetricsHandlerExposesPrometheusText(t *testing.T) {
 	} {
 		if !strings.Contains(body, metricName) {
 			t.Fatalf("metrics output missing %s:\n%s", metricName, body)
+		}
+	}
+}
+
+func TestMetricsHandlerExposesRuntimeCapacityAndCacheGauges(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	metrics := NewMetrics()
+	state := lifecycle.NewState()
+	done := state.TrackRequest()
+	defer done()
+	metrics.SetRuntimeObservers(state, 10, func() int { return 3 })
+	r := gin.New()
+	r.GET("/metrics", metrics.Handler())
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/metrics", http.NoBody))
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body=%s", w.Code, w.Body.String())
+	}
+	body := w.Body.String()
+	for _, want := range []string{
+		"fd_in_flight_requests 1",
+		"fd_in_flight_capacity 10",
+		`fd_cache_entries{tier="l1"} 3`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("metrics output missing %q:\n%s", want, body)
 		}
 	}
 }

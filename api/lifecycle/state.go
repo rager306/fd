@@ -27,6 +27,7 @@ type State struct {
 
 type errorSnapshot struct {
 	err error
+	at  time.Time
 }
 
 type contextKey struct{}
@@ -165,7 +166,11 @@ func (s *State) WaitDrain(timeout time.Duration) error {
 
 // SetLastError records the last lifecycle error. Passing nil clears it.
 func (s *State) SetLastError(err error) {
-	s.lastError.Store(errorSnapshot{err: err})
+	if err == nil {
+		s.lastError.Store(errorSnapshot{})
+		return
+	}
+	s.lastError.Store(errorSnapshot{err: err, at: time.Now()})
 }
 
 // LastError returns the last lifecycle error recorded by SetLastError.
@@ -175,4 +180,17 @@ func (s *State) LastError() error {
 		return nil
 	}
 	return value.(errorSnapshot).err
+}
+
+// LastErrorAt returns when the current last lifecycle error was recorded.
+func (s *State) LastErrorAt() (time.Time, bool) {
+	value := s.lastError.Load()
+	if value == nil {
+		return time.Time{}, false
+	}
+	snapshot := value.(errorSnapshot)
+	if snapshot.err == nil || snapshot.at.IsZero() {
+		return time.Time{}, false
+	}
+	return snapshot.at, true
 }

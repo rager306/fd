@@ -4,6 +4,7 @@ package observability
 import (
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"fd-api/embed"
@@ -31,6 +32,14 @@ type Metrics struct {
 	modelLoaded         prometheus.Gauge
 	cacheHitsTotal      *prometheus.CounterVec
 	cacheEvictionsTotal prometheus.Counter
+	inFlightRequests    prometheus.Gauge
+	inFlightCapacity    prometheus.Gauge
+	cacheEntries        *prometheus.GaugeVec
+
+	runtimeMu        sync.RWMutex
+	runtimeState     *lifecycle.State
+	runtimeCapacity  int64
+	localCacheSizeFn func() int
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
@@ -67,6 +76,18 @@ func NewMetrics() *Metrics {
 			Name: "fd_cache_evictions_total",
 			Help: "Total fd in-memory cache evictions.",
 		}),
+		inFlightRequests: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "fd_in_flight_requests",
+			Help: "Current fd embedding requests in flight.",
+		}),
+		inFlightCapacity: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "fd_in_flight_capacity",
+			Help: "Configured fd embedding in-flight capacity. Zero means unlimited.",
+		}),
+		cacheEntries: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "fd_cache_entries",
+			Help: "Current fd cache entries by tier where cheap to observe.",
+		}, []string{"tier"}),
 	}
 	metrics.registry.MustRegister(
 		metrics.requestsTotal,
@@ -76,6 +97,9 @@ func NewMetrics() *Metrics {
 		metrics.modelLoaded,
 		metrics.cacheHitsTotal,
 		metrics.cacheEvictionsTotal,
+		metrics.inFlightRequests,
+		metrics.inFlightCapacity,
+		metrics.cacheEntries,
 	)
 	metrics.initLabelSeries()
 	return metrics
@@ -97,6 +121,7 @@ func (m *Metrics) initLabelSeries() {
 func (m *Metrics) Handler() gin.HandlerFunc {
 	handler := promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{})
 	return func(c *gin.Context) {
+		m.observeRuntimeGauges()
 		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }
@@ -114,6 +139,32 @@ func (m *Metrics) Middleware() gin.HandlerFunc {
 		m.observeBatchSize(c)
 		m.observeErrorCode(c, statusCode)
 		m.observeModelLoaded(c)
+	}
+}
+
+// SetRuntimeObservers configures cheap runtime gauges collected at scrape time.
+func (m *Metrics) SetRuntimeObservers(state *lifecycle.State, capacity int64, localCacheSizeFn func() int) {
+	m.runtimeMu.Lock()
+	defer m.runtimeMu.Unlock()
+	m.runtimeState = state
+	m.runtimeCapacity = capacity
+	m.localCacheSizeFn = localCacheSizeFn
+}
+
+func (m *Metrics) observeRuntimeGauges() {
+	m.runtimeMu.RLock()
+	state := m.runtimeState
+	capacity := m.runtimeCapacity
+	localCacheSizeFn := m.localCacheSizeFn
+	m.runtimeMu.RUnlock()
+	if state != nil {
+		m.inFlightRequests.Set(float64(state.InFlightCount()))
+	} else {
+		m.inFlightRequests.Set(0)
+	}
+	m.inFlightCapacity.Set(float64(capacity))
+	if localCacheSizeFn != nil {
+		m.cacheEntries.WithLabelValues("l1").Set(float64(localCacheSizeFn()))
 	}
 }
 

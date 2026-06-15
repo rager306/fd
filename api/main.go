@@ -281,6 +281,7 @@ func main() {
 	if maxInFlight > 0 {
 		logger.Info("embedding lifecycle capacity gate enabled", "max_in_flight", maxInFlight)
 	}
+	maxInFlightCapacity := int64(maxInFlight)
 
 	teiClient := embed.NewTEIClient(teiURL, modelID, httpClient)
 	embeddingClient := embed.Embedder(teiClient)
@@ -318,9 +319,44 @@ func main() {
 	batchHandler := handlers.NewBatchHandler(embeddingClient, tiered, modelID, logger)
 	v1BatchHandler := handlers.NewV1BatchHandler(embeddingClient, tiered, logger)
 	cacheHandler := handlers.NewCacheHandler(tiered)
+	metrics.SetRuntimeObservers(lifecycleState, maxInFlightCapacity, tiered.LocalSize)
 
 	runtimeHealth := runtimeConfig.Health(modelID, redisOptions.Namespace.String())
-	healthHandler := handlers.NewHealthHandlerWithState(runtimeHealth, lifecycleState)
+	teiHealthURL := strings.TrimRight(teiURL, "/") + "/health"
+	healthHandler := handlers.NewHealthHandlerWithOptions(runtimeHealth, lifecycleState, handlers.HealthOptions{
+		InFlightCapacity: &maxInFlightCapacity,
+		Dependencies: &handlers.DependencyChecks{
+			TEI: handlers.DependencyProbeFunc(func(ctx context.Context) handlers.DependencyStatus {
+				started := time.Now()
+				req, err := http.NewRequestWithContext(ctx, http.MethodGet, teiHealthURL, http.NoBody)
+				if err != nil {
+					return handlers.DependencyStatus{Reachable: false, LatencyMS: float64(time.Since(started).Microseconds()) / 1000, Error: err.Error()}
+				}
+				resp, err := httpClient.Do(req)
+				latencyMS := float64(time.Since(started).Microseconds()) / 1000
+				if err != nil {
+					return handlers.DependencyStatus{Reachable: false, LatencyMS: latencyMS, Error: err.Error()}
+				}
+				defer resp.Body.Close()
+				reachable := resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusInternalServerError
+				status := handlers.DependencyStatus{Reachable: reachable, LatencyMS: latencyMS}
+				if !reachable {
+					status.Error = fmt.Sprintf("status %d", resp.StatusCode)
+				}
+				return status
+			}),
+			Redis: handlers.DependencyProbeFunc(func(ctx context.Context) handlers.DependencyStatus {
+				started := time.Now()
+				err := tiered.Ping(ctx)
+				status := handlers.DependencyStatus{Reachable: err == nil, LatencyMS: float64(time.Since(started).Microseconds()) / 1000, Namespace: redisOptions.Namespace.String()}
+				if err != nil {
+					status.Error = err.Error()
+				}
+				return status
+			}),
+		},
+		DependencyTimeout: 750 * time.Millisecond,
+	})
 	r.GET("/live", handlers.NewLiveHandler())
 	r.GET("/ready", handlers.NewReadyHandler(lifecycleState))
 	r.GET("/version", handlers.NewVersionHandler(buildInfo))
