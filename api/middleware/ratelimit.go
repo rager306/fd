@@ -10,6 +10,7 @@ import (
 
 	"fd-api/embed"
 	"fd-api/handlers"
+	"fd-api/internal/envutil"
 
 	"github.com/gin-gonic/gin"
 )
@@ -48,12 +49,12 @@ func NewRateLimiter(rpm int) *RateLimiter {
 
 // IPRateLimitFromEnv returns per-IP rate limiting middleware from env.
 func IPRateLimitFromEnv() gin.HandlerFunc {
-	return IPRateLimit(rateLimitEnabledFromEnv(), envInt("FD_RATE_LIMIT_IP_RPM", defaultIPRateLimitRPM))
+	return IPRateLimit(rateLimitEnabledFromEnv(), envutil.PositiveInt("FD_RATE_LIMIT_IP_RPM", defaultIPRateLimitRPM))
 }
 
 // UserRateLimitFromEnv returns per-user rate limiting middleware from env.
 func UserRateLimitFromEnv() gin.HandlerFunc {
-	return UserRateLimit(rateLimitEnabledFromEnv(), envInt("FD_RATE_LIMIT_USER_RPM", defaultUserRateLimitRPM))
+	return UserRateLimit(rateLimitEnabledFromEnv(), envutil.PositiveInt("FD_RATE_LIMIT_USER_RPM", defaultUserRateLimitRPM))
 }
 
 // IPRateLimit limits requests per client IP when enabled.
@@ -183,16 +184,4 @@ func userFromValidatedRequest(c *gin.Context) string {
 
 func rateLimitEnabledFromEnv() bool {
 	return strings.EqualFold(os.Getenv("FD_RATE_LIMIT_ENABLED"), "true")
-}
-
-func envInt(key string, fallback int) int {
-	value := strings.TrimSpace(os.Getenv(key))
-	if value == "" {
-		return fallback
-	}
-	parsed, err := strconv.Atoi(value)
-	if err != nil || parsed <= 0 {
-		return fallback
-	}
-	return parsed
 }

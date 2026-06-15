@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -19,9 +21,89 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const testVectorCacheTTL = time.Hour
+
+type localVectorCache struct {
+	local   *cache.LocalCache
+	metrics *observability.Metrics
+}
+
+func newLocalVectorCache(maxSize int, metrics *observability.Metrics) *localVectorCache {
+	return &localVectorCache{local: cache.NewLocalCache(maxSize, 0), metrics: metrics}
+}
+
+func (c *localVectorCache) GetIfPresent(ctx context.Context, key string, dim int) ([]float32, bool) {
+	data, ok := c.local.Get(ctx, key)
+	if !ok {
+		c.observeCacheResult("miss")
+		return nil, false
+	}
+	vec, ok := decodeTestVector(data, dim)
+	if !ok {
+		c.observeCacheResult("miss")
+		return nil, false
+	}
+	c.observeCacheResult("hit")
+	return vec, true
+}
+
+func (c *localVectorCache) GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32 {
+	hits := make(map[int][]float32)
+	for i, key := range keys {
+		if vec, ok := c.GetIfPresent(ctx, key, dim); ok {
+			hits[i] = vec
+		}
+	}
+	return hits
+}
+
+func (c *localVectorCache) Set(ctx context.Context, key string, _ int, emb []float32) {
+	c.local.Set(ctx, key, encodeTestVector(emb), testVectorCacheTTL)
+}
+
+func (c *localVectorCache) GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
+	if vec, ok := c.GetIfPresent(ctx, key, dim); ok {
+		return vec, nil
+	}
+	vec, err := loader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	c.Set(ctx, key, dim, vec)
+	return vec, nil
+}
+
+func (c *localVectorCache) Close() error { return c.local.Close() }
+
+func (c *localVectorCache) observeCacheResult(result string) {
+	if c.metrics != nil {
+		c.metrics.ObserveCacheResult(result)
+	}
+}
+
+func encodeTestVector(vec []float32) []byte {
+	data := make([]byte, 4*len(vec))
+	for i, v := range vec {
+		binary.LittleEndian.PutUint32(data[i*4:], math.Float32bits(v))
+	}
+	return data
+}
+
+func decodeTestVector(data []byte, dim int) ([]float32, bool) {
+	if len(data) != 4*dim {
+		return nil, false
+	}
+	vec := make([]float32, dim)
+	for i := range vec {
+		vec[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[i*4:]))
+	}
+	return vec, true
+}
+
 func TestFdV2CacheMissThenHit(t *testing.T) {
 	metrics := observability.NewMetrics()
-	vectorCache := cache.NewLRUCache(100, time.Hour, metrics)
+	vectorCache := newLocalVectorCache(100, metrics)
+	t.Cleanup(func() { _ = vectorCache.Close() })
 	var calls atomic.Int64
 	embedder := &lifecycleTestEmbedder{embedFunc: func(_ context.Context, texts []string) ([][]float32, error) {
 		calls.Add(1)

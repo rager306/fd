@@ -94,8 +94,4 @@ func TestRateLimitEnvHelpersFallback(t *testing.T) {
 	if !rateLimitEnabledFromEnv() {
 		t.Fatal("rateLimitEnabledFromEnv = false, want true")
 	}
-	t.Setenv("FD_RATE_LIMIT_IP_RPM", "not-a-number")
-	if got := envInt("FD_RATE_LIMIT_IP_RPM", 42); got != 42 {
-		t.Fatalf("envInt invalid = %d, want fallback", got)
-	}
 }

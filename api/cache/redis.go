@@ -160,23 +160,18 @@ func (n RedisCacheNamespace) String() string {
 	}
 	parts := []string{cacheVersion}
 	if n.ModelID != "" {
-		parts = append(parts, "m"+shortNamespaceHash(n.ModelID))
+		parts = append(parts, "m"+shortHash(n.ModelID))
 	}
 	if n.ModelRevision != "" {
-		parts = append(parts, "r"+shortNamespaceHash(n.ModelRevision))
+		parts = append(parts, "r"+shortHash(n.ModelRevision))
 	}
 	if n.TokenizerVersion != "" {
-		parts = append(parts, "t"+shortNamespaceHash(n.TokenizerVersion))
+		parts = append(parts, "t"+shortHash(n.TokenizerVersion))
 	}
 	if n.ChunkingVersion != "" {
-		parts = append(parts, "c"+shortNamespaceHash(n.ChunkingVersion))
+		parts = append(parts, "c"+shortHash(n.ChunkingVersion))
 	}
 	return strings.Join(parts, ":")
-}
-
-func shortNamespaceHash(value string) string {
-	h := sha256.Sum256([]byte(value))
-	return hex.EncodeToString(h[:])[:12]
 }
 
 func (c *RedisCache) expiration() time.Duration {

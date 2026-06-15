@@ -2,8 +2,6 @@ package cache
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"log/slog"
 	"time"
 
@@ -41,7 +39,7 @@ func NewTieredCacheWithLogger(local *LocalCache, redis *RedisCache, localTTL tim
 // GetOrLoad checks L1 then L2, invoking loader if both miss.
 func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
 	localKey := localCacheKey(key, dim)
-	keyHash := shortCacheKeyHash(key)
+	keyHash := shortHash(key)
 
 	// L1 check — returns []byte
 	if data, ok := tc.local.Get(ctx, localKey); ok {
@@ -109,11 +107,6 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 		tc.logger.Debug("cache singleflight shared", "event", "cache_singleflight_shared", "key_hash", keyHash, "dim", dim)
 	}
 	return r.([]float32), nil
-}
-
-func shortCacheKeyHash(key string) string {
-	h := sha256.Sum256([]byte(key))
-	return hex.EncodeToString(h[:])[:12]
 }
 
 // Ping checks L2 (Redis) connectivity.

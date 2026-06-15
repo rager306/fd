@@ -33,6 +33,22 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: `GET /openapi.json` returns an OAS 3.2.0 document; docs render it; the final contract verifier asserts `openapi == "3.2.0"`; external schema validation or compatibility checks pass; mandatory Go gates (`go test ./...`, golangci-lint v2.12.2, govulncheck) pass.
 - Notes: Implement as a new follow-up milestone/slice, not by editing M041 closure claims.
 
+### R038 — Simplify runtime and lifecycle contracts so active TEI-only health and embedding/warmup interfaces do not advertise inactive ONNX fields or duplicate interface names.
+- Class: quality-attribute
+- Status: active
+- Description: Simplify runtime and lifecycle contracts so active TEI-only health and embedding/warmup interfaces do not advertise inactive ONNX fields or duplicate interface names.
+- Why it matters: Issue #7 findings #26, #29, and #30 create misleading contracts and unnecessary startup/lifecycle ambiguity after the TEI-only decision.
+- Source: GitHub issue #7 / M048
+- Validation: Tests and static checks prove RuntimeHealth only exposes active TEI fields, embedding interface duplication is removed, and lifecycle state construction is explicit.
+
+### R039 — Make low-level API contract helpers fail clearly for bad inputs instead of producing malformed messages or silently dropping schema fields.
+- Class: quality-attribute
+- Status: active
+- Description: Make low-level API contract helpers fail clearly for bad inputs instead of producing malformed messages or silently dropping schema fields.
+- Why it matters: Issue #7 findings #24 and #31 are small but user-facing maintainability gaps in validation errors and OpenAPI generation.
+- Source: GitHub issue #7 / M048
+- Validation: Tests prove array-element validation errors are well-formed and OpenAPI helper misuse fails loudly.
+
 ## Validated
 
 ### R001 — Embedding runtime optimizations must preserve Russian-language and legal-domain retrieval/embedding quality for the current model; any model replacement requires benchmark evidence on a Russian legal corpus.
@@ -346,6 +362,15 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M047 S01: `getEnvInt` uses `strconv.Atoi` and falls back on invalid/overflowing/negative values; un-emitted `dimensions_required`, `dimensions_mismatch`, and `request_timeout` registry rows were removed; `TestAllErrorCodesHaveNonTestEmitters` enforces future registry emitter coverage. Evidence: `benchmark-results/m047-s01-contract-cleanup.md`, `go test ./...` passed with 283 tests, static proof `60cf4abe-6f44-4527-8b7a-1017cbd03e71`.
 - Notes: Validated for issue #6 findings #15 and #25.
 
+### R037 — Remove dead or duplicated cache helpers so the active TEI cache path has one maintained implementation for local cache behavior, hashing, and env parsing.
+- Class: quality-attribute
+- Status: validated
+- Description: Remove dead or duplicated cache helpers so the active TEI cache path has one maintained implementation for local cache behavior, hashing, and env parsing.
+- Why it matters: Issue #7 findings #19, #27, and #28 are low-severity maintainability debt that make cache behavior harder to reason about and refactor safely.
+- Source: GitHub issue #7 / M048
+- Validation: M048 S01: removed dead LRUCache source/tests, replaced the only LRU integration-test scaffold with a LocalCache-backed adapter, unified duplicate cache short hash helpers into `shortHash`, and replaced duplicated active env integer parsers with `internal/envutil`. Evidence: `benchmark-results/m048-s01-cache-cleanup.md`, `go test ./cache` passed with 36 tests, `go test ./...` passed with 282 tests, static proof `1453b735-d079-4ce7-9282-08805c13a318`.
+- Notes: Validated for issue #7 findings #19, #27, and #28.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -410,10 +435,13 @@ This file is the explicit capability and coverage contract for the project.
 | R034 | continuity | validated | none | none | M047 S04: model warmup now retries up to three attempts with bounded backoff, records per-attempt errors, marks readiness on later success, and clears previous errors through `MarkWarmupDone`. Evidence: `benchmark-results/m047-s04-warmup-retry-closure.md`, `go test ./...` passed with 290 tests, static proof `7ee9815e-9837-40f9-8430-8ef343422cdf`. |
 | R035 | operability | validated | none | none | M047 S02: listener fatal errors now flow through `reportHTTPServerError`, which ignores wrapped `http.ErrServerClosed` with `errors.Is` and sends a synthetic `server_error` signal into the existing lifecycle shutdown path instead of calling `os.Exit(1)` from the listener goroutine. Evidence: `benchmark-results/m047-s02-graceful-listener-shutdown.md`, `go test ./...` passed with 285 tests, static proof `519aee78-cfa7-47d0-9fdf-aee5cddd1f83`. |
 | R036 | quality-attribute | validated | none | none | M047 S01: `getEnvInt` uses `strconv.Atoi` and falls back on invalid/overflowing/negative values; un-emitted `dimensions_required`, `dimensions_mismatch`, and `request_timeout` registry rows were removed; `TestAllErrorCodesHaveNonTestEmitters` enforces future registry emitter coverage. Evidence: `benchmark-results/m047-s01-contract-cleanup.md`, `go test ./...` passed with 283 tests, static proof `60cf4abe-6f44-4527-8b7a-1017cbd03e71`. |
+| R037 | quality-attribute | validated | none | none | M048 S01: removed dead LRUCache source/tests, replaced the only LRU integration-test scaffold with a LocalCache-backed adapter, unified duplicate cache short hash helpers into `shortHash`, and replaced duplicated active env integer parsers with `internal/envutil`. Evidence: `benchmark-results/m048-s01-cache-cleanup.md`, `go test ./cache` passed with 36 tests, `go test ./...` passed with 282 tests, static proof `1453b735-d079-4ce7-9282-08805c13a318`. |
+| R038 | quality-attribute | active | none | none | Tests and static checks prove RuntimeHealth only exposes active TEI fields, embedding interface duplication is removed, and lifecycle state construction is explicit. |
+| R039 | quality-attribute | active | none | none | Tests prove array-element validation errors are well-formed and OpenAPI helper misuse fails loudly. |
 
 ## Coverage Summary
 
-- Active requirements: 3
+- Active requirements: 5
 - Mapped to slices: 2
-- Validated: 31 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036)
-- Unmapped active requirements: 1
+- Validated: 32 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037)
+- Unmapped active requirements: 3

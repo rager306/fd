@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -19,6 +18,7 @@ import (
 	"fd-api/cache"
 	"fd-api/embed"
 	"fd-api/handlers"
+	"fd-api/internal/envutil"
 	"fd-api/lifecycle"
 	"fd-api/middleware"
 	"fd-api/observability"
@@ -49,18 +49,6 @@ func configureTrustedProxies(r *gin.Engine) {
 	if err := r.SetTrustedProxies(nil); err != nil {
 		panic("configure trusted proxies: " + err.Error())
 	}
-}
-
-func getEnvInt(key string, defaultValue int) int {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	n, err := strconv.Atoi(value)
-	if err != nil || n < 0 {
-		return defaultValue
-	}
-	return n
 }
 
 func getLogLevel(value string) slog.Level {
@@ -229,7 +217,7 @@ func main() {
 	modelID := getEnv("MODEL_ID", "deepvk/USER-bge-m3")
 	bindHost := getEnv("BIND_HOST", "0.0.0.0")
 	port := getEnv("PORT", "8000")
-	redisPoolSize := getEnvInt("REDIS_POOL_SIZE", 50)
+	redisPoolSize := envutil.Int("REDIS_POOL_SIZE", 50)
 
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
@@ -289,7 +277,7 @@ func main() {
 		BuildHash: BuildHash,
 		BuildDate: BuildDate,
 	})
-	maxInFlight := getEnvInt("FD_MAX_IN_FLIGHT", 0)
+	maxInFlight := envutil.Int("FD_MAX_IN_FLIGHT", 0)
 	if maxInFlight > 0 {
 		logger.Info("embedding lifecycle capacity gate enabled", "max_in_flight", maxInFlight)
 	}
