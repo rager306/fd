@@ -182,7 +182,15 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	hash := c.HashText(text)
+	// Fast path for common dimensions to avoid strconv.Itoa allocations.
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + hash + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + hash + ":d512"
+	}
+	return c.prefix + c.namespace + ":" + hash + ":d" + strconv.Itoa(dim)
 }
 
 func (c *RedisCache) namespacePattern() string {
