@@ -1,4 +1,4 @@
-## 2024-05-24 - Unauthenticated System Endpoints
-**Vulnerability:** Critical readiness and health endpoints (`/health`, `/ready`, `/v1/healthcheck`) were blocked by authentication requirements when `FD_API_KEY` was set.
-**Learning:** Load balancers and orchestration systems (like Kubernetes) often probe health check endpoints without authentication. If they are blocked by a global API key requirement, the service might be incorrectly marked as unhealthy and terminated.
-**Prevention:** Ensure all liveness, readiness, and health-check endpoints are explicitly excluded from global authentication middleware.
+## 2026-06-16 - Prevent Timing Attacks leaking API Key Length
+**Vulnerability:** `subtle.ConstantTimeCompare` leaks the expected length of secrets if the given input is of unequal length.
+**Learning:** In Go, `subtle.ConstantTimeCompare` performs an early non-constant-time return (0) if the two byte slices have differing lengths. Directly using it on user input strings versus stored tokens allows attackers to measure the time taken, thereby brute-forcing the exact length of the API key or secret token.
+**Prevention:** Always ensure the inputs passed to `subtle.ConstantTimeCompare` are exactly the same length. For comparing secrets against arbitrary user inputs, the standard pattern is to hash both inputs first using a strong cryptographic hash function (like SHA-256), which yields fixed-size digests (32 bytes), and then compare the hashes using `subtle.ConstantTimeCompare`.
