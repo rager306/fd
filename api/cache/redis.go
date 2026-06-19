@@ -182,6 +182,17 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
+	// Fast-path common embedding dimensions to avoid strconv.Itoa
+	// memory allocation and formatting overhead in the hot path.
+	// Expanding the concatenation fully lets the Go compiler use
+	// a single `runtime.concatstrings` operation, reducing total allocations
+	// compared to `strconv.Itoa` or intermediate variables.
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d512"
+	}
 	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
