@@ -4,8 +4,10 @@ import (
 	"testing"
 )
 
+const benchPrefix = "bench:"
+
 func BenchmarkHashText(b *testing.B) {
-	c := &RedisCache{prefix: "bench:"}
+	c := &RedisCache{prefix: benchPrefix}
 	text := "benchmark test string for hashing performance"
 
 	b.ResetTimer()
@@ -15,7 +17,7 @@ func BenchmarkHashText(b *testing.B) {
 }
 
 func BenchmarkRedisCacheKey(b *testing.B) {
-	c := &RedisCache{prefix: "bench:", namespace: "v2"}
+	c := &RedisCache{prefix: benchPrefix, namespace: "v2"}
 	text := "benchmark test string for key performance"
 
 	b.Run("dim1024", func(b *testing.B) {
@@ -41,7 +43,7 @@ func BenchmarkRedisCacheKey(b *testing.B) {
 }
 
 func BenchmarkHashText_Short(b *testing.B) {
-	c := &RedisCache{prefix: "bench:"}
+	c := &RedisCache{prefix: benchPrefix}
 	text := "hi"
 
 	b.ResetTimer()
