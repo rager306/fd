@@ -182,6 +182,12 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d512"
+	}
 	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
