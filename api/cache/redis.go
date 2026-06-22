@@ -12,11 +12,22 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
 
 const defaultRedisCacheTTL = 24 * time.Hour
+
+var isLittleEndian bool
+
+func init() {
+	x := uint16(0xABCD)
+	//nolint:gosec // G103: performance optimization for architecture checking
+	if *(*byte)(unsafe.Pointer(&x)) == 0xCD {
+		isLittleEndian = true
+	}
+}
 
 // RedisCacheNamespace controls correctness-affecting Redis key namespace fields.
 // Optional values are hashed before they are included in keys so model/tokenizer
@@ -208,8 +219,15 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim)) //nolint:gosec // G115: bounds-checked above
-	for i := 0; i < dim; i++ {
-		binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+
+	if isLittleEndian && dim > 0 && dim <= len(embedding) {
+		//nolint:gosec // G103: performance optimization for byte casting
+		src := unsafe.Slice((*byte)(unsafe.Pointer(&embedding[0])), dim*4)
+		copy(buf[2:], src)
+	} else {
+		for i := 0; i < dim; i++ {
+			binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+		}
 	}
 	return buf, nil
 }
@@ -229,9 +247,14 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 		return nil, 0
 	}
 	emb := make([]float32, dim)
+
+	// Fast path loop:
+	offset := 2
 	for i := 0; i < dim; i++ {
-		emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
+		emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[offset : offset+4]))
+		offset += 4
 	}
+
 	return emb, dim
 }
 
@@ -239,8 +262,17 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // component for the embedding text (the dim and prefix are added by
 // the key() method to form the full Redis key).
 func (c *RedisCache) HashText(text string) string {
-	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	var b []byte
+	if text != "" {
+		//nolint:gosec // G103: performance optimization for byte casting
+		b = unsafe.Slice(unsafe.StringData(text), len(text))
+	}
+	h := sha256.Sum256(b)
+
+	// Fast hex encode
+	var buf [64]byte
+	hex.Encode(buf[:], h[:])
+	return string(buf[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns
