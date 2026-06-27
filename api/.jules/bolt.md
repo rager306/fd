@@ -1,0 +1,3 @@
+## 2025-06-27 - Fast-path slice conversions and endianness checking
+**Learning:** When using `unsafe.Pointer`/`unsafe.Slice` to alias a `[]float32` slice to `[]byte` for fast memory copies instead of element-by-element encoding, we must ensure memory constraints are respected (allocating a new slice `make` and using `copy()` instead of returning the aliased slice directly) and confirm the host architecture's endianness dynamically using an `init()` block (as done via checking `isLittleEndian`) to prevent data corruption on big-endian systems.
+**Action:** Always verify endianness dynamically when implementing fast-path byte alias conversions for architectures where endianness could alter behavior. Use `copy` to avoid returning aliased memory unless specifically safe.
