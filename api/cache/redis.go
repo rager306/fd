@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -182,7 +183,14 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	switch dim {
+	case 1024:
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d1024"
+	case 512:
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d512"
+	default:
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	}
 }
 
 func (c *RedisCache) namespacePattern() string {
@@ -239,8 +247,12 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // component for the embedding text (the dim and prefix are added by
 // the key() method to form the full Redis key).
 func (c *RedisCache) HashText(text string) string {
-	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	//nolint:gosec // G103: performance optimization for byte casting
+	textBytes := unsafe.Slice(unsafe.StringData(text), len(text))
+	h := sha256.Sum256(textBytes)
+	var buf [64]byte
+	hex.Encode(buf[:], h[:])
+	return string(buf[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns
