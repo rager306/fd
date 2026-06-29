@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2024-05-23 - Zero-allocation String Hashing
+**Learning:** In hot paths (like `shortHash` used for cache keys), combining zero-copy string-to-byte casting (via `unsafe`) with stack-allocated byte arrays for hex encoding significantly reduces memory allocations (from 3 allocs/176B down to 1 alloc/16B per call) compared to standard `sha256.Sum256([]byte(string))` and `hex.EncodeToString`.
+**Action:** When hex-encoding strings in hot paths, prefer using `hex.Encode` into a fixed-size stack-allocated buffer followed by a standard string conversion rather than `hex.EncodeToString`. When casting strings to byte slices, use `unsafe.Slice(unsafe.StringData(text), len(text))` (with an empty string check) to avoid allocations.
