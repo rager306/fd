@@ -224,6 +224,19 @@ Cache namespace isolation matters. When comparing runtime backends or changing m
 | `FD_RATE_LIMIT_ENABLED` | unset / false | Enables IP/user rate limiting when configured. |
 | `FD_TRACES_ENABLED` | unset / false | Enables `/v1/traces` diagnostic events. |
 
+### Lifecycle warmup recovery knobs
+
+fd retries model warmup at startup and, after the startup window is exhausted, keeps retrying in the background until TEI becomes reachable. This prevents the service from getting stuck in `degraded` after a compose restart where fd starts before TEI finishes loading the BERT model on CPU (~15-20s, longer under contention).
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `FD_WARMUP_START_MAX_ATTEMPTS` | `5` | Startup warmup attempts before the background recovery loop takes over. |
+| `FD_WARMUP_START_BACKOFF_SEC` | `5` | Fixed backoff in seconds between startup warmup attempts. |
+| `FD_WARMUP_RECOVERY_INTERVAL_SEC` | `30` | Background retry interval after the startup window fails. |
+| `FD_WARMUP_RECOVERY_ENABLED` | `true` | Feature flag for the background recovery loop. Set to `false` to roll back to manual-restart-only behavior. |
+
+The recovery loop stops on its own when warmup succeeds or shutdown begins, and updates `/health.last_error` so the current failure reason stays visible. See the Operations section for what to expect during a cold start.
+
 ## Operations
 
 ### TEI startup
@@ -250,6 +263,29 @@ curl http://localhost:8000/health
 ```
 
 `/health` exposes runtime metadata but is not a live inference probe. For readiness that matters to clients, also run a small `/v1/embeddings` smoke request.
+
+### Lifecycle warmup recovery
+
+After a cold start, fd may go through a brief `degraded` window before TEI becomes reachable. This is expected during any of these scenarios:
+
+- `docker compose restart` while fd and tei start within milliseconds of each other.
+- `docker compose up -d --force-recreate` with tei still loading the BERT model on CPU.
+- Bringing tei back after an operator outage.
+
+Behavior during this window:
+
+- Startup warmup retries up to `FD_WARMUP_START_MAX_ATTEMPTS` times with `FD_WARMUP_START_BACKOFF_SEC` between attempts. With defaults this covers roughly 30 seconds.
+- If startup warmup still fails, a background recovery loop ticks every `FD_WARMUP_RECOVERY_INTERVAL_SEC` (default 30s) and retries until TEI responds, the process shuts down, or `FD_WARMUP_RECOVERY_ENABLED=false` is set.
+- `/health` returns `503` with `status: degraded` and the current failure in `last_error` until recovery succeeds. No operator action is needed.
+- Once TEI accepts a request, recovery marks warmup done and `/health` flips to `200 / status: ok`. The transition is logged as `warmup recovery succeeded` with the retry attempt number and elapsed time.
+
+Operators who prefer the old fail-closed manual-restart behavior can set `FD_WARMUP_RECOVERY_ENABLED=false`. To watch recovery happen live:
+
+```bash
+docker compose logs --follow api | grep -E 'warmup recovery|model warmup'
+```
+
+A reproducer for the underlying race lives at `tools/verify_warmup_recovery.sh`. The benchmark run on this repo showed recovery succeeding after roughly 3.5 minutes when TEI BERT load was under CPU contention.
 
 ### Logs
 
@@ -311,6 +347,18 @@ If a backend/model/tokenizer/chunking change is under test, isolate the Redis na
 ### API returns `503 model_overloaded`
 
 `FD_MAX_IN_FLIGHT` is set to a positive value and the lifecycle capacity gate is full. Either reduce concurrency, increase the configured capacity, or leave `FD_MAX_IN_FLIGHT=0` for unlimited current behavior.
+
+### fd stays `degraded` after a compose restart
+
+If `/health` keeps returning `503 / status: degraded, model_loaded: false` with `last_error` showing `connection refused` or `lookup tei`, the most likely cause is that TEI has not finished loading the BERT model on CPU yet. The lifecycle warmup recovery loop is designed to handle exactly this case — wait and re-check, or watch the recovery in real time:
+
+```bash
+docker compose logs --follow api | grep -E 'warmup recovery|model warmup'
+```
+
+When recovery succeeds you will see `warmup recovery succeeded` with the attempt number and elapsed time, then `/health` flips to `200 / status: ok` automatically. On a heavily loaded CPU this can take several minutes (the recorded recovery on this repo took about 3.5 minutes under contention). Only fall back to `docker restart fd_api` if recovery has been stuck without progress for longer than `FD_WARMUP_RECOVERY_INTERVAL_SEC * 10` plus whatever TEI load is expected on the host.
+
+If you need to disable the recovery loop without changing other settings, set `FD_WARMUP_RECOVERY_ENABLED=false` and restart the api container; the service then returns to manual-restart-only behavior.
 
 ### API returns auth or CORS errors
 
