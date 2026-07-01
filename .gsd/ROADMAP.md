@@ -46,7 +46,7 @@
 - ✅ **M040: Same-host embedding service readiness** (`depends:[—]`)
 - ✅ **M040-pbp9z1: Same-host embedding service readiness** (`depends:[—]`)
 - ✅ **M041-4tw0w7: fd v2 service hardening and observability** (`depends:[M040-pbp9z1]`)
-- 🔄 **M042-fjf2en: TEI perf investigation and mitigation** (`depends:[—]`)
+- ✅ **M042-fjf2en: TEI perf investigation and mitigation** (`depends:[—]`)
 - ✅ **M043-dpr0cq: Static analysis quality hardening** (`depends:[—]`)
 - 🔄 **M044-9vahk2: Upgrade OpenAPI contract to OAS 3.2.0** (`depends:[M041-4tw0w7]`)
 - ✅ **M045-d0e5xq: Stabilize TEI startup** (`depends:[—]`)
@@ -55,3 +55,4 @@
 - ✅ **M048-l4sctg: Audit cleanup tail** (`depends:[M047-9fngng]`)
 - ✅ **M049-7dn2gp: Agent native observability and cache controls** (`depends:[—]`)
 - ✅ **M050-rfqm1p: Current test truth and stronger gates** (`depends:[—]`)
+- ✅ **M051-h1xr44: fd lifecycle warmup auto-recovery** (`depends:[—]`)

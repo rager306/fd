@@ -147,6 +147,29 @@ func defaultWarmupRetryPolicy() warmupRetryPolicy {
 	}
 }
 
+// warmupRetryPolicyFromEnv builds the startup warmup retry policy from
+// environment. This expands the startup window over the legacy
+// defaultWarmupRetryPolicy so fd-api survives a slow TEI startup (CPU BERT
+// load ~15-20s) without operator intervention. Backoff is a fixed interval
+// rather than exponential: the legacy doubling backoff (2s,4s,8s) blew past
+// the TEI load window and looked like a hang in logs.
+//
+// Env knobs (all safe to leave unset):
+//   FD_WARMUP_START_MAX_ATTEMPTS  default 5   (>=1, clamped)
+//   FD_WARMUP_START_BACKOFF_SEC   default 5   (>=0, 0 disables backoff)
+func warmupRetryPolicyFromEnv() warmupRetryPolicy {
+	maxAttempts := envutil.Int("FD_WARMUP_START_MAX_ATTEMPTS", 5)
+	if maxAttempts < 1 {
+		maxAttempts = 1
+	}
+	backoffSeconds := envutil.Int("FD_WARMUP_START_BACKOFF_SEC", 5)
+	backoff := time.Duration(backoffSeconds) * time.Second
+	return warmupRetryPolicy{
+		maxAttempts: maxAttempts,
+		backoff: func(int) time.Duration { return backoff },
+	}
+}
+
 func startModelWarmup(logger *slog.Logger, state *lifecycle.State, model embed.Embedder, timeout time.Duration) {
 	startModelWarmupWithPolicy(logger, state, model, timeout, defaultWarmupRetryPolicy())
 }
@@ -402,7 +425,26 @@ func main() {
 
 	go reportHTTPServerError(logger, addr, srv.ListenAndServe, sigCh)
 
-	startModelWarmup(logger, lifecycleState, embeddingClient, defaultWarmupTimeout)
+	warmupPolicy := warmupRetryPolicyFromEnv()
+	logger.Info("model warmup policy",
+		"max_attempts", warmupPolicy.maxAttempts,
+		"backoff", warmupPolicy.backoff(1).String(),
+	)
+	startModelWarmupWithPolicy(logger, lifecycleState, embeddingClient, defaultWarmupTimeout, warmupPolicy)
+
+	// M051-h1xr44 S01/T03: background warmup recovery. Survives the
+	// startup-time race when fd_api starts before TEI finishes BERT load
+	// (~15-20s on CPU) by retrying PreWarm periodically until IsWarmupDone.
+	// Cancelled on signal so the goroutine exits deterministically.
+	recoveryCtx, recoveryCancel := context.WithCancel(context.Background())
+	defer recoveryCancel()
+	recoveryInterval := time.Duration(envutil.Int("FD_WARMUP_RECOVERY_INTERVAL_SEC", 30)) * time.Second
+	recoveryEnabled := envutil.BoolOrDefault("FD_WARMUP_RECOVERY_ENABLED", true)
+	logger.Info("warmup recovery config",
+		"enabled", recoveryEnabled,
+		"interval", recoveryInterval.String(),
+	)
+	lifecycle.StartWarmupRecovery(recoveryCtx, logger, lifecycleState, embeddingClient, defaultWarmupTimeout, recoveryInterval, recoveryEnabled)
 
 	if err := lifecycle.AwaitSignalAndShutdown(
 		context.Background(),

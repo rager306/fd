@@ -1,0 +1,4161 @@
+{
+  "schema": 2,
+  "lastWriter": "gsd-pi",
+  "lastProjectedAt": "2026-07-01T10:51:42.431Z",
+  "projections": {
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-ROADMAP.md": {
+      "sha": "151d2e6b4b890deb",
+      "entities": [
+        "M001-h8xt3d"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-01-PLAN.md": {
+      "sha": "7311fa2f3758589e",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S01"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-SUMMARY.md": {
+      "sha": "4f4700d6c42e3e01",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S01"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-01-UAT.md": {
+      "sha": "a6d7d5bfe64ba045",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S01"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-02-PLAN.md": {
+      "sha": "5eb004bb202cd53e",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S02"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-02-SUMMARY.md": {
+      "sha": "be3ef06bfa6726a9",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S02"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-02-UAT.md": {
+      "sha": "0682feb3e58c4dc0",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S02"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-03-PLAN.md": {
+      "sha": "ac68805ade5c09d0",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S03"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-03-SUMMARY.md": {
+      "sha": "669d4c5f12540629",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S03"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-03-UAT.md": {
+      "sha": "45e05d1465a3c58b",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S03"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-04-PLAN.md": {
+      "sha": "49cdd83f2da9334b",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S04"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-04-SUMMARY.md": {
+      "sha": "d9e8675fa590b4b9",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S04"
+      ]
+    },
+    "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-04-UAT.md": {
+      "sha": "8058d37a68eb958c",
+      "entities": [
+        "M001-h8xt3d",
+        "M001-h8xt3d/S04"
+      ]
+    },
+    "phases/02-d2au23-m002-d2au23-project-hygiene-followups/02-ROADMAP.md": {
+      "sha": "e0c0f196a3803911",
+      "entities": [
+        "M002-d2au23"
+      ]
+    },
+    "phases/02-d2au23-m002-d2au23-project-hygiene-followups/02-01-PLAN.md": {
+      "sha": "86c42c011189b194",
+      "entities": [
+        "M002-d2au23",
+        "M002-d2au23/S01"
+      ]
+    },
+    "phases/02-d2au23-m002-d2au23-project-hygiene-followups/02-01-SUMMARY.md": {
+      "sha": "fef06c258e2ca53c",
+      "entities": [
+        "M002-d2au23",
+        "M002-d2au23/S01"
+      ]
+    },
+    "phases/02-d2au23-m002-d2au23-project-hygiene-followups/02-01-UAT.md": {
+      "sha": "4b1f6f3d65f30452",
+      "entities": [
+        "M002-d2au23",
+        "M002-d2au23/S01"
+      ]
+    },
+    "phases/02-d2au23-m002-d2au23-project-hygiene-followups/02-02-PLAN.md": {
+      "sha": "e418b3760655e809",
+      "entities": [
+        "M002-d2au23",
+        "M002-d2au23/S02"
+      ]
+    },
+    "phases/02-d2au23-m002-d2au23-project-hygiene-followups/02-SUMMARY.md": {
+      "sha": "efcfb180e7a82007",
+      "entities": [
+        "M002-d2au23",
+        "M002-d2au23/S02"
+      ]
+    },
+    "phases/02-d2au23-m002-d2au23-project-hygiene-followups/02-02-UAT.md": {
+      "sha": "15d91c45f20b2386",
+      "entities": [
+        "M002-d2au23",
+        "M002-d2au23/S02"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-ROADMAP.md": {
+      "sha": "c3cb1cbac1a21da5",
+      "entities": [
+        "M003-xx4yc3"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-01-PLAN.md": {
+      "sha": "723af70d7065b8a5",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S01"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-01-SUMMARY.md": {
+      "sha": "5f70c88b0895700a",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S01"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-01-UAT.md": {
+      "sha": "fd9ee35778ee14ba",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S01"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-02-PLAN.md": {
+      "sha": "5002ae1d12536668",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S02"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-02-SUMMARY.md": {
+      "sha": "7f8302a8fea6d198",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S02"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-02-UAT.md": {
+      "sha": "262f7e132ce127f5",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S02"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-03-PLAN.md": {
+      "sha": "5072ebff19e35975",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S03"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-SUMMARY.md": {
+      "sha": "b91768e085a7627a",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S03"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-03-UAT.md": {
+      "sha": "47e08793aa59cbb0",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S03"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-04-PLAN.md": {
+      "sha": "58642222044c66b7",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S04"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-04-SUMMARY.md": {
+      "sha": "a8a67c60281cf332",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S04"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-04-UAT.md": {
+      "sha": "ad909569bd8380aa",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S04"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-05-CONTINUE.md": {
+      "sha": "1543a451739d0d76",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S05"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-05-PLAN.md": {
+      "sha": "505cfa869dc90080",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S05"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-05-SUMMARY.md": {
+      "sha": "e8c4deb52faa167a",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S05"
+      ]
+    },
+    "phases/03-xx4yc3-m003-xx4yc3-runtime-validation-and-perfo/03-05-UAT.md": {
+      "sha": "af5047d9db19ef98",
+      "entities": [
+        "M003-xx4yc3",
+        "M003-xx4yc3/S05"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-ROADMAP.md": {
+      "sha": "49f343d2de69ce9d",
+      "entities": [
+        "M004-9886ht"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-01-PLAN.md": {
+      "sha": "b94bfaaa68aae5c7",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S01"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-01-SUMMARY.md": {
+      "sha": "2c0a9ad2882fd5d4",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S01"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-01-UAT.md": {
+      "sha": "8de7274ceebf8cfc",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S01"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-02-PLAN.md": {
+      "sha": "65ccee03bb372c99",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S02"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-02-SUMMARY.md": {
+      "sha": "53ea3966fe556938",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S02"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-02-UAT.md": {
+      "sha": "eab630b9cbff2e31",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S02"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-03-PLAN.md": {
+      "sha": "0bb9ec4f22c64492",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S03"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-03-SUMMARY.md": {
+      "sha": "f59ee2aa52bffdde",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S03"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-03-UAT.md": {
+      "sha": "83a658ae6dd8a5d6",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S03"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-04-PLAN.md": {
+      "sha": "c878efa354ced552",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S04"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-SUMMARY.md": {
+      "sha": "4e5817956dacf540",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S04"
+      ]
+    },
+    "phases/04-9886ht-m004-9886ht-measured-performance-optimiz/04-04-UAT.md": {
+      "sha": "66de2c3171e24466",
+      "entities": [
+        "M004-9886ht",
+        "M004-9886ht/S04"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-ROADMAP.md": {
+      "sha": "7fd93bc46ebbd81f",
+      "entities": [
+        "M005-pyn4x7"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-01-PLAN.md": {
+      "sha": "1119d7e39a817ea3",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S01"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-01-SUMMARY.md": {
+      "sha": "681cfc20dcb2b721",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S01"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-01-UAT.md": {
+      "sha": "a410f87b8edba46a",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S01"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-02-PLAN.md": {
+      "sha": "0beb54e005c02ca3",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S02"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-02-SUMMARY.md": {
+      "sha": "edb40f79dcd29235",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S02"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-02-UAT.md": {
+      "sha": "5bd406a76addbe62",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S02"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-03-PLAN.md": {
+      "sha": "d60c3da889a91860",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S03"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-03-SUMMARY.md": {
+      "sha": "46f78833f6354890",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S03"
+      ]
+    },
+    "phases/05-pyn4x7-m005-pyn4x7-production-hardening-documen/05-03-UAT.md": {
+      "sha": "49995c8d7255a968",
+      "entities": [
+        "M005-pyn4x7",
+        "M005-pyn4x7/S03"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-ROADMAP.md": {
+      "sha": "03e9630730150f13",
+      "entities": [
+        "M006-f8tc43"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-01-PLAN.md": {
+      "sha": "d7048f6738eece2a",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S01"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-01-SUMMARY.md": {
+      "sha": "62dd64b2f15db2da",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S01"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-01-UAT.md": {
+      "sha": "698fc1753046332d",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S01"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-02-PLAN.md": {
+      "sha": "53fca54aeabc7f73",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S02"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-02-SUMMARY.md": {
+      "sha": "95e518acaef84e61",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S02"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-02-UAT.md": {
+      "sha": "29c18da60244434e",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S02"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-03-PLAN.md": {
+      "sha": "719c7041cdadf191",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S03"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-03-SUMMARY.md": {
+      "sha": "56441e2babe7b8c7",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S03"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-03-UAT.md": {
+      "sha": "7fbb08b772f33c9f",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S03"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-04-PLAN.md": {
+      "sha": "0de7314d6429fb52",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S04"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-04-SUMMARY.md": {
+      "sha": "b6bca42299f43240",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S04"
+      ]
+    },
+    "phases/06-f8tc43-m006-f8tc43-go-quality-tooling/06-04-UAT.md": {
+      "sha": "1fabf5a580c5624a",
+      "entities": [
+        "M006-f8tc43",
+        "M006-f8tc43/S04"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-ROADMAP.md": {
+      "sha": "d48f508426657541",
+      "entities": [
+        "M007-wvm7b3"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-01-PLAN.md": {
+      "sha": "2683997500562e2e",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S01"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-01-SUMMARY.md": {
+      "sha": "213bcdbaa8cc4b4f",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S01"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-01-UAT.md": {
+      "sha": "f9f1f1c8df5014f9",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S01"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-02-PLAN.md": {
+      "sha": "93d4c09646094f08",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S02"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-02-SUMMARY.md": {
+      "sha": "bf6de6353c5dfc7a",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S02"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-02-UAT.md": {
+      "sha": "7058e6d3153492e0",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S02"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-03-PLAN.md": {
+      "sha": "0b0df42a4f984a07",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S03"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-03-SUMMARY.md": {
+      "sha": "d79e14fbdf42f785",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S03"
+      ]
+    },
+    "phases/07-wvm7b3-m007-wvm7b3-go-ci-quality-workflow/07-03-UAT.md": {
+      "sha": "cdaaf6a4d52fe2b5",
+      "entities": [
+        "M007-wvm7b3",
+        "M007-wvm7b3/S03"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-ROADMAP.md": {
+      "sha": "7f5d0969d9333cce",
+      "entities": [
+        "M008-6hnowu"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-01-CONTINUE.md": {
+      "sha": "9fda7df00149ae8b",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S01"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-01-PLAN.md": {
+      "sha": "89fac838a555dc52",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S01"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-01-REPLAN.md": {
+      "sha": "8166c4a892d12ca8",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S01"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-01-SUMMARY.md": {
+      "sha": "51165d91c55e6c0d",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S01"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-01-UAT.md": {
+      "sha": "c444d4b204bc634e",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S01"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-02-PLAN.md": {
+      "sha": "83e50cff6d1f679a",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S02"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-02-RESEARCH.md": {
+      "sha": "167ebdbb34769997",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S02"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-02-SUMMARY.md": {
+      "sha": "62871e61750d500b",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S02"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-02-UAT.md": {
+      "sha": "f14a4542641de05d",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S02"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-04-PLAN.md": {
+      "sha": "614564d7317aa5ab",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S04"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-04-REPLAN.md": {
+      "sha": "7114d546d3e3b5bb",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S04"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-04-RESEARCH.md": {
+      "sha": "cd8ac0819e060a7f",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S04"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-04-SUMMARY.md": {
+      "sha": "4e60c65e3e745846",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S04"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-04-UAT.md": {
+      "sha": "92c6eb2ddbfecf98",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S04"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-05-PLAN.md": {
+      "sha": "c4167699d386f333",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S05"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-05-RESEARCH.md": {
+      "sha": "e59f2ae9053d00e5",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S05"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-05-SUMMARY.md": {
+      "sha": "3343491f4e958372",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S05"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-05-UAT.md": {
+      "sha": "08fb48314e384200",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S05"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-06-PLAN.md": {
+      "sha": "e98cbd7ce605570c",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S06"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-06-RESEARCH.md": {
+      "sha": "1c4d07b16dcbf3ca",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S06"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-06-SUMMARY.md": {
+      "sha": "bcf8417c20b52b8d",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S06"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-06-UAT.md": {
+      "sha": "9e17d6d0321f9c1c",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S06"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-03-PLAN.md": {
+      "sha": "28586e9aab4fa1bc",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S03"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-03-RESEARCH.md": {
+      "sha": "c703e672bf419276",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S03"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-03-SUMMARY.md": {
+      "sha": "b75d86666eebf230",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S03"
+      ]
+    },
+    "phases/08-6hnowu-m008-6hnowu-embedding-runtime-optimizati/08-03-UAT.md": {
+      "sha": "3dd677080f4ce754",
+      "entities": [
+        "M008-6hnowu",
+        "M008-6hnowu/S03"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-ROADMAP.md": {
+      "sha": "9a08cd25ff5adb10",
+      "entities": [
+        "M009-zjrq6j"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-01-ASSESSMENT.md": {
+      "sha": "417d12bd0d9cee93",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S01"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-01-PLAN.md": {
+      "sha": "12a2e40be1439051",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S01"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-01-SUMMARY.md": {
+      "sha": "ec4500bce4d234b3",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S01"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-01-UAT.md": {
+      "sha": "fc53da6616824ce2",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S01"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-02-ASSESSMENT.md": {
+      "sha": "550111c341f24e01",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S02"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-02-PLAN.md": {
+      "sha": "1e988b28dc53359a",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S02"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-02-SUMMARY.md": {
+      "sha": "4c020de943634e01",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S02"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-02-UAT.md": {
+      "sha": "782cc60b4d9026a1",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S02"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-03-ASSESSMENT.md": {
+      "sha": "4c06f7b3e88737df",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S03"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-03-PLAN.md": {
+      "sha": "4127187681434006",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S03"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-03-SUMMARY.md": {
+      "sha": "aa9f8468172adeb8",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S03"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-03-UAT.md": {
+      "sha": "1588bbed75e1a74f",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S03"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-04-ASSESSMENT.md": {
+      "sha": "a6f21049a716b20b",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S04"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-04-PLAN.md": {
+      "sha": "ab12495053f60507",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S04"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-04-SUMMARY.md": {
+      "sha": "7059a6472037d8fa",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S04"
+      ]
+    },
+    "phases/09-zjrq6j-m009-zjrq6j-measured-cache-and-benchmark/09-04-UAT.md": {
+      "sha": "18a5a5293ded022b",
+      "entities": [
+        "M009-zjrq6j",
+        "M009-zjrq6j/S04"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-ROADMAP.md": {
+      "sha": "73039f6288631554",
+      "entities": [
+        "M010-84qfzu"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-01-ASSESSMENT.md": {
+      "sha": "db85aa2016d39bf4",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S01"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-01-CONTINUE.md": {
+      "sha": "af727367331a99d0",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S01"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-01-PLAN.md": {
+      "sha": "3e19964825f30573",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S01"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-01-RESEARCH.md": {
+      "sha": "f1fe40028e01bd03",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S01"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-01-SUMMARY.md": {
+      "sha": "6f6d9631c7ff47f6",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S01"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-01-UAT.md": {
+      "sha": "9266e23155b0ae3f",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S01"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-02-ASSESSMENT.md": {
+      "sha": "2b3c084ea06fc93d",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S02"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-02-PLAN.md": {
+      "sha": "f5d22fc4cd64169f",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S02"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-02-SUMMARY.md": {
+      "sha": "dccac6c954689e60",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S02"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-02-UAT.md": {
+      "sha": "4053434a9c0ec988",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S02"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-03-ASSESSMENT.md": {
+      "sha": "48160dbf535a5bc1",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S03"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-03-PLAN.md": {
+      "sha": "536b08b553942a84",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S03"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-03-SUMMARY.md": {
+      "sha": "2745b3e60824066b",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S03"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-03-UAT.md": {
+      "sha": "4adf3e2f2601a104",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S03"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-04-PLAN.md": {
+      "sha": "d1f1780640b2eaf1",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S04"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-04-RESEARCH.md": {
+      "sha": "6472b28c95f94fb2",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S04"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-04-SUMMARY.md": {
+      "sha": "f8b3936ec5eaa7d9",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S04"
+      ]
+    },
+    "phases/10-84qfzu-m010-84qfzu-onnx-fp32-dense-feasibility/10-04-UAT.md": {
+      "sha": "1223ccbf5e7cb4af",
+      "entities": [
+        "M010-84qfzu",
+        "M010-84qfzu/S04"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-ROADMAP.md": {
+      "sha": "75b047429a1091e9",
+      "entities": [
+        "M011-33b7wf"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-01-ASSESSMENT.md": {
+      "sha": "4df647ed61b3b2ff",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S01"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-01-PLAN.md": {
+      "sha": "d9ecfab8acde0df7",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S01"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-01-RESEARCH.md": {
+      "sha": "390ee6962a4ecdcc",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S01"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-01-SUMMARY.md": {
+      "sha": "6234382d44d95818",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S01"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-01-UAT.md": {
+      "sha": "9d38f8bd42827d0c",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S01"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-02-ASSESSMENT.md": {
+      "sha": "a83e2231fcf9ac67",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S02"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-02-PLAN.md": {
+      "sha": "17d0b67d6e95ddb3",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S02"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-02-SUMMARY.md": {
+      "sha": "2a96a1c5de9aa515",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S02"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-02-UAT.md": {
+      "sha": "ccf4559ec5d58110",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S02"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-03-ASSESSMENT.md": {
+      "sha": "8dfb9b62dbb8acbf",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S03"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-03-PLAN.md": {
+      "sha": "e6454ca642fe8efb",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S03"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-03-SUMMARY.md": {
+      "sha": "17525c947b6bc370",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S03"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-03-UAT.md": {
+      "sha": "1c7448a3d21283be",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S03"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-04-CONTINUE.md": {
+      "sha": "67bdc93deff663f9",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S04"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-04-PLAN.md": {
+      "sha": "a8ec28bee20f1f81",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S04"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-04-RESEARCH.md": {
+      "sha": "b38212d447559233",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S04"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-04-SUMMARY.md": {
+      "sha": "34bcfd564e94669b",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S04"
+      ]
+    },
+    "phases/11-33b7wf-m011-33b7wf-opt-in-onnx-backend-prototyp/11-04-UAT.md": {
+      "sha": "bbc392359aab8a09",
+      "entities": [
+        "M011-33b7wf",
+        "M011-33b7wf/S04"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-ROADMAP.md": {
+      "sha": "b79b0383f742ec37",
+      "entities": [
+        "M012-3edtlz"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-01-ASSESSMENT.md": {
+      "sha": "2cd44ac22363fe78",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S01"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-01-PLAN.md": {
+      "sha": "6d869c90fd88833e",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S01"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-01-SUMMARY.md": {
+      "sha": "db9cd528afdf0672",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S01"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-01-UAT.md": {
+      "sha": "1421843ebfb665f1",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S01"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-02-ASSESSMENT.md": {
+      "sha": "aee14e0e6bfc432b",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S02"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-02-PLAN.md": {
+      "sha": "265798bddb01080a",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S02"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-02-RESEARCH.md": {
+      "sha": "2ddcecba8ad32c11",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S02"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-02-SUMMARY.md": {
+      "sha": "71043b41fbbfbf80",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S02"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-02-UAT.md": {
+      "sha": "5ff9ed5c41da892e",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S02"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-03-ASSESSMENT.md": {
+      "sha": "3a2035232a10f35a",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S03"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-03-PLAN.md": {
+      "sha": "db8d2e9084f6b8f8",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S03"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-03-SUMMARY.md": {
+      "sha": "ef4031ccc817fe44",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S03"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-03-UAT.md": {
+      "sha": "205e18746b6fcaf5",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S03"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-04-PLAN.md": {
+      "sha": "54cf74e045428b88",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S04"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-04-RESEARCH.md": {
+      "sha": "b23598cfc29363c8",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S04"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-04-SUMMARY.md": {
+      "sha": "412bd6c3e098468d",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S04"
+      ]
+    },
+    "phases/12-3edtlz-m012-3edtlz-tokenizer-parity-gate/12-04-UAT.md": {
+      "sha": "dfdf6da1be151771",
+      "entities": [
+        "M012-3edtlz",
+        "M012-3edtlz/S04"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-ROADMAP.md": {
+      "sha": "fc12e294a5a314ed",
+      "entities": [
+        "M013-nhu1x9"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-01-ASSESSMENT.md": {
+      "sha": "12d60bf33332f0c1",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S01"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-01-PLAN.md": {
+      "sha": "c66914675c442b9c",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S01"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-01-SUMMARY.md": {
+      "sha": "62c24b79601f8e31",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S01"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-01-UAT.md": {
+      "sha": "ff1ec762ebcffc7d",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S01"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-02-ASSESSMENT.md": {
+      "sha": "f7a9a5db4850b48d",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S02"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-02-PLAN.md": {
+      "sha": "84839ad3e1fd0e02",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S02"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-02-SUMMARY.md": {
+      "sha": "090f0868e5c9fcb9",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S02"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-02-UAT.md": {
+      "sha": "c28865b97766195d",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S02"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-03-ASSESSMENT.md": {
+      "sha": "f33db5bf11c76795",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S03"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-03-PLAN.md": {
+      "sha": "a4033bd4d6624710",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S03"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-03-SUMMARY.md": {
+      "sha": "92a3467b62909b5a",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S03"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-03-UAT.md": {
+      "sha": "fe69f4d1fb1b1c8f",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S03"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-04-PLAN.md": {
+      "sha": "5a3c2ebd26b4cf0c",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S04"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-04-RESEARCH.md": {
+      "sha": "9a48afae9c047597",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S04"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-04-SUMMARY.md": {
+      "sha": "72cefd667bddb1bd",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S04"
+      ]
+    },
+    "phases/13-nhu1x9-m013-nhu1x9-hf-tokenizer-native-packagin/13-04-UAT.md": {
+      "sha": "3f464dc62af5d821",
+      "entities": [
+        "M013-nhu1x9",
+        "M013-nhu1x9/S04"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-ROADMAP.md": {
+      "sha": "80171cc5088f1c69",
+      "entities": [
+        "M014-vjfs9f"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-01-ASSESSMENT.md": {
+      "sha": "e87dd041e649c491",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S01"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-01-PLAN.md": {
+      "sha": "ebe1f6a23e19f0b2",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S01"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-01-SUMMARY.md": {
+      "sha": "fae30701919c89fb",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S01"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-01-UAT.md": {
+      "sha": "29eba200b0c1552f",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S01"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-02-ASSESSMENT.md": {
+      "sha": "7bf2f25d0211b8db",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S02"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-02-CONTINUE.md": {
+      "sha": "187dd2220a7b60d4",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S02"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-02-PLAN.md": {
+      "sha": "534da081791e62a3",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S02"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-02-SUMMARY.md": {
+      "sha": "ffe15d640dec4948",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S02"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-02-UAT.md": {
+      "sha": "dc148a0f99311381",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S02"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-03-ASSESSMENT.md": {
+      "sha": "15294965f4096744",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S03"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-03-PLAN.md": {
+      "sha": "3f0d3eb230e00f94",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S03"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-03-REPLAN.md": {
+      "sha": "ffa5d227f6c17860",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S03"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-03-SUMMARY.md": {
+      "sha": "b4bfb3b981e4c3e0",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S03"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-03-UAT.md": {
+      "sha": "37592f9ab9d01437",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S03"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-04-PLAN.md": {
+      "sha": "5c286c9ba3af0280",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S04"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-04-SUMMARY.md": {
+      "sha": "c201d7d7ca676402",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S04"
+      ]
+    },
+    "phases/14-vjfs9f-m014-vjfs9f-tagged-onnx-performance-benc/14-04-UAT.md": {
+      "sha": "aa231e8238bac949",
+      "entities": [
+        "M014-vjfs9f",
+        "M014-vjfs9f/S04"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-ROADMAP.md": {
+      "sha": "4b8a7c4152ca459d",
+      "entities": [
+        "M015-22msl0"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-01-PLAN.md": {
+      "sha": "9d0b948eb0f0df46",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S01"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-01-SUMMARY.md": {
+      "sha": "d252f7c400d003c9",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S01"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-01-UAT.md": {
+      "sha": "1f48c8342fe234f5",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S01"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-02-ASSESSMENT.md": {
+      "sha": "7f9060ac22aae495",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S02"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-02-PLAN.md": {
+      "sha": "55373a13c90c2f5b",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S02"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-02-SUMMARY.md": {
+      "sha": "b25bf70f5f5c0eae",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S02"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-02-UAT.md": {
+      "sha": "ffb177ba78c433bb",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S02"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-03-ASSESSMENT.md": {
+      "sha": "da7bb78f3990d480",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S03"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-03-PLAN.md": {
+      "sha": "e11eaae168c63483",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S03"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-03-SUMMARY.md": {
+      "sha": "188c7709c55eb8e9",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S03"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-03-UAT.md": {
+      "sha": "f2982e017a16bcd9",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S03"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-04-PLAN.md": {
+      "sha": "26f3be2e3f30148a",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S04"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-04-SUMMARY.md": {
+      "sha": "3c2e4a1102ee156a",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S04"
+      ]
+    },
+    "phases/15-22msl0-m015-22msl0-russian-legal-retrieval-qual/15-04-UAT.md": {
+      "sha": "cbc6e038f306e2fd",
+      "entities": [
+        "M015-22msl0",
+        "M015-22msl0/S04"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-ROADMAP.md": {
+      "sha": "52f527e2ccc5229e",
+      "entities": [
+        "M016-pdcjat"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-01-ASSESSMENT.md": {
+      "sha": "837acec54da66d56",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S01"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-01-PLAN.md": {
+      "sha": "29cd6196663a8e14",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S01"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-01-SUMMARY.md": {
+      "sha": "e40cc5eec81bf055",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S01"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-01-UAT.md": {
+      "sha": "cee53eaaaa1104a5",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S01"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-02-CONTINUE.md": {
+      "sha": "7c896b3f267da89b",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S02"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-02-PLAN.md": {
+      "sha": "59bfb0046594b2a7",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S02"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-02-SUMMARY.md": {
+      "sha": "19da24d4a66fceee",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S02"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-02-UAT.md": {
+      "sha": "41b2c4d8b23dbca1",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S02"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-03-PLAN.md": {
+      "sha": "a74d07b578257583",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S03"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-03-SUMMARY.md": {
+      "sha": "e6c9edb4ff84f903",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S03"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-03-UAT.md": {
+      "sha": "ed3793a98f5a5278",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S03"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-04-PLAN.md": {
+      "sha": "511f4e5502200bc9",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S04"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-04-SUMMARY.md": {
+      "sha": "67d67a94e3bda870",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S04"
+      ]
+    },
+    "phases/16-pdcjat-m016-pdcjat-onnx-legal-divergence-and-mo/16-04-UAT.md": {
+      "sha": "fa6baf3a57a24b6a",
+      "entities": [
+        "M016-pdcjat",
+        "M016-pdcjat/S04"
+      ]
+    },
+    "phases/17-j10hmp-m017-j10hmp-onnx-512-legal-quality-gate/17-ROADMAP.md": {
+      "sha": "e4ae8859463e4bb2",
+      "entities": [
+        "M017-j10hmp"
+      ]
+    },
+    "phases/17-j10hmp-m017-j10hmp-onnx-512-legal-quality-gate/17-01-PLAN.md": {
+      "sha": "de51fbfa4ad5fbb6",
+      "entities": [
+        "M017-j10hmp",
+        "M017-j10hmp/S01"
+      ]
+    },
+    "phases/17-j10hmp-m017-j10hmp-onnx-512-legal-quality-gate/17-01-SUMMARY.md": {
+      "sha": "d201566c54890faa",
+      "entities": [
+        "M017-j10hmp",
+        "M017-j10hmp/S01"
+      ]
+    },
+    "phases/17-j10hmp-m017-j10hmp-onnx-512-legal-quality-gate/17-01-UAT.md": {
+      "sha": "db56e5375c4d668f",
+      "entities": [
+        "M017-j10hmp",
+        "M017-j10hmp/S01"
+      ]
+    },
+    "phases/17-j10hmp-m017-j10hmp-onnx-512-legal-quality-gate/17-02-PLAN.md": {
+      "sha": "5fd91a54ca80ce2a",
+      "entities": [
+        "M017-j10hmp",
+        "M017-j10hmp/S02"
+      ]
+    },
+    "phases/17-j10hmp-m017-j10hmp-onnx-512-legal-quality-gate/17-02-SUMMARY.md": {
+      "sha": "7909502f2f4e6b68",
+      "entities": [
+        "M017-j10hmp",
+        "M017-j10hmp/S02"
+      ]
+    },
+    "phases/17-j10hmp-m017-j10hmp-onnx-512-legal-quality-gate/17-02-UAT.md": {
+      "sha": "c5d38c8f2f9dd210",
+      "entities": [
+        "M017-j10hmp",
+        "M017-j10hmp/S02"
+      ]
+    },
+    "phases/18-vq2ttb-m018-vq2ttb-onnx-1024-legal-quality-gate/18-ROADMAP.md": {
+      "sha": "6b8a8ffed5f096f0",
+      "entities": [
+        "M018-vq2ttb"
+      ]
+    },
+    "phases/18-vq2ttb-m018-vq2ttb-onnx-1024-legal-quality-gate/18-01-PLAN.md": {
+      "sha": "2bada57b61c90ded",
+      "entities": [
+        "M018-vq2ttb",
+        "M018-vq2ttb/S01"
+      ]
+    },
+    "phases/18-vq2ttb-m018-vq2ttb-onnx-1024-legal-quality-gate/18-01-SUMMARY.md": {
+      "sha": "e8d8ec56c5169972",
+      "entities": [
+        "M018-vq2ttb",
+        "M018-vq2ttb/S01"
+      ]
+    },
+    "phases/18-vq2ttb-m018-vq2ttb-onnx-1024-legal-quality-gate/18-01-UAT.md": {
+      "sha": "cc930f8d54275842",
+      "entities": [
+        "M018-vq2ttb",
+        "M018-vq2ttb/S01"
+      ]
+    },
+    "phases/18-vq2ttb-m018-vq2ttb-onnx-1024-legal-quality-gate/18-02-PLAN.md": {
+      "sha": "b2221c38dce08ab3",
+      "entities": [
+        "M018-vq2ttb",
+        "M018-vq2ttb/S02"
+      ]
+    },
+    "phases/18-vq2ttb-m018-vq2ttb-onnx-1024-legal-quality-gate/18-02-SUMMARY.md": {
+      "sha": "97ebfa25c6ca4184",
+      "entities": [
+        "M018-vq2ttb",
+        "M018-vq2ttb/S02"
+      ]
+    },
+    "phases/18-vq2ttb-m018-vq2ttb-onnx-1024-legal-quality-gate/18-02-UAT.md": {
+      "sha": "73d9cb46af08d5f7",
+      "entities": [
+        "M018-vq2ttb",
+        "M018-vq2ttb/S02"
+      ]
+    },
+    "phases/19-opzh2g-m019-opzh2g-onnx-1024-performance-benchm/19-ROADMAP.md": {
+      "sha": "fd2964546c0e9ff7",
+      "entities": [
+        "M019-opzh2g"
+      ]
+    },
+    "phases/19-opzh2g-m019-opzh2g-onnx-1024-performance-benchm/19-01-PLAN.md": {
+      "sha": "f8861894557afd1d",
+      "entities": [
+        "M019-opzh2g",
+        "M019-opzh2g/S01"
+      ]
+    },
+    "phases/19-opzh2g-m019-opzh2g-onnx-1024-performance-benchm/19-01-SUMMARY.md": {
+      "sha": "34f0c76f68354f45",
+      "entities": [
+        "M019-opzh2g",
+        "M019-opzh2g/S01"
+      ]
+    },
+    "phases/19-opzh2g-m019-opzh2g-onnx-1024-performance-benchm/19-01-UAT.md": {
+      "sha": "fc89d09b0be04bee",
+      "entities": [
+        "M019-opzh2g",
+        "M019-opzh2g/S01"
+      ]
+    },
+    "phases/19-opzh2g-m019-opzh2g-onnx-1024-performance-benchm/19-02-PLAN.md": {
+      "sha": "a620b99d316d60c2",
+      "entities": [
+        "M019-opzh2g",
+        "M019-opzh2g/S02"
+      ]
+    },
+    "phases/19-opzh2g-m019-opzh2g-onnx-1024-performance-benchm/19-02-SUMMARY.md": {
+      "sha": "9602715e1251468f",
+      "entities": [
+        "M019-opzh2g",
+        "M019-opzh2g/S02"
+      ]
+    },
+    "phases/19-opzh2g-m019-opzh2g-onnx-1024-performance-benchm/19-02-UAT.md": {
+      "sha": "c51c32b7913d129b",
+      "entities": [
+        "M019-opzh2g",
+        "M019-opzh2g/S02"
+      ]
+    },
+    "phases/20-mvkq4d-m020-mvkq4d-onnx-1024-artifact-contract/20-ROADMAP.md": {
+      "sha": "d32ac691c2c7b1ba",
+      "entities": [
+        "M020-mvkq4d"
+      ]
+    },
+    "phases/20-mvkq4d-m020-mvkq4d-onnx-1024-artifact-contract/20-01-PLAN.md": {
+      "sha": "f9cae245d3598396",
+      "entities": [
+        "M020-mvkq4d",
+        "M020-mvkq4d/S01"
+      ]
+    },
+    "phases/20-mvkq4d-m020-mvkq4d-onnx-1024-artifact-contract/20-01-SUMMARY.md": {
+      "sha": "2aac370f32c1eab8",
+      "entities": [
+        "M020-mvkq4d",
+        "M020-mvkq4d/S01"
+      ]
+    },
+    "phases/20-mvkq4d-m020-mvkq4d-onnx-1024-artifact-contract/20-01-UAT.md": {
+      "sha": "1c8762bc03d07efc",
+      "entities": [
+        "M020-mvkq4d",
+        "M020-mvkq4d/S01"
+      ]
+    },
+    "phases/20-mvkq4d-m020-mvkq4d-onnx-1024-artifact-contract/20-02-PLAN.md": {
+      "sha": "882e6ef37fd37333",
+      "entities": [
+        "M020-mvkq4d",
+        "M020-mvkq4d/S02"
+      ]
+    },
+    "phases/20-mvkq4d-m020-mvkq4d-onnx-1024-artifact-contract/20-02-SUMMARY.md": {
+      "sha": "9c6760598cb78309",
+      "entities": [
+        "M020-mvkq4d",
+        "M020-mvkq4d/S02"
+      ]
+    },
+    "phases/20-mvkq4d-m020-mvkq4d-onnx-1024-artifact-contract/20-02-UAT.md": {
+      "sha": "b12ed92db8984ef9",
+      "entities": [
+        "M020-mvkq4d",
+        "M020-mvkq4d/S02"
+      ]
+    },
+    "phases/21-4t2wpt-m021-4t2wpt-onnx-1024-docker-ci-packagin/21-ROADMAP.md": {
+      "sha": "88d4f8f6db962d95",
+      "entities": [
+        "M021-4t2wpt"
+      ]
+    },
+    "phases/21-4t2wpt-m021-4t2wpt-onnx-1024-docker-ci-packagin/21-01-PLAN.md": {
+      "sha": "1c6918ded002c301",
+      "entities": [
+        "M021-4t2wpt",
+        "M021-4t2wpt/S01"
+      ]
+    },
+    "phases/21-4t2wpt-m021-4t2wpt-onnx-1024-docker-ci-packagin/21-01-SUMMARY.md": {
+      "sha": "d60f340159a9a506",
+      "entities": [
+        "M021-4t2wpt",
+        "M021-4t2wpt/S01"
+      ]
+    },
+    "phases/21-4t2wpt-m021-4t2wpt-onnx-1024-docker-ci-packagin/21-01-UAT.md": {
+      "sha": "072c6b64b41c65af",
+      "entities": [
+        "M021-4t2wpt",
+        "M021-4t2wpt/S01"
+      ]
+    },
+    "phases/21-4t2wpt-m021-4t2wpt-onnx-1024-docker-ci-packagin/21-02-PLAN.md": {
+      "sha": "9ab006e25a0dab46",
+      "entities": [
+        "M021-4t2wpt",
+        "M021-4t2wpt/S02"
+      ]
+    },
+    "phases/21-4t2wpt-m021-4t2wpt-onnx-1024-docker-ci-packagin/21-02-SUMMARY.md": {
+      "sha": "a021339b1478009b",
+      "entities": [
+        "M021-4t2wpt",
+        "M021-4t2wpt/S02"
+      ]
+    },
+    "phases/21-4t2wpt-m021-4t2wpt-onnx-1024-docker-ci-packagin/21-02-UAT.md": {
+      "sha": "c65ac0f2c77f72c3",
+      "entities": [
+        "M021-4t2wpt",
+        "M021-4t2wpt/S02"
+      ]
+    },
+    "phases/22-i079tk-m022-i079tk-onnx-1024-dedicated-docker-p/22-ROADMAP.md": {
+      "sha": "606cf24c37a9f50a",
+      "entities": [
+        "M022-i079tk"
+      ]
+    },
+    "phases/22-i079tk-m022-i079tk-onnx-1024-dedicated-docker-p/22-01-CONTINUE.md": {
+      "sha": "66d93dfacf9487fa",
+      "entities": [
+        "M022-i079tk",
+        "M022-i079tk/S01"
+      ]
+    },
+    "phases/22-i079tk-m022-i079tk-onnx-1024-dedicated-docker-p/22-01-PLAN.md": {
+      "sha": "5339771a2d5b65e2",
+      "entities": [
+        "M022-i079tk",
+        "M022-i079tk/S01"
+      ]
+    },
+    "phases/22-i079tk-m022-i079tk-onnx-1024-dedicated-docker-p/22-01-SUMMARY.md": {
+      "sha": "d01bbaaa23773482",
+      "entities": [
+        "M022-i079tk",
+        "M022-i079tk/S01"
+      ]
+    },
+    "phases/22-i079tk-m022-i079tk-onnx-1024-dedicated-docker-p/22-01-UAT.md": {
+      "sha": "da66fdb0792cdc79",
+      "entities": [
+        "M022-i079tk",
+        "M022-i079tk/S01"
+      ]
+    },
+    "phases/22-i079tk-m022-i079tk-onnx-1024-dedicated-docker-p/22-02-PLAN.md": {
+      "sha": "ae2dc4f959b846bc",
+      "entities": [
+        "M022-i079tk",
+        "M022-i079tk/S02"
+      ]
+    },
+    "phases/22-i079tk-m022-i079tk-onnx-1024-dedicated-docker-p/22-02-SUMMARY.md": {
+      "sha": "86d8d7659accb053",
+      "entities": [
+        "M022-i079tk",
+        "M022-i079tk/S02"
+      ]
+    },
+    "phases/22-i079tk-m022-i079tk-onnx-1024-dedicated-docker-p/22-02-UAT.md": {
+      "sha": "f7efaf3f6ac3c0e0",
+      "entities": [
+        "M022-i079tk",
+        "M022-i079tk/S02"
+      ]
+    },
+    "phases/23-myx9u4-m023-myx9u4-onnx-1024-packaged-legal-qua/23-ROADMAP.md": {
+      "sha": "a80c21ff4bf993cf",
+      "entities": [
+        "M023-myx9u4"
+      ]
+    },
+    "phases/23-myx9u4-m023-myx9u4-onnx-1024-packaged-legal-qua/23-01-PLAN.md": {
+      "sha": "c6e3071d236f9a49",
+      "entities": [
+        "M023-myx9u4",
+        "M023-myx9u4/S01"
+      ]
+    },
+    "phases/23-myx9u4-m023-myx9u4-onnx-1024-packaged-legal-qua/23-01-SUMMARY.md": {
+      "sha": "84d34dcf3dd1358f",
+      "entities": [
+        "M023-myx9u4",
+        "M023-myx9u4/S01"
+      ]
+    },
+    "phases/23-myx9u4-m023-myx9u4-onnx-1024-packaged-legal-qua/23-01-UAT.md": {
+      "sha": "6febfe99ce864c8b",
+      "entities": [
+        "M023-myx9u4",
+        "M023-myx9u4/S01"
+      ]
+    },
+    "phases/23-myx9u4-m023-myx9u4-onnx-1024-packaged-legal-qua/23-02-PLAN.md": {
+      "sha": "ab3a2a953ace9180",
+      "entities": [
+        "M023-myx9u4",
+        "M023-myx9u4/S02"
+      ]
+    },
+    "phases/23-myx9u4-m023-myx9u4-onnx-1024-packaged-legal-qua/23-02-SUMMARY.md": {
+      "sha": "a9ea575b4652a15f",
+      "entities": [
+        "M023-myx9u4",
+        "M023-myx9u4/S02"
+      ]
+    },
+    "phases/23-myx9u4-m023-myx9u4-onnx-1024-packaged-legal-qua/23-02-UAT.md": {
+      "sha": "4737c1b61a9cdb81",
+      "entities": [
+        "M023-myx9u4",
+        "M023-myx9u4/S02"
+      ]
+    },
+    "phases/24-b8pfpl-m024-b8pfpl-onnx-1024-packaged-performan/24-ROADMAP.md": {
+      "sha": "c10a3567fa768aed",
+      "entities": [
+        "M024-b8pfpl"
+      ]
+    },
+    "phases/24-b8pfpl-m024-b8pfpl-onnx-1024-packaged-performan/24-01-PLAN.md": {
+      "sha": "43759da964363ca0",
+      "entities": [
+        "M024-b8pfpl",
+        "M024-b8pfpl/S01"
+      ]
+    },
+    "phases/24-b8pfpl-m024-b8pfpl-onnx-1024-packaged-performan/24-01-SUMMARY.md": {
+      "sha": "7c9cc626910eb4a8",
+      "entities": [
+        "M024-b8pfpl",
+        "M024-b8pfpl/S01"
+      ]
+    },
+    "phases/24-b8pfpl-m024-b8pfpl-onnx-1024-packaged-performan/24-01-UAT.md": {
+      "sha": "2d912a96eb75c9d7",
+      "entities": [
+        "M024-b8pfpl",
+        "M024-b8pfpl/S01"
+      ]
+    },
+    "phases/24-b8pfpl-m024-b8pfpl-onnx-1024-packaged-performan/24-02-PLAN.md": {
+      "sha": "74c4ae538e7871e9",
+      "entities": [
+        "M024-b8pfpl",
+        "M024-b8pfpl/S02"
+      ]
+    },
+    "phases/24-b8pfpl-m024-b8pfpl-onnx-1024-packaged-performan/24-02-SUMMARY.md": {
+      "sha": "1e2b1872cf8b48a3",
+      "entities": [
+        "M024-b8pfpl",
+        "M024-b8pfpl/S02"
+      ]
+    },
+    "phases/24-b8pfpl-m024-b8pfpl-onnx-1024-packaged-performan/24-02-UAT.md": {
+      "sha": "4761ff5284212a74",
+      "entities": [
+        "M024-b8pfpl",
+        "M024-b8pfpl/S02"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-ROADMAP.md": {
+      "sha": "1fd56e4bb0d97451",
+      "entities": [
+        "M025-9bvjxa"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-01-PLAN.md": {
+      "sha": "0034c4d590a34811",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S01"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-01-SUMMARY.md": {
+      "sha": "069db8eb05ea7c1a",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S01"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-01-UAT.md": {
+      "sha": "40705863f3c69b5b",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S01"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-02-PLAN.md": {
+      "sha": "4b64635d0b47dd94",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S02"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-02-SUMMARY.md": {
+      "sha": "062d260b53bb0b01",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S02"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-02-UAT.md": {
+      "sha": "39f03fbef3b1fc6c",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S02"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-03-PLAN.md": {
+      "sha": "9c6cb289c852b0bd",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S03"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-03-SUMMARY.md": {
+      "sha": "4831b93d52595b15",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S03"
+      ]
+    },
+    "phases/25-9bvjxa-m025-9bvjxa-onnx-artifact-provisioning-a/25-03-UAT.md": {
+      "sha": "bb7e3a7c428f3cd1",
+      "entities": [
+        "M025-9bvjxa",
+        "M025-9bvjxa/S03"
+      ]
+    },
+    "phases/26-ji0i9y-m026-ji0i9y-onnx-operational-diagnostics/26-ROADMAP.md": {
+      "sha": "552fcb58e805f20d",
+      "entities": [
+        "M026-ji0i9y"
+      ]
+    },
+    "phases/26-ji0i9y-m026-ji0i9y-onnx-operational-diagnostics/26-01-PLAN.md": {
+      "sha": "8691b68389096cf8",
+      "entities": [
+        "M026-ji0i9y",
+        "M026-ji0i9y/S01"
+      ]
+    },
+    "phases/26-ji0i9y-m026-ji0i9y-onnx-operational-diagnostics/26-01-SUMMARY.md": {
+      "sha": "af1e082cd7718694",
+      "entities": [
+        "M026-ji0i9y",
+        "M026-ji0i9y/S01"
+      ]
+    },
+    "phases/26-ji0i9y-m026-ji0i9y-onnx-operational-diagnostics/26-01-UAT.md": {
+      "sha": "c3ab93fb2f7b4c74",
+      "entities": [
+        "M026-ji0i9y",
+        "M026-ji0i9y/S01"
+      ]
+    },
+    "phases/26-ji0i9y-m026-ji0i9y-onnx-operational-diagnostics/26-02-PLAN.md": {
+      "sha": "ec8e6f93540bb911",
+      "entities": [
+        "M026-ji0i9y",
+        "M026-ji0i9y/S02"
+      ]
+    },
+    "phases/26-ji0i9y-m026-ji0i9y-onnx-operational-diagnostics/26-02-SUMMARY.md": {
+      "sha": "bf912f8a46d2220e",
+      "entities": [
+        "M026-ji0i9y",
+        "M026-ji0i9y/S02"
+      ]
+    },
+    "phases/26-ji0i9y-m026-ji0i9y-onnx-operational-diagnostics/26-02-UAT.md": {
+      "sha": "423fecd28da4261f",
+      "entities": [
+        "M026-ji0i9y",
+        "M026-ji0i9y/S02"
+      ]
+    },
+    "phases/27-qswsja-m027-qswsja-onnx-artifact-preflight-diag/27-ROADMAP.md": {
+      "sha": "0be7521487f98f67",
+      "entities": [
+        "M027-qswsja"
+      ]
+    },
+    "phases/27-qswsja-m027-qswsja-onnx-artifact-preflight-diag/27-01-CONTINUE.md": {
+      "sha": "a2b56e22b5392079",
+      "entities": [
+        "M027-qswsja",
+        "M027-qswsja/S01"
+      ]
+    },
+    "phases/27-qswsja-m027-qswsja-onnx-artifact-preflight-diag/27-01-PLAN.md": {
+      "sha": "98b8c2369dd6fc58",
+      "entities": [
+        "M027-qswsja",
+        "M027-qswsja/S01"
+      ]
+    },
+    "phases/27-qswsja-m027-qswsja-onnx-artifact-preflight-diag/27-01-SUMMARY.md": {
+      "sha": "7a17cb3f8659e1fb",
+      "entities": [
+        "M027-qswsja",
+        "M027-qswsja/S01"
+      ]
+    },
+    "phases/27-qswsja-m027-qswsja-onnx-artifact-preflight-diag/27-01-UAT.md": {
+      "sha": "decad64ae9086c14",
+      "entities": [
+        "M027-qswsja",
+        "M027-qswsja/S01"
+      ]
+    },
+    "phases/27-qswsja-m027-qswsja-onnx-artifact-preflight-diag/27-02-PLAN.md": {
+      "sha": "c69b138149983bca",
+      "entities": [
+        "M027-qswsja",
+        "M027-qswsja/S02"
+      ]
+    },
+    "phases/27-qswsja-m027-qswsja-onnx-artifact-preflight-diag/27-02-SUMMARY.md": {
+      "sha": "ee4bcbe10dd77590",
+      "entities": [
+        "M027-qswsja",
+        "M027-qswsja/S02"
+      ]
+    },
+    "phases/27-qswsja-m027-qswsja-onnx-artifact-preflight-diag/27-02-UAT.md": {
+      "sha": "820baccd8f91ad99",
+      "entities": [
+        "M027-qswsja",
+        "M027-qswsja/S02"
+      ]
+    },
+    "phases/28-y63tog-m028-y63tog-onnx-operational-security-re/28-ROADMAP.md": {
+      "sha": "ded815014943cc6d",
+      "entities": [
+        "M028-y63tog"
+      ]
+    },
+    "phases/28-y63tog-m028-y63tog-onnx-operational-security-re/28-01-PLAN.md": {
+      "sha": "26a319f917f55333",
+      "entities": [
+        "M028-y63tog",
+        "M028-y63tog/S01"
+      ]
+    },
+    "phases/28-y63tog-m028-y63tog-onnx-operational-security-re/28-01-RESEARCH.md": {
+      "sha": "97b62697fc49a1b2",
+      "entities": [
+        "M028-y63tog",
+        "M028-y63tog/S01"
+      ]
+    },
+    "phases/28-y63tog-m028-y63tog-onnx-operational-security-re/28-01-SUMMARY.md": {
+      "sha": "fd67cce3d95f5163",
+      "entities": [
+        "M028-y63tog",
+        "M028-y63tog/S01"
+      ]
+    },
+    "phases/28-y63tog-m028-y63tog-onnx-operational-security-re/28-01-UAT.md": {
+      "sha": "176d3adbb853f14d",
+      "entities": [
+        "M028-y63tog",
+        "M028-y63tog/S01"
+      ]
+    },
+    "phases/28-y63tog-m028-y63tog-onnx-operational-security-re/28-02-PLAN.md": {
+      "sha": "b711631ff24b5cca",
+      "entities": [
+        "M028-y63tog",
+        "M028-y63tog/S02"
+      ]
+    },
+    "phases/28-y63tog-m028-y63tog-onnx-operational-security-re/28-02-SUMMARY.md": {
+      "sha": "9e4fdbb5f5d6285f",
+      "entities": [
+        "M028-y63tog",
+        "M028-y63tog/S02"
+      ]
+    },
+    "phases/28-y63tog-m028-y63tog-onnx-operational-security-re/28-02-UAT.md": {
+      "sha": "b88c96c42baad780",
+      "entities": [
+        "M028-y63tog",
+        "M028-y63tog/S02"
+      ]
+    },
+    "phases/29-4nh2ca-m029-4nh2ca-onnx-provisioning-security-r/29-ROADMAP.md": {
+      "sha": "66ccdee9e3219180",
+      "entities": [
+        "M029-4nh2ca"
+      ]
+    },
+    "phases/29-4nh2ca-m029-4nh2ca-onnx-provisioning-security-r/29-01-PLAN.md": {
+      "sha": "b85a14ff2d5ef7b4",
+      "entities": [
+        "M029-4nh2ca",
+        "M029-4nh2ca/S01"
+      ]
+    },
+    "phases/29-4nh2ca-m029-4nh2ca-onnx-provisioning-security-r/29-01-SUMMARY.md": {
+      "sha": "df218383ad63d6f7",
+      "entities": [
+        "M029-4nh2ca",
+        "M029-4nh2ca/S01"
+      ]
+    },
+    "phases/29-4nh2ca-m029-4nh2ca-onnx-provisioning-security-r/29-01-UAT.md": {
+      "sha": "69d2c293fcccca93",
+      "entities": [
+        "M029-4nh2ca",
+        "M029-4nh2ca/S01"
+      ]
+    },
+    "phases/29-4nh2ca-m029-4nh2ca-onnx-provisioning-security-r/29-02-PLAN.md": {
+      "sha": "077cb1a63335cf15",
+      "entities": [
+        "M029-4nh2ca",
+        "M029-4nh2ca/S02"
+      ]
+    },
+    "phases/29-4nh2ca-m029-4nh2ca-onnx-provisioning-security-r/29-02-SUMMARY.md": {
+      "sha": "dfa230019248d35d",
+      "entities": [
+        "M029-4nh2ca",
+        "M029-4nh2ca/S02"
+      ]
+    },
+    "phases/29-4nh2ca-m029-4nh2ca-onnx-provisioning-security-r/29-02-UAT.md": {
+      "sha": "35993bf5d5915643",
+      "entities": [
+        "M029-4nh2ca",
+        "M029-4nh2ca/S02"
+      ]
+    },
+    "phases/30-3kdha1-m030-3kdha1-onnx-artifact-path-security/30-ROADMAP.md": {
+      "sha": "27a5203b1c2edf02",
+      "entities": [
+        "M030-3kdha1"
+      ]
+    },
+    "phases/30-3kdha1-m030-3kdha1-onnx-artifact-path-security/30-01-PLAN.md": {
+      "sha": "9c55bd25b987089d",
+      "entities": [
+        "M030-3kdha1",
+        "M030-3kdha1/S01"
+      ]
+    },
+    "phases/30-3kdha1-m030-3kdha1-onnx-artifact-path-security/30-01-SUMMARY.md": {
+      "sha": "fb937a4228b98a95",
+      "entities": [
+        "M030-3kdha1",
+        "M030-3kdha1/S01"
+      ]
+    },
+    "phases/30-3kdha1-m030-3kdha1-onnx-artifact-path-security/30-01-UAT.md": {
+      "sha": "7789a60911424fde",
+      "entities": [
+        "M030-3kdha1",
+        "M030-3kdha1/S01"
+      ]
+    },
+    "phases/30-3kdha1-m030-3kdha1-onnx-artifact-path-security/30-02-PLAN.md": {
+      "sha": "106be3384f153fd1",
+      "entities": [
+        "M030-3kdha1",
+        "M030-3kdha1/S02"
+      ]
+    },
+    "phases/30-3kdha1-m030-3kdha1-onnx-artifact-path-security/30-02-SUMMARY.md": {
+      "sha": "8097a8f12df561ff",
+      "entities": [
+        "M030-3kdha1",
+        "M030-3kdha1/S02"
+      ]
+    },
+    "phases/30-3kdha1-m030-3kdha1-onnx-artifact-path-security/30-02-UAT.md": {
+      "sha": "9e4bfca4cc526eac",
+      "entities": [
+        "M030-3kdha1",
+        "M030-3kdha1/S02"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-ROADMAP.md": {
+      "sha": "471b263168243c3c",
+      "entities": [
+        "M031-gn517a"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-01-ASSESSMENT.md": {
+      "sha": "ba2512db527e4f4c",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S01"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-01-CONTINUE.md": {
+      "sha": "fe55690e04d2f725",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S01"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-01-PLAN.md": {
+      "sha": "a7be606e16d7be0e",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S01"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-01-RESEARCH.md": {
+      "sha": "ad1b1c4bbfb26de3",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S01"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-01-SUMMARY.md": {
+      "sha": "3c74434cb259ddfe",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S01"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-01-UAT.md": {
+      "sha": "ff383a520eb31eca",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S01"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-02-PLAN.md": {
+      "sha": "2e186ee083ae6599",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S02"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-02-SUMMARY.md": {
+      "sha": "dd8a02179e365106",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S02"
+      ]
+    },
+    "phases/31-gn517a-m031-gn517a-onnx-artifact-source-contrac/31-02-UAT.md": {
+      "sha": "15496f572e015d9a",
+      "entities": [
+        "M031-gn517a",
+        "M031-gn517a/S02"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-ROADMAP.md": {
+      "sha": "6ad6da93e33db2e7",
+      "entities": [
+        "M032-qq6po2"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-01-ASSESSMENT.md": {
+      "sha": "5d5dff75b43bd789",
+      "entities": [
+        "M032-qq6po2",
+        "M032-qq6po2/S01"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-01-PLAN.md": {
+      "sha": "c88d117bbe3254ed",
+      "entities": [
+        "M032-qq6po2",
+        "M032-qq6po2/S01"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-01-RESEARCH.md": {
+      "sha": "ad4ef73ca215566e",
+      "entities": [
+        "M032-qq6po2",
+        "M032-qq6po2/S01"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-01-SUMMARY.md": {
+      "sha": "c84b6f74b25c74e6",
+      "entities": [
+        "M032-qq6po2",
+        "M032-qq6po2/S01"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-01-UAT.md": {
+      "sha": "16af5c0f3a1d4410",
+      "entities": [
+        "M032-qq6po2",
+        "M032-qq6po2/S01"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-02-PLAN.md": {
+      "sha": "c5be882e5baa4f5b",
+      "entities": [
+        "M032-qq6po2",
+        "M032-qq6po2/S02"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-02-SUMMARY.md": {
+      "sha": "e04a24fef10a80e5",
+      "entities": [
+        "M032-qq6po2",
+        "M032-qq6po2/S02"
+      ]
+    },
+    "phases/32-qq6po2-m032-qq6po2-onnx-model-reproducibility-s/32-02-UAT.md": {
+      "sha": "ba5c85748ebeee0c",
+      "entities": [
+        "M032-qq6po2",
+        "M032-qq6po2/S02"
+      ]
+    },
+    "phases/33-aym8ih-m033-aym8ih-onnx-runtime-wheel-provision/33-ROADMAP.md": {
+      "sha": "4c2dee57e7daad40",
+      "entities": [
+        "M033-aym8ih"
+      ]
+    },
+    "phases/33-aym8ih-m033-aym8ih-onnx-runtime-wheel-provision/33-01-ASSESSMENT.md": {
+      "sha": "080b6e005f7db62c",
+      "entities": [
+        "M033-aym8ih",
+        "M033-aym8ih/S01"
+      ]
+    },
+    "phases/33-aym8ih-m033-aym8ih-onnx-runtime-wheel-provision/33-01-PLAN.md": {
+      "sha": "a238cba1a103aced",
+      "entities": [
+        "M033-aym8ih",
+        "M033-aym8ih/S01"
+      ]
+    },
+    "phases/33-aym8ih-m033-aym8ih-onnx-runtime-wheel-provision/33-01-SUMMARY.md": {
+      "sha": "40d7c2280e90edbe",
+      "entities": [
+        "M033-aym8ih",
+        "M033-aym8ih/S01"
+      ]
+    },
+    "phases/33-aym8ih-m033-aym8ih-onnx-runtime-wheel-provision/33-01-UAT.md": {
+      "sha": "b36ec6cf88616e06",
+      "entities": [
+        "M033-aym8ih",
+        "M033-aym8ih/S01"
+      ]
+    },
+    "phases/33-aym8ih-m033-aym8ih-onnx-runtime-wheel-provision/33-02-PLAN.md": {
+      "sha": "942dd56f2b862514",
+      "entities": [
+        "M033-aym8ih",
+        "M033-aym8ih/S02"
+      ]
+    },
+    "phases/33-aym8ih-m033-aym8ih-onnx-runtime-wheel-provision/33-02-SUMMARY.md": {
+      "sha": "9884d41f1ec5dc1b",
+      "entities": [
+        "M033-aym8ih",
+        "M033-aym8ih/S02"
+      ]
+    },
+    "phases/33-aym8ih-m033-aym8ih-onnx-runtime-wheel-provision/33-02-UAT.md": {
+      "sha": "03b29c1a8d505334",
+      "entities": [
+        "M033-aym8ih",
+        "M033-aym8ih/S02"
+      ]
+    },
+    "phases/34-9tfz77-m034-9tfz77-hosted-onnx-workflow-input-a/34-ROADMAP.md": {
+      "sha": "d98b02ea79a9e0f7",
+      "entities": [
+        "M034-9tfz77"
+      ]
+    },
+    "phases/34-9tfz77-m034-9tfz77-hosted-onnx-workflow-input-a/34-01-ASSESSMENT.md": {
+      "sha": "dea9f748f22a6cb7",
+      "entities": [
+        "M034-9tfz77",
+        "M034-9tfz77/S01"
+      ]
+    },
+    "phases/34-9tfz77-m034-9tfz77-hosted-onnx-workflow-input-a/34-01-PLAN.md": {
+      "sha": "e101d8091955b736",
+      "entities": [
+        "M034-9tfz77",
+        "M034-9tfz77/S01"
+      ]
+    },
+    "phases/34-9tfz77-m034-9tfz77-hosted-onnx-workflow-input-a/34-01-SUMMARY.md": {
+      "sha": "e89afaf073739b4b",
+      "entities": [
+        "M034-9tfz77",
+        "M034-9tfz77/S01"
+      ]
+    },
+    "phases/34-9tfz77-m034-9tfz77-hosted-onnx-workflow-input-a/34-01-UAT.md": {
+      "sha": "e55ae84057695a2c",
+      "entities": [
+        "M034-9tfz77",
+        "M034-9tfz77/S01"
+      ]
+    },
+    "phases/34-9tfz77-m034-9tfz77-hosted-onnx-workflow-input-a/34-02-PLAN.md": {
+      "sha": "f23c4598a06d022a",
+      "entities": [
+        "M034-9tfz77",
+        "M034-9tfz77/S02"
+      ]
+    },
+    "phases/34-9tfz77-m034-9tfz77-hosted-onnx-workflow-input-a/34-02-SUMMARY.md": {
+      "sha": "bd8dea35dba277bd",
+      "entities": [
+        "M034-9tfz77",
+        "M034-9tfz77/S02"
+      ]
+    },
+    "phases/34-9tfz77-m034-9tfz77-hosted-onnx-workflow-input-a/34-02-UAT.md": {
+      "sha": "2551c736f5186683",
+      "entities": [
+        "M034-9tfz77",
+        "M034-9tfz77/S02"
+      ]
+    },
+    "phases/35-7j2h6x-m035-7j2h6x-exact-onnx-binary-hosting-co/35-ROADMAP.md": {
+      "sha": "a709ca4ad0d4577b",
+      "entities": [
+        "M035-7j2h6x"
+      ]
+    },
+    "phases/35-7j2h6x-m035-7j2h6x-exact-onnx-binary-hosting-co/35-01-ASSESSMENT.md": {
+      "sha": "e22a31a53f8b556a",
+      "entities": [
+        "M035-7j2h6x",
+        "M035-7j2h6x/S01"
+      ]
+    },
+    "phases/35-7j2h6x-m035-7j2h6x-exact-onnx-binary-hosting-co/35-01-PLAN.md": {
+      "sha": "1f7d5afad6a6ab62",
+      "entities": [
+        "M035-7j2h6x",
+        "M035-7j2h6x/S01"
+      ]
+    },
+    "phases/35-7j2h6x-m035-7j2h6x-exact-onnx-binary-hosting-co/35-01-SUMMARY.md": {
+      "sha": "195859dcf4bd6629",
+      "entities": [
+        "M035-7j2h6x",
+        "M035-7j2h6x/S01"
+      ]
+    },
+    "phases/35-7j2h6x-m035-7j2h6x-exact-onnx-binary-hosting-co/35-01-UAT.md": {
+      "sha": "0576aa2ff28e3f96",
+      "entities": [
+        "M035-7j2h6x",
+        "M035-7j2h6x/S01"
+      ]
+    },
+    "phases/35-7j2h6x-m035-7j2h6x-exact-onnx-binary-hosting-co/35-02-PLAN.md": {
+      "sha": "2f00808e0e80ec03",
+      "entities": [
+        "M035-7j2h6x",
+        "M035-7j2h6x/S02"
+      ]
+    },
+    "phases/35-7j2h6x-m035-7j2h6x-exact-onnx-binary-hosting-co/35-02-SUMMARY.md": {
+      "sha": "8ff8752eb2f7ff06",
+      "entities": [
+        "M035-7j2h6x",
+        "M035-7j2h6x/S02"
+      ]
+    },
+    "phases/35-7j2h6x-m035-7j2h6x-exact-onnx-binary-hosting-co/35-02-UAT.md": {
+      "sha": "607609e767956cbf",
+      "entities": [
+        "M035-7j2h6x",
+        "M035-7j2h6x/S02"
+      ]
+    },
+    "phases/36-o0hewj-m036-o0hewj-onnx-reproducible-export-wor/36-ROADMAP.md": {
+      "sha": "2b87d51c43b0eafb",
+      "entities": [
+        "M036-o0hewj"
+      ]
+    },
+    "phases/36-o0hewj-m036-o0hewj-onnx-reproducible-export-wor/36-01-ASSESSMENT.md": {
+      "sha": "dad4459e557da8ac",
+      "entities": [
+        "M036-o0hewj",
+        "M036-o0hewj/S01"
+      ]
+    },
+    "phases/36-o0hewj-m036-o0hewj-onnx-reproducible-export-wor/36-01-PLAN.md": {
+      "sha": "3a70e5ce5d3c3831",
+      "entities": [
+        "M036-o0hewj",
+        "M036-o0hewj/S01"
+      ]
+    },
+    "phases/36-o0hewj-m036-o0hewj-onnx-reproducible-export-wor/36-01-SUMMARY.md": {
+      "sha": "682dee4186ab6e1e",
+      "entities": [
+        "M036-o0hewj",
+        "M036-o0hewj/S01"
+      ]
+    },
+    "phases/36-o0hewj-m036-o0hewj-onnx-reproducible-export-wor/36-01-UAT.md": {
+      "sha": "dfc4da80b17506cc",
+      "entities": [
+        "M036-o0hewj",
+        "M036-o0hewj/S01"
+      ]
+    },
+    "phases/36-o0hewj-m036-o0hewj-onnx-reproducible-export-wor/36-02-PLAN.md": {
+      "sha": "60054de37b52cd06",
+      "entities": [
+        "M036-o0hewj",
+        "M036-o0hewj/S02"
+      ]
+    },
+    "phases/36-o0hewj-m036-o0hewj-onnx-reproducible-export-wor/36-02-SUMMARY.md": {
+      "sha": "5ce958225afcc884",
+      "entities": [
+        "M036-o0hewj",
+        "M036-o0hewj/S02"
+      ]
+    },
+    "phases/36-o0hewj-m036-o0hewj-onnx-reproducible-export-wor/36-02-UAT.md": {
+      "sha": "bea0b805608caf8c",
+      "entities": [
+        "M036-o0hewj",
+        "M036-o0hewj/S02"
+      ]
+    },
+    "phases/37-d23oz4-m037-d23oz4-target-runtime-validation-co/37-ROADMAP.md": {
+      "sha": "e2eb67cb0c86ad24",
+      "entities": [
+        "M037-d23oz4"
+      ]
+    },
+    "phases/37-d23oz4-m037-d23oz4-target-runtime-validation-co/37-01-ASSESSMENT.md": {
+      "sha": "f624d3ca3737b447",
+      "entities": [
+        "M037-d23oz4",
+        "M037-d23oz4/S01"
+      ]
+    },
+    "phases/37-d23oz4-m037-d23oz4-target-runtime-validation-co/37-01-PLAN.md": {
+      "sha": "a68423b48bc0ac21",
+      "entities": [
+        "M037-d23oz4",
+        "M037-d23oz4/S01"
+      ]
+    },
+    "phases/37-d23oz4-m037-d23oz4-target-runtime-validation-co/37-01-SUMMARY.md": {
+      "sha": "cd33d19728079c31",
+      "entities": [
+        "M037-d23oz4",
+        "M037-d23oz4/S01"
+      ]
+    },
+    "phases/37-d23oz4-m037-d23oz4-target-runtime-validation-co/37-01-UAT.md": {
+      "sha": "3c350fae0dc95a71",
+      "entities": [
+        "M037-d23oz4",
+        "M037-d23oz4/S01"
+      ]
+    },
+    "phases/37-d23oz4-m037-d23oz4-target-runtime-validation-co/37-02-PLAN.md": {
+      "sha": "e2abe6071f08bbeb",
+      "entities": [
+        "M037-d23oz4",
+        "M037-d23oz4/S02"
+      ]
+    },
+    "phases/37-d23oz4-m037-d23oz4-target-runtime-validation-co/37-02-SUMMARY.md": {
+      "sha": "88c753ed14f98b65",
+      "entities": [
+        "M037-d23oz4",
+        "M037-d23oz4/S02"
+      ]
+    },
+    "phases/37-d23oz4-m037-d23oz4-target-runtime-validation-co/37-02-UAT.md": {
+      "sha": "d58c2766c72387ca",
+      "entities": [
+        "M037-d23oz4",
+        "M037-d23oz4/S02"
+      ]
+    },
+    "phases/38-pmw50e-m038-pmw50e-go-onnx-target-runtime-accep/38-ROADMAP.md": {
+      "sha": "2b767160785e97fd",
+      "entities": [
+        "M038-pmw50e"
+      ]
+    },
+    "phases/38-pmw50e-m038-pmw50e-go-onnx-target-runtime-accep/38-01-ASSESSMENT.md": {
+      "sha": "2ba663068373a6cb",
+      "entities": [
+        "M038-pmw50e",
+        "M038-pmw50e/S01"
+      ]
+    },
+    "phases/38-pmw50e-m038-pmw50e-go-onnx-target-runtime-accep/38-01-PLAN.md": {
+      "sha": "d4f2b26f5e68e54a",
+      "entities": [
+        "M038-pmw50e",
+        "M038-pmw50e/S01"
+      ]
+    },
+    "phases/38-pmw50e-m038-pmw50e-go-onnx-target-runtime-accep/38-01-SUMMARY.md": {
+      "sha": "0d070e72ca9696ac",
+      "entities": [
+        "M038-pmw50e",
+        "M038-pmw50e/S01"
+      ]
+    },
+    "phases/38-pmw50e-m038-pmw50e-go-onnx-target-runtime-accep/38-01-UAT.md": {
+      "sha": "506e2114225a9214",
+      "entities": [
+        "M038-pmw50e",
+        "M038-pmw50e/S01"
+      ]
+    },
+    "phases/38-pmw50e-m038-pmw50e-go-onnx-target-runtime-accep/38-02-PLAN.md": {
+      "sha": "54bb2106a4f7b055",
+      "entities": [
+        "M038-pmw50e",
+        "M038-pmw50e/S02"
+      ]
+    },
+    "phases/38-pmw50e-m038-pmw50e-go-onnx-target-runtime-accep/38-02-SUMMARY.md": {
+      "sha": "bc3fa351dfd3dff2",
+      "entities": [
+        "M038-pmw50e",
+        "M038-pmw50e/S02"
+      ]
+    },
+    "phases/38-pmw50e-m038-pmw50e-go-onnx-target-runtime-accep/38-02-UAT.md": {
+      "sha": "e4b6340caa21e5bb",
+      "entities": [
+        "M038-pmw50e",
+        "M038-pmw50e/S02"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-ROADMAP.md": {
+      "sha": "b7049d50cac7e4e4",
+      "entities": [
+        "M039-aexhf5"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-01-ASSESSMENT.md": {
+      "sha": "89f1fdab0e8e6e47",
+      "entities": [
+        "M039-aexhf5",
+        "M039-aexhf5/S01"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-01-CONTINUE.md": {
+      "sha": "d3c9fce55b899eab",
+      "entities": [
+        "M039-aexhf5",
+        "M039-aexhf5/S01"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-01-PLAN.md": {
+      "sha": "5b3ef3c2a508fd0a",
+      "entities": [
+        "M039-aexhf5",
+        "M039-aexhf5/S01"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-01-SUMMARY.md": {
+      "sha": "6c88302ffe01e5d0",
+      "entities": [
+        "M039-aexhf5",
+        "M039-aexhf5/S01"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-01-UAT.md": {
+      "sha": "52040275a15dcb07",
+      "entities": [
+        "M039-aexhf5",
+        "M039-aexhf5/S01"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-02-PLAN.md": {
+      "sha": "39d8bf6569726b21",
+      "entities": [
+        "M039-aexhf5",
+        "M039-aexhf5/S02"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-02-SUMMARY.md": {
+      "sha": "3fecf0525362d3cd",
+      "entities": [
+        "M039-aexhf5",
+        "M039-aexhf5/S02"
+      ]
+    },
+    "phases/39-aexhf5-m039-aexhf5-packaged-go-onnx-target-runt/39-02-UAT.md": {
+      "sha": "cf1fdda365841eac",
+      "entities": [
+        "M039-aexhf5",
+        "M039-aexhf5/S02"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-ROADMAP.md": {
+      "sha": "8cd43b2296c74259",
+      "entities": [
+        "M040-pbp9z1"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-01-ASSESSMENT.md": {
+      "sha": "bc140e76a185e74b",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S01"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-01-PLAN.md": {
+      "sha": "229fd81365fb06ff",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S01"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-01-RESEARCH.md": {
+      "sha": "58855636cb01f5fd",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S01"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-01-SUMMARY.md": {
+      "sha": "7fadc7e35bb4842a",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S01"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-01-UAT.md": {
+      "sha": "512ca02939b04ae4",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S01"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-02-ASSESSMENT.md": {
+      "sha": "39930f7dcdc7c21a",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S02"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-02-PLAN.md": {
+      "sha": "f5ba8b9efc07f491",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S02"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-02-RESEARCH.md": {
+      "sha": "dbce77503a3bba2a",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S02"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-02-SUMMARY.md": {
+      "sha": "a5f8e5da2f5deba6",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S02"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-02-UAT.md": {
+      "sha": "cb64256cd4776107",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S02"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-03-ASSESSMENT.md": {
+      "sha": "e4f21addf3a072e8",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S03"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-03-PLAN.md": {
+      "sha": "ec6c9273b1e4f214",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S03"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-03-RESEARCH.md": {
+      "sha": "14f9fd7159021f08",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S03"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-03-SUMMARY.md": {
+      "sha": "fd5c5ef70d92433a",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S03"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-03-UAT.md": {
+      "sha": "1a149328d200f827",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S03"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-04-PLAN.md": {
+      "sha": "4ea02a99148572a9",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S04"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-04-RESEARCH.md": {
+      "sha": "e72808d04b49c0b7",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S04"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-04-SUMMARY.md": {
+      "sha": "e0447da8d3e980eb",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S04"
+      ]
+    },
+    "phases/40-pbp9z1-m040-pbp9z1-same-host-embedding-service/40-04-UAT.md": {
+      "sha": "fe541ca5063234a5",
+      "entities": [
+        "M040-pbp9z1",
+        "M040-pbp9z1/S04"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-ROADMAP.md": {
+      "sha": "7e0c4af066493a7d",
+      "entities": [
+        "M041-4tw0w7"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-01-ASSESSMENT.md": {
+      "sha": "40e98384c7c363a7",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S01"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-01-PLAN.md": {
+      "sha": "b1a0308216dd2497",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S01"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-01-REPLAN.md": {
+      "sha": "8e322317ff8bc9a0",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S01"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-01-SUMMARY.md": {
+      "sha": "86919e8c0087da3f",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S01"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-01-UAT.md": {
+      "sha": "6fbba225ea64dd10",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S01"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-02-ASSESSMENT.md": {
+      "sha": "93a65b11b8679c05",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S02"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-02-CONTINUE.md": {
+      "sha": "205bd14645dd228c",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S02"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-02-PLAN.md": {
+      "sha": "376f96e9bad5f89e",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S02"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-02-SUMMARY.md": {
+      "sha": "9bc0009141aafe0f",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S02"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-02-UAT.md": {
+      "sha": "1b713a80ade47bc2",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S02"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-03-ASSESSMENT.md": {
+      "sha": "caa172423afe0e40",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S03"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-03-PLAN.md": {
+      "sha": "7392b3bc84d91882",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S03"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-03-SUMMARY.md": {
+      "sha": "e7e6694c82a122e3",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S03"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-03-UAT.md": {
+      "sha": "d8f1f18e540add2b",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S03"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-04-CONTINUE.md": {
+      "sha": "b8df646c235f5d10",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S04"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-04-PLAN.md": {
+      "sha": "6ec3f9109960ca7a",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S04"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-04-REPLAN.md": {
+      "sha": "ec0d180658d0bff7",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S04"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-04-SUMMARY.md": {
+      "sha": "b16a8b915e83e8a3",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S04"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-04-UAT.md": {
+      "sha": "cd8a9892a3bd4ccd",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S04"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-05-PLAN.md": {
+      "sha": "b45c5e2d5e78189c",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S05"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-05-SUMMARY.md": {
+      "sha": "12aebc2d8f549550",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S05"
+      ]
+    },
+    "phases/41-4tw0w7-fd-v2-service-hardening-and-observabilit/41-05-UAT.md": {
+      "sha": "9d0872e3b1cf7aaa",
+      "entities": [
+        "M041-4tw0w7",
+        "M041-4tw0w7/S05"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-ROADMAP.md": {
+      "sha": "cd3ee220852a8136",
+      "entities": [
+        "M042-fjf2en"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-01-ASSESSMENT.md": {
+      "sha": "a8b5f1c8dd93cf1d",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S01"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-01-CONTINUE.md": {
+      "sha": "2dd8e8fd2e680882",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S01"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-01-PLAN.md": {
+      "sha": "33c580235750f5f4",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S01"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-01-REPLAN.md": {
+      "sha": "9a723d5653679e03",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S01"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-01-SUMMARY.md": {
+      "sha": "11478f161cc72929",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S01"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-01-UAT.md": {
+      "sha": "6cae404fdc1d47ea",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S01"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-02-ASSESSMENT.md": {
+      "sha": "b4cb2ae33cacc731",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S02"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-02-PLAN.md": {
+      "sha": "e9f5843d43aad958",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S02"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-02-SUMMARY.md": {
+      "sha": "9ec880e5766ae423",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S02"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-02-UAT.md": {
+      "sha": "cd39d636fbf29108",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S02"
+      ]
+    },
+    "phases/42-fjf2en-tei-perf-investigation-and-mitigation/42-03-PLAN.md": {
+      "sha": "8ac139de6f9066e2",
+      "entities": [
+        "M042-fjf2en",
+        "M042-fjf2en/S03"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-ROADMAP.md": {
+      "sha": "144d8253f3808846",
+      "entities": [
+        "M043-dpr0cq"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-01-PLAN.md": {
+      "sha": "3fb6d24e752f33ea",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S01"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-01-SUMMARY.md": {
+      "sha": "23b441d51a96b761",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S01"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-01-UAT.md": {
+      "sha": "6b47f45b1dc3cbea",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S01"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-02-PLAN.md": {
+      "sha": "cce2d83682f8cffc",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S02"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-02-SUMMARY.md": {
+      "sha": "180b6e3d4bf27c1b",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S02"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-02-UAT.md": {
+      "sha": "a1ddc6edd8258058",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S02"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-03-PLAN.md": {
+      "sha": "629d82a9c85b6530",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S03"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-03-SUMMARY.md": {
+      "sha": "fa74ee12637c958f",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S03"
+      ]
+    },
+    "phases/43-dpr0cq-static-analysis-quality-hardening/43-03-UAT.md": {
+      "sha": "4f305fe812a50069",
+      "entities": [
+        "M043-dpr0cq",
+        "M043-dpr0cq/S03"
+      ]
+    },
+    "phases/44-9vahk2-upgrade-openapi-contract-to-oas-3-2-0/44-ROADMAP.md": {
+      "sha": "3bc31a8886297c35",
+      "entities": [
+        "M044-9vahk2"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-ROADMAP.md": {
+      "sha": "4bd1f504a1c447c6",
+      "entities": [
+        "M045-d0e5xq"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-01-ASSESSMENT.md": {
+      "sha": "0164a7acb4778e48",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S01"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-01-PLAN.md": {
+      "sha": "3d5f90500b93aad3",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S01"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-01-SUMMARY.md": {
+      "sha": "a6f5f6308bc5870a",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S01"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-01-UAT.md": {
+      "sha": "b8324e5e777ff86f",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S01"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-02-ASSESSMENT.md": {
+      "sha": "10004478193a5373",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S02"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-02-PLAN.md": {
+      "sha": "a1595396b1b71cd9",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S02"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-02-SUMMARY.md": {
+      "sha": "f12a33d375ba9819",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S02"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-02-UAT.md": {
+      "sha": "836e1504e651518c",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S02"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-03-ASSESSMENT.md": {
+      "sha": "a291205d24337983",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S03"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-03-PLAN.md": {
+      "sha": "d428b0100200294b",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S03"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-03-SUMMARY.md": {
+      "sha": "a8d1287de7360ebf",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S03"
+      ]
+    },
+    "phases/45-d0e5xq-stabilize-tei-startup/45-03-UAT.md": {
+      "sha": "266b35be3e39112c",
+      "entities": [
+        "M045-d0e5xq",
+        "M045-d0e5xq/S03"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-ROADMAP.md": {
+      "sha": "aa127f43b647ad57",
+      "entities": [
+        "M046-zqzcu6"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-01-ASSESSMENT.md": {
+      "sha": "7beda30200afc590",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S01"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-01-PLAN.md": {
+      "sha": "e554d973fe2f0017",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S01"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-01-RESEARCH.md": {
+      "sha": "e6718616bb361447",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S01"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-01-SUMMARY.md": {
+      "sha": "0b941f9e72dcf5e7",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S01"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-01-UAT.md": {
+      "sha": "dcb916c4b10017ca",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S01"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-02-ASSESSMENT.md": {
+      "sha": "1502a1759ee95f51",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S02"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-02-PLAN.md": {
+      "sha": "2b71c9455fbd88ea",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S02"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-02-SUMMARY.md": {
+      "sha": "a1e34fd777fb857f",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S02"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-02-UAT.md": {
+      "sha": "3761b539bde46744",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S02"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-03-ASSESSMENT.md": {
+      "sha": "2b8338e9f480d16c",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S03"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-03-PLAN.md": {
+      "sha": "aa2655c57511f136",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S03"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-03-SUMMARY.md": {
+      "sha": "bc7363fb00339be3",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S03"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-03-UAT.md": {
+      "sha": "4af9a6ae98ac9bc5",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S03"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-04-ASSESSMENT.md": {
+      "sha": "cecdf8febf190484",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S04"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-04-PLAN.md": {
+      "sha": "711509b065285c0e",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S04"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-04-SUMMARY.md": {
+      "sha": "58058296ad6371e3",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S04"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-04-UAT.md": {
+      "sha": "6548cf5295c0a102",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S04"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-05-ASSESSMENT.md": {
+      "sha": "efc9e95805bb00e3",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S05"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-05-PLAN.md": {
+      "sha": "4af26ff1fa64b69d",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S05"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-05-SUMMARY.md": {
+      "sha": "83bfce7a497aa082",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S05"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-05-UAT.md": {
+      "sha": "4aa6c652df73b6c3",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S05"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-06-ASSESSMENT.md": {
+      "sha": "15d185483d7a3851",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S06"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-06-PLAN.md": {
+      "sha": "816db5dff4626a0d",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S06"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-06-SUMMARY.md": {
+      "sha": "f2650ba0d5a1390c",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S06"
+      ]
+    },
+    "phases/46-zqzcu6-audit-remediation-waves/46-06-UAT.md": {
+      "sha": "157f7a1fbd554315",
+      "entities": [
+        "M046-zqzcu6",
+        "M046-zqzcu6/S06"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-ROADMAP.md": {
+      "sha": "81c727455ca2aa53",
+      "entities": [
+        "M047-9fngng"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-01-ASSESSMENT.md": {
+      "sha": "be4ee7e71046853b",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S01"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-01-PLAN.md": {
+      "sha": "b9745a5cb66e1f3c",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S01"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-01-SUMMARY.md": {
+      "sha": "5a6dc983a9a1383e",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S01"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-01-UAT.md": {
+      "sha": "2bc9d1b725f5aa2a",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S01"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-02-ASSESSMENT.md": {
+      "sha": "09e0d54cb8cfc0ba",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S02"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-02-PLAN.md": {
+      "sha": "058cd2d5d27cee8c",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S02"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-02-SUMMARY.md": {
+      "sha": "67e5c803bf5d6b7d",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S02"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-02-UAT.md": {
+      "sha": "87ea8818e6d5b619",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S02"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-03-ASSESSMENT.md": {
+      "sha": "ac69d3fb2c253f5e",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S03"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-03-PLAN.md": {
+      "sha": "955c554e11d0fdc0",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S03"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-03-SUMMARY.md": {
+      "sha": "c1840e9791890874",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S03"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-03-UAT.md": {
+      "sha": "c1f79e9ae5f2a575",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S03"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-04-ASSESSMENT.md": {
+      "sha": "9f2cd51845b69f87",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S04"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-04-PLAN.md": {
+      "sha": "67b2c1c301d9cb0d",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S04"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-04-SUMMARY.md": {
+      "sha": "b7e9ea9cfb63625d",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S04"
+      ]
+    },
+    "phases/47-9fngng-audit-followup-resilience-contract/47-04-UAT.md": {
+      "sha": "8c167702274cc4c8",
+      "entities": [
+        "M047-9fngng",
+        "M047-9fngng/S04"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-ROADMAP.md": {
+      "sha": "066999fc63b5a293",
+      "entities": [
+        "M048-l4sctg"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-01-ASSESSMENT.md": {
+      "sha": "8156c9cecbcf1119",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S01"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-01-PLAN.md": {
+      "sha": "ecb7c91201f41e35",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S01"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-01-SUMMARY.md": {
+      "sha": "d7ca8e10d4fffdcf",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S01"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-01-UAT.md": {
+      "sha": "06d5a2e82fd1de97",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S01"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-02-ASSESSMENT.md": {
+      "sha": "44eefa0f6659d7d3",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S02"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-02-PLAN.md": {
+      "sha": "53c6d4ba9fd6185a",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S02"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-02-SUMMARY.md": {
+      "sha": "b28c684d6c4ce388",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S02"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-02-UAT.md": {
+      "sha": "0eaef03b7a7ef4f1",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S02"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-03-ASSESSMENT.md": {
+      "sha": "d41d10be51899369",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S03"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-03-PLAN.md": {
+      "sha": "051c3b02be016990",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S03"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-03-SUMMARY.md": {
+      "sha": "9d6f030e5e448a08",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S03"
+      ]
+    },
+    "phases/48-l4sctg-audit-cleanup-tail/48-03-UAT.md": {
+      "sha": "7324a382a098f401",
+      "entities": [
+        "M048-l4sctg",
+        "M048-l4sctg/S03"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-ROADMAP.md": {
+      "sha": "9239376b72de9482",
+      "entities": [
+        "M049-7dn2gp"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-01-ASSESSMENT.md": {
+      "sha": "3c07c8a3c946f6ba",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S01"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-01-PLAN.md": {
+      "sha": "305e7a428d30c3d6",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S01"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-01-SUMMARY.md": {
+      "sha": "a73ef74426d97537",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S01"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-01-UAT.md": {
+      "sha": "c74619d5cb5fc18a",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S01"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-02-ASSESSMENT.md": {
+      "sha": "14281d976eaea770",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S02"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-02-PLAN.md": {
+      "sha": "48cc9a320c12ba4c",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S02"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-02-SUMMARY.md": {
+      "sha": "9884703ba1e70fe7",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S02"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-02-UAT.md": {
+      "sha": "33844246fd78a9b5",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S02"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-03-ASSESSMENT.md": {
+      "sha": "03b1ad085b4c491c",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S03"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-03-PLAN.md": {
+      "sha": "6029193b5a9af8ad",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S03"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-03-SUMMARY.md": {
+      "sha": "7a0bf6c764fae3d6",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S03"
+      ]
+    },
+    "phases/49-7dn2gp-agent-native-observability-and-cache-con/49-03-UAT.md": {
+      "sha": "669fc7882a6e61e0",
+      "entities": [
+        "M049-7dn2gp",
+        "M049-7dn2gp/S03"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-ROADMAP.md": {
+      "sha": "e97a467ace0dd7cb",
+      "entities": [
+        "M050-rfqm1p"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-01-ASSESSMENT.md": {
+      "sha": "3bdcb8128fd65131",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S01"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-01-PLAN.md": {
+      "sha": "76d644355ab9ad25",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S01"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-01-SUMMARY.md": {
+      "sha": "9f0b9344bba69df9",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S01"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-01-UAT.md": {
+      "sha": "8609d8a987f5425a",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S01"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-02-ASSESSMENT.md": {
+      "sha": "b767839fbe382f16",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S02"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-02-PLAN.md": {
+      "sha": "7a9cbf195065e436",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S02"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-02-SUMMARY.md": {
+      "sha": "65a803f6bf3d7168",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S02"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-02-UAT.md": {
+      "sha": "b8d5f87447f5bc26",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S02"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-03-ASSESSMENT.md": {
+      "sha": "0e56ba2afd13f818",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S03"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-03-PLAN.md": {
+      "sha": "d73bfd5e8e3c2be9",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S03"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-03-SUMMARY.md": {
+      "sha": "bcf3ee9977d12d11",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S03"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-03-UAT.md": {
+      "sha": "d5bf54ae1d5e498b",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S03"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-04-PLAN.md": {
+      "sha": "831ae21016cb293d",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S04"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-04-SUMMARY.md": {
+      "sha": "130544d72874af6b",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S04"
+      ]
+    },
+    "phases/50-rfqm1p-current-test-truth-and-stronger-gates/50-04-UAT.md": {
+      "sha": "7f4e9ddbae9c3a95",
+      "entities": [
+        "M050-rfqm1p",
+        "M050-rfqm1p/S04"
+      ]
+    },
+    "phases/51-h1xr44-fd-lifecycle-warmup-auto-recovery/51-ROADMAP.md": {
+      "sha": "3e1567b042cde7ca",
+      "entities": [
+        "M051-h1xr44"
+      ]
+    },
+    "phases/51-h1xr44-fd-lifecycle-warmup-auto-recovery/T01-PLAN.md": {
+      "sha": "2ac2202987b875e0",
+      "entities": [
+        "M051-h1xr44",
+        "M051-h1xr44/S01",
+        "M051-h1xr44/S01/T01"
+      ]
+    },
+    "phases/51-h1xr44-fd-lifecycle-warmup-auto-recovery/T02-PLAN.md": {
+      "sha": "a251f6b1e82240df",
+      "entities": [
+        "M051-h1xr44",
+        "M051-h1xr44/S01",
+        "M051-h1xr44/S01/T02"
+      ]
+    },
+    "phases/51-h1xr44-fd-lifecycle-warmup-auto-recovery/51-01-PLAN.md": {
+      "sha": "5c34c56cdccf8525",
+      "entities": [
+        "M051-h1xr44",
+        "M051-h1xr44/S01"
+      ]
+    },
+    "phases/51-h1xr44-fd-lifecycle-warmup-auto-recovery/T04-PLAN.md": {
+      "sha": "93e97b22914bdea3",
+      "entities": [
+        "M051-h1xr44",
+        "M051-h1xr44/S01",
+        "M051-h1xr44/S01/T04"
+      ]
+    },
+    "phases/51-h1xr44-fd-lifecycle-warmup-auto-recovery/T03-PLAN.md": {
+      "sha": "3b7ef6d9be3b4eb1",
+      "entities": [
+        "M051-h1xr44",
+        "M051-h1xr44/S01",
+        "M051-h1xr44/S01/T03"
+      ]
+    },
+    "phases/51-h1xr44-fd-lifecycle-warmup-auto-recovery/T05-PLAN.md": {
+      "sha": "74bc9f93f36da158",
+      "entities": [
+        "M051-h1xr44",
+        "M051-h1xr44/S01",
+        "M051-h1xr44/S01/T05"
+      ]
+    }
+  },
+  "planning": {
+    "active": false,
+    "layout": null,
+    "projections": {},
+    "passthrough": {}
+  },
+  "piVersion": ""
+}

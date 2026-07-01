@@ -433,6 +433,16 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: M050/S03 selected `github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest` and ran bounded mutation baseline over `api/cache/hash.go`, `api/cache/keys.go`, `api/handlers/cache.go`, `api/handlers/health.go`, `api/lifecycle/state.go`. Result: mutation score 1.000000 (143 passed/killed, 0 failed/survived, 4 duplicated, 0 skipped, total 143). Fresh `cd api && go test ./...` passed afterward.
 - Notes: Evidence artifact: `benchmark-results/m050-s03-mutation-baseline.md`. Baseline is informational/local for now; future CI hard gate should pin runner/toolchain or run manually due runtime cost.
 
+### R046 — fd-api must automatically recover model readiness after transient startup-time TEI unreachability (race condition where fd-api starts before TEI finishes BERT CPU load) without operator intervention, via periodic background warmup retry with feature-flag rollback.
+- Class: continuity
+- Status: validated
+- Description: fd-api must automatically recover model readiness after transient startup-time TEI unreachability (race condition where fd-api starts before TEI finishes BERT CPU load) without operator intervention, via periodic background warmup retry with feature-flag rollback.
+- Why it matters: Без auto-recovery fd-api залипает в degraded/model_not_loaded после race с медленным TEI startup, требуя ручного `docker restart fd_api`. Это нарушает same-host service continuity contract — оператор не должен вмешиваться в типовые restart сценарии.
+- Source: M051-h1xr44 root-cause analysis of fd_api degraded race (MEM088)
+- Primary owning slice: M051-h1xr44/S01
+- Supporting slices: M051-h1xr44/S01
+- Validation: M051-h1xr44 S01 complete: warmupRetryPolicyFromEnv() расширяет startup до 5×5с; StartWarmupRecovery goroutine тикает каждые 30с (FD_WARMUP_RECOVERY_INTERVAL_SEC) с feature flag FD_WARMUP_RECOVERY_ENABLED. End-to-end доказано дважды: recovery succeeded attempt:7 elapsed:210197ms после 3.5 мин TEI CPU load. Evidence: .gsd/runtime/M051-h1xr44/api-recovery-logs.jsonl. Unit tests (8) + full api suite (11 пакетов) green с -race.
+
 ## Deferred
 
 ### R021 — fd handler отправляет chunked TEI calls в ПАРАЛЛЕЛЬ (bounded concurrency 4, matches TEI max_batch_requests=4) вместо sequential. Cold path for batch=128 должен упасть с 25s до ≤10s; batch=32 cold с 6s до ≤4s. Env FD_ASYNC_CHUNKS=true включает async mode (default off для backward compat). Каждый chunk error агрегируется, partial response не отдаётся.
@@ -506,10 +516,11 @@ This file is the explicit capability and coverage contract for the project.
 | R043 | quality-attribute | validated | M050-rfqm1p/S01 | none | M050/S01 validated existing test actuality: `benchmark-results/m050-s01-test-actuality.md`; final `cd api && go test ./...` passed with 295 tests in 10 packages; final `cd tests/integration && go test -v .` passed public/fail-closed checks after root integration module/auth update. |
 | R044 | failure-visibility | validated | M050-rfqm1p/S02 | none | M050/S02 implemented and verified `tests/integration` Docker Compose e2e suite. Authenticated proof recreated `fd_api` with a temporary nonprinted key and passed: SUMMARY pass=9 fail=0 skip=0 across public diagnostics, auth fail-closed, authenticated metrics, embeddings dimensions/batch/validation, and cache HIT/flush/delete invalidation. |
 | R045 | quality-attribute | validated | M050-rfqm1p/S03 | none | M050/S03 selected `github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest` and ran bounded mutation baseline over `api/cache/hash.go`, `api/cache/keys.go`, `api/handlers/cache.go`, `api/handlers/health.go`, `api/lifecycle/state.go`. Result: mutation score 1.000000 (143 passed/killed, 0 failed/survived, 4 duplicated, 0 skipped, total 143). Fresh `cd api && go test ./...` passed afterward. |
+| R046 | continuity | validated | M051-h1xr44/S01 | M051-h1xr44/S01 | M051-h1xr44 S01 complete: warmupRetryPolicyFromEnv() расширяет startup до 5×5с; StartWarmupRecovery goroutine тикает каждые 30с (FD_WARMUP_RECOVERY_INTERVAL_SEC) с feature flag FD_WARMUP_RECOVERY_ENABLED. End-to-end доказано дважды: recovery succeeded attempt:7 elapsed:210197ms после 3.5 мин TEI CPU load. Evidence: .gsd/runtime/M051-h1xr44/api-recovery-logs.jsonl. Unit tests (8) + full api suite (11 пакетов) green с -race. |
 
 ## Coverage Summary
 
 - Active requirements: 3
 - Mapped to slices: 2
-- Validated: 40 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045)
+- Validated: 41 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R011, R013, R014, R015, R016, R017, R018, R019, R020, R023, R024, R025, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046)
 - Unmapped active requirements: 1

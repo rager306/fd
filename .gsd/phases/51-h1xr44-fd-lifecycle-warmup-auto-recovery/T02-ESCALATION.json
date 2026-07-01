@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "taskId": "T02",
+  "sliceId": "S01",
+  "milestoneId": "M051-h1xr44",
+  "question": "Нужен ли capped/log-throttled retry для сценария когда TEI permanently unreachable (recovery логирует WARN каждую попытку)?",
+  "options": [
+    {
+      "id": "A",
+      "label": "Не нужно — пусть WARN шумит",
+      "tradeoffs": "Log noise при permanent outage, но простой код и никаких потерянных recovery при медленном recovery."
+    },
+    {
+      "id": "B",
+      "label": "Capped backoff с ceiling",
+      "tradeoffs": "Сложнее: после N попыток удвоенный interval до ceiling (напр. 5 мин). Тише в логах, но медленнее реагирует на восстановление."
+    },
+    {
+      "id": "C",
+      "label": "Доза-логирование с rate-limit",
+      "tradeoffs": "Логируем первые 3 попытки, дальше каждые 10x. Умеренный шум, первое восстановление не теряется."
+    }
+  ],
+  "recommendation": "A",
+  "recommendationRationale": "Текущий scope минимален. WARN структурно логируется с attempt# — оператор видит картину. Если log-spam окажется проблемой в проде, добавим cap отдельной T0X.",
+  "continueWithDefault": true,
+  "createdAt": "2026-07-01T09:18:24.257Z"
+}
