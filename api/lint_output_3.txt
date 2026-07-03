@@ -1,0 +1,3 @@
+go: github.com/golangci/golangci-lint/v2@v2.12.2 requires go >= 1.25.0; switching to go1.25.11
+level=error msg="Running error: context loading failed: failed to load packages: failed to load packages: failed to load with go/packages: -: named files must be .go files: ./embed/..."
+exit status 3
