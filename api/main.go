@@ -456,7 +456,7 @@ func main() {
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer func() { _ = resultStore.Close() }()
+		defer resultStore.Close()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}
@@ -520,7 +520,8 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		recoveryCancel()
+		os.Exit(1) //nolint:gocritic // exitAfterDefer: manually calling deferred function before exit
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
