@@ -1,5 +1,9 @@
 # FD Embedding Service
 
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](./CHANGELOG.md)
+
 FD is a same-host text embedding service for legal-domain workloads. It exposes an OpenAI-compatible embeddings API, uses HuggingFace Text Embeddings Inference (TEI) for inference, and keeps hot results in a two-tier cache: in-process L1 plus Redis L2.
 
 The current production runtime is **TEI-only** with `deepvk/USER-bge-m3` at **1024 dimensions**. ONNX runtime work is intentionally inactive/future research; do not treat ONNX as part of the current deployment path.
@@ -499,4 +503,6 @@ Run benchmark tooling from the host against a local Docker stack. Some older ben
 
 ## License
 
-No license file is currently present in this repository. Add a `LICENSE` file before distributing or accepting external contributions.
+[MIT License](./LICENSE). Copyright (c) 2026 rager306.
+
+See [CHANGELOG.md](./CHANGELOG.md) for release history. The current release is `v1.0.0` (2026-07-03).
