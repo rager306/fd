@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "lastWriter": "gsd-pi",
-  "lastProjectedAt": "2026-07-03T09:17:52.885Z",
+  "lastProjectedAt": "2026-07-03T11:51:10.572Z",
   "projections": {
     "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-ROADMAP.md": {
       "sha": "151d2e6b4b890deb",
@@ -4201,6 +4201,109 @@
       "entities": [
         "M052-mmf99p",
         "M052-mmf99p/S01"
+      ]
+    },
+    "phases/53-ckvgjw-cache-capacity-tuning-phase-1a/53-ROADMAP.md": {
+      "sha": "c050967bb2959386",
+      "entities": [
+        "M053-ckvgjw"
+      ]
+    },
+    "phases/53-ckvgjw-cache-capacity-tuning-phase-1a/T01-PLAN.md": {
+      "sha": "0663e36786a68e5b",
+      "entities": [
+        "M053-ckvgjw",
+        "M053-ckvgjw/S01",
+        "M053-ckvgjw/S01/T01"
+      ]
+    },
+    "phases/53-ckvgjw-cache-capacity-tuning-phase-1a/T02-PLAN.md": {
+      "sha": "236a2f8347b60a94",
+      "entities": [
+        "M053-ckvgjw",
+        "M053-ckvgjw/S01",
+        "M053-ckvgjw/S01/T02"
+      ]
+    },
+    "phases/53-ckvgjw-cache-capacity-tuning-phase-1a/53-01-PLAN.md": {
+      "sha": "d89fb1656853c660",
+      "entities": [
+        "M053-ckvgjw",
+        "M053-ckvgjw/S01"
+      ]
+    },
+    "phases/53-ckvgjw-cache-capacity-tuning-phase-1a/T03-PLAN.md": {
+      "sha": "4fc8c1cf1b1398cc",
+      "entities": [
+        "M053-ckvgjw",
+        "M053-ckvgjw/S01",
+        "M053-ckvgjw/S01/T03"
+      ]
+    },
+    "phases/54-ybl4jr-bulk-ingestion-queue-phase-2/54-ROADMAP.md": {
+      "sha": "a874ad15c998b5fb",
+      "entities": [
+        "M054-ybl4jr"
+      ]
+    },
+    "phases/54-ybl4jr-bulk-ingestion-queue-phase-2/T03-PLAN.md": {
+      "sha": "503c866d37b16e5e",
+      "entities": [
+        "M054-ybl4jr",
+        "M054-ybl4jr/S01",
+        "M054-ybl4jr/S01/T03"
+      ]
+    },
+    "phases/54-ybl4jr-bulk-ingestion-queue-phase-2/T02-PLAN.md": {
+      "sha": "9d0895359bacd693",
+      "entities": [
+        "M054-ybl4jr",
+        "M054-ybl4jr/S01",
+        "M054-ybl4jr/S01/T02"
+      ]
+    },
+    "phases/54-ybl4jr-bulk-ingestion-queue-phase-2/T01-PLAN.md": {
+      "sha": "31091a71b10ec341",
+      "entities": [
+        "M054-ybl4jr",
+        "M054-ybl4jr/S01",
+        "M054-ybl4jr/S01/T01"
+      ]
+    },
+    "phases/54-ybl4jr-bulk-ingestion-queue-phase-2/T04-PLAN.md": {
+      "sha": "b29a982e652ef73d",
+      "entities": [
+        "M054-ybl4jr",
+        "M054-ybl4jr/S01",
+        "M054-ybl4jr/S01/T04"
+      ]
+    },
+    "phases/54-ybl4jr-bulk-ingestion-queue-phase-2/54-01-PLAN.md": {
+      "sha": "0e30e02cb66d65c5",
+      "entities": [
+        "M054-ybl4jr",
+        "M054-ybl4jr/S01"
+      ]
+    },
+    "phases/55-ucu1jl-phase-1b-miss-coalescing/55-ROADMAP.md": {
+      "sha": "fabeba075b608ba4",
+      "entities": [
+        "M055-ucu1jl"
+      ]
+    },
+    "phases/55-ucu1jl-phase-1b-miss-coalescing/T01-PLAN.md": {
+      "sha": "7305497bbe79a080",
+      "entities": [
+        "M055-ucu1jl",
+        "M055-ucu1jl/S01",
+        "M055-ucu1jl/S01/T01"
+      ]
+    },
+    "phases/55-ucu1jl-phase-1b-miss-coalescing/55-01-PLAN.md": {
+      "sha": "e9dddf8d54d143a5",
+      "entities": [
+        "M055-ucu1jl",
+        "M055-ucu1jl/S01"
       ]
     }
   },

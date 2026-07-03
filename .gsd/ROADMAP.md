@@ -57,3 +57,6 @@
 - ✅ **M050-rfqm1p: Current test truth and stronger gates** (`depends:[—]`)
 - ✅ **M051-h1xr44: fd lifecycle warmup auto-recovery** (`depends:[—]`)
 - ✅ **M052-mmf99p: Phase 0 metrics coverage for fd throughput** (`depends:[—]`)
+- ✅ **M053-ckvgjw: Cache capacity tuning (Phase 1a)** (`depends:[—]`)
+- ✅ **M054-ybl4jr: Bulk ingestion queue (Phase 2)** (`depends:[—]`)
+- ✅ **M055-ucu1jl: Phase 1b miss-coalescing** (`depends:[—]`)

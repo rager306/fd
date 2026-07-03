@@ -311,7 +311,18 @@ func main() {
 	maxInFlightCapacity := int64(maxInFlight)
 
 	teiClient := embed.NewTEIClient(teiURL, modelID, httpClient)
+	// M055-ucu1jl Phase 1b (Issue #9): opt-in cross-request coalescing.
+	// When FD_COALESCE_ENABLED=true, wrap the TEI client in CoalescingEmbedder
+	// so concurrent /v1/embeddings requests under burst share a single TEI
+	// call within FD_COALESCE_WINDOW_MS. Default 0 = disabled (pass-through).
 	embeddingClient := embed.Embedder(teiClient)
+	if envutil.BoolOrDefault("FD_COALESCE_ENABLED", false) {
+		coWindow := envutil.DurationOrDefault("FD_COALESCE_WINDOW_MS", 5*time.Millisecond)
+		co := embed.NewCoalescingEmbedder(embeddingClient, coWindow)
+		defer co.Close()
+		embeddingClient = co
+		logger.Info("embedding coalescing enabled", "window_ms", coWindow.Milliseconds())
+	}
 	logger.Info("tei client configured", "url", teiURL, "model", modelID)
 
 	if os.Getenv("GIN_MODE") == "release" {
