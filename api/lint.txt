@@ -20,15 +20,6 @@ api/embed/coalescedembedder.go:141:3: ifElseChain: rewrite if-else to switch sta
 api/fd_v2_queue_integration_test.go:32:1: paramTypeCombine: func(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) could be replaced with func(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) (gocritic)
 func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 ^
-api/fd_v2_queue_integration_test.go:81:10: httpNoBody: http.NoBody should be preferred to the nil request body (gocritic)
-		req := httptest.NewRequest(http.MethodGet, "/v1/queue/"+id, nil)
-		       ^
-api/fd_v2_queue_integration_test.go:142:9: httpNoBody: http.NoBody should be preferred to the nil request body (gocritic)
-	req := httptest.NewRequest(http.MethodGet, "/v1/queue/nonexistent", nil)
-	       ^
-api/main.go:523:3: exitAfterDefer: os.Exit will exit, and `defer recoveryCancel()` will not run (gocritic)
-		os.Exit(1)
-		^
 api/main.go:231:1: cyclomatic complexity 18 of func `main` is high (> 15) (gocyclo)
 func main() {
 ^
@@ -71,9 +62,9 @@ func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseReco
 api/observability/metrics.go:56:2: field redisSizeTimeout is unused (unused)
 	redisSizeTimeout  time.Duration
 	^
-24 issues:
+21 issues:
 * goconst: 4
-* gocritic: 6
+* gocritic: 3
 * gocyclo: 1
 * gosec: 2
 * govet: 1
