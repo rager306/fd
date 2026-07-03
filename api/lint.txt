@@ -11,24 +11,6 @@ api/handlers/queue_handlers.go:127:12: string `list` has 3 occurrences, make it 
 api/observability/metrics.go:88:25: string `tier` has 3 occurrences, make it a constant (goconst)
 		}, []string{"result", "tier"}),
 		                      ^
-api/embed/coalesce_baseline_test.go:70:1: paramTypeCombine: func(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) could be replaced with func(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) (gocritic)
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) {
-^
-api/embed/coalescedembedder.go:141:3: ifElseChain: rewrite if-else to switch statement (gocritic)
-		if err != nil {
-		^
-api/fd_v2_queue_integration_test.go:32:1: paramTypeCombine: func(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) could be replaced with func(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) (gocritic)
-func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
-^
-api/main.go:231:1: cyclomatic complexity 18 of func `main` is high (> 15) (gocyclo)
-func main() {
-^
-api/embed/coalesce_baseline_test.go:42:15: G304: Potential file inclusion via variable (gosec)
-	data, err := os.ReadFile(root)
-	             ^
-api/embed/coalesce_baseline_test.go:86:9: G404: Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand) (gosec)
-	rng := rand.New(rand.NewSource(42))
-	       ^
 api/cache/tiered.go:233:32: defers: call to time.Since is not deferred (govet)
 	defer tc.recordLookupDuration(time.Since(started))
 	                              ^
@@ -53,24 +35,27 @@ api/queue/types.go:21:2: exported: exported const StatusPending should have comm
 api/queue/worker.go:164:15: SA4010: this result of append is never used, except maybe in other appends (staticcheck)
 		indexByID = append(indexByID, &batch[i])
 		            ^
+api/embed/coalesce_baseline_test.go:70:81: runCorpusBurst - result calls is never used (unparam)
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
+                                                                                ^
 api/embed/coalescedembedder_test.go:42:11: TestCoalescingEmbedderBurst$1 - i is unused (unparam)
 		go func(i int) {
 		        ^
+api/fd_v2_queue_integration_test.go:32:51: setupQueueTestServer - batchSize always receives 32 (unparam)
+func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
+                                                  ^
 api/fd_v2_queue_integration_test.go:57:16: postQueue - t is unused (unparam)
 func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
                ^
 api/observability/metrics.go:56:2: field redisSizeTimeout is unused (unused)
 	redisSizeTimeout  time.Duration
 	^
-21 issues:
+17 issues:
 * goconst: 4
-* gocritic: 3
-* gocyclo: 1
-* gosec: 2
 * govet: 1
 * ineffassign: 2
 * revive: 4
 * staticcheck: 1
-* unparam: 2
+* unparam: 4
 * unused: 1
 exit status 1
