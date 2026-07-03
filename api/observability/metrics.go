@@ -42,6 +42,11 @@ type Metrics struct {
 	teiErrorsTotal      *prometheus.CounterVec
 	cacheLookupDuration prometheus.Histogram
 	teiBatchFillRatio   prometheus.Histogram
+	queueDepth          prometheus.Gauge
+	queueDrainTotal     prometheus.Counter
+	queueSubmitTotal    *prometheus.CounterVec
+	queueBatchSize      prometheus.Histogram
+	queueProcessDuration prometheus.Histogram
 
 	runtimeMu         sync.RWMutex
 	runtimeState      *lifecycle.State
@@ -125,6 +130,28 @@ func NewMetrics() *Metrics {
 			Help:    "Per-call TEI batch fill ratio in [0.0, 1.0]. Higher means more inputs per TEI HTTP call. Cap denominator is fd's 32-input TEI batch limit.",
 			Buckets: []float64{0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0},
 		}),
+		queueDepth: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "fd_queue_depth",
+			Help: "Current number of items in the async /v1/queue channel.",
+		}),
+		queueDrainTotal: prometheus.NewCounter(prometheus.CounterOpts{
+			Name: "fd_queue_drain_total",
+			Help: "Total items drained from the async /v1/queue channel.",
+		}),
+		queueSubmitTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "fd_queue_submit_total",
+			Help: "Async /v1/queue submissions by outcome.",
+		}, []string{"result"}),
+		queueBatchSize: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    "fd_queue_batch_size",
+			Help:    "Items in each queue-worker TEI batch call.",
+			Buckets: []float64{1, 2, 4, 8, 16, 32, 64, 128},
+		}),
+		queueProcessDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    "fd_queue_process_duration_seconds",
+			Help:    "Per-batch queue worker processing duration (TEI call + result split).",
+			Buckets: []float64{0.01, 0.05, 0.1, 0.5, 1.0, 5.0},
+		}),
 	}
 	metrics.registry.MustRegister(
 		metrics.requestsTotal,
@@ -143,6 +170,11 @@ func NewMetrics() *Metrics {
 		metrics.teiErrorsTotal,
 		metrics.cacheLookupDuration,
 		metrics.teiBatchFillRatio,
+		metrics.queueDepth,
+		metrics.queueDrainTotal,
+		metrics.queueSubmitTotal,
+		metrics.queueBatchSize,
+		metrics.queueProcessDuration,
 	)
 	// init label series for cache_memory_bytes so the gauge appears at
 	// startup rather than only after first data point, keeping /metrics
@@ -171,6 +203,10 @@ func (m *Metrics) initLabelSeries() {
 	}
 	for _, reason := range []string{"timeout", "http_error", "circuit_open", "model_mismatch", "transport"} {
 		m.teiErrorsTotal.WithLabelValues(reason)
+	}
+	// Async /v1/queue: submit outcome label cardinality.
+	for _, result := range []string{"accepted", "rejected"} {
+		m.queueSubmitTotal.WithLabelValues(result)
 	}
 }
 
@@ -353,4 +389,32 @@ func requestStatus(statusCode int) string {
 		return requestStatusError
 	}
 	return requestStatusSuccess
+}
+
+// SetQueueDepth sets the queue depth gauge. Called from the queue handler at
+// submit time or from a periodic scrape-time observer.
+func (m *Metrics) SetQueueDepth(n int) {
+	m.queueDepth.Set(float64(n))
+}
+
+// IncQueueDrain increments fd_queue_drain_total by n.
+func (m *Metrics) IncQueueDrain(n int) {
+	m.queueDrainTotal.Add(float64(n))
+}
+
+// IncQueueSubmit records a /v1/queue submission outcome. result must be
+// "accepted" or "rejected".
+func (m *Metrics) IncQueueSubmit(result string) {
+	m.queueSubmitTotal.WithLabelValues(result).Inc()
+}
+
+// ObserveQueueBatchSize records the size of a worker-processed batch.
+func (m *Metrics) ObserveQueueBatchSize(n int) {
+	m.queueBatchSize.Observe(float64(n))
+}
+
+// ObserveQueueProcessDuration records the duration of a single worker batch
+// (TEI call + result split).
+func (m *Metrics) ObserveQueueProcessDuration(d time.Duration) {
+	m.queueProcessDuration.Observe(d.Seconds())
 }

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "taskId": "T03",
+  "sliceId": "S03",
+  "milestoneId": "M012-3edtlz",
+  "question": "Should the next ONNX tokenizer work package HF Rust tokenizer integration behind build tags/native packaging, use a sidecar, or defer integration?",
+  "options": [
+    {
+      "id": "A",
+      "label": "Build-tag integration next",
+      "tradeoffs": "Adds `hf_tokenizers` build-tag path and native library packaging, preserving default TEI builds. More engineering work, but keeps correctness and avoids breaking normal builds."
+    },
+    {
+      "id": "B",
+      "label": "Tokenizer sidecar next",
+      "tradeoffs": "Keeps Go builds simpler and uses proven Python/HF tokenization, but adds a process boundary and operational complexity."
+    },
+    {
+      "id": "C",
+      "label": "Defer ONNX integration",
+      "tradeoffs": "Stops ONNX work after proving parity path exists. Lowest risk, but leaves performance upside unexplored."
+    }
+  ],
+  "recommendation": "A",
+  "recommendationRationale": "The HF Rust binding proved exact token parity. A build-tag/native-packaging milestone can preserve default builds while enabling the opt-in ONNX backend to become semantically correct.",
+  "continueWithDefault": true,
+  "createdAt": "2026-05-20T02:20:07.480Z"
+}

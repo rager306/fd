@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"errors"
+	"fd-api/cache"
+	"fd-api/internal/envutil"
 	"fd-api/lifecycle"
 	"fmt"
 	"io"
@@ -227,5 +229,69 @@ func TestEmbeddingRuntimeConfigHealthReturnsSafeTEIMetadata(t *testing.T) {
 	}
 	if health.CacheNamespace != "v2" {
 		t.Fatalf("cache_namespace = %q", health.CacheNamespace)
+	}
+}
+
+func TestWarmupRetryPolicyFromEnvDefaultsTo5(t *testing.T) {
+	policy := warmupRetryPolicyFromEnv()
+	if policy.maxAttempts != 5 {
+		t.Fatalf("maxAttempts = %d, want 5", policy.maxAttempts)
+	}
+	if policy.backoff(1) != 5*time.Second {
+		t.Fatalf("backoff(1) = %s, want 5s", policy.backoff(1))
+	}
+}
+
+func TestCacheConfigFromEnv(t *testing.T) {
+	t.Setenv("FD_CACHE_MAX_SIZE", "500")
+	t.Setenv("FD_CACHE_LOCAL_TTL", "10s")
+
+	size := envutil.PositiveInt("FD_CACHE_MAX_SIZE", 10000)
+	ttl := envutil.DurationOrDefault("FD_CACHE_LOCAL_TTL", 30*time.Second)
+
+	if size != 500 {
+		t.Fatalf("FD_CACHE_MAX_SIZE=500, got %d", size)
+	}
+	if ttl != 10*time.Second {
+		t.Fatalf("FD_CACHE_LOCAL_TTL=10s, got %s", ttl)
+	}
+}
+
+func TestCacheConfigDefaultsWithoutEnv(t *testing.T) {
+	t.Setenv("FD_CACHE_MAX_SIZE", "")
+	t.Setenv("FD_CACHE_LOCAL_TTL", "")
+
+	size := envutil.PositiveInt("FD_CACHE_MAX_SIZE", 10000)
+	ttl := envutil.DurationOrDefault("FD_CACHE_LOCAL_TTL", 30*time.Second)
+
+	if size != 10000 {
+		t.Fatalf("default FD_CACHE_MAX_SIZE = %d, want 10000", size)
+	}
+	if ttl != 30*time.Second {
+		t.Fatalf("default FD_CACHE_LOCAL_TTL = %s, want 30s", ttl)
+	}
+}
+
+func TestLocalCacheWithSmallSize(t *testing.T) {
+	c := cache.NewLocalCache(5, 30*time.Second)
+	defer c.Close()
+	ctx := context.Background()
+	for i := 0; i < 10; i++ {
+		c.Set(ctx, fmt.Sprintf("k%d", i), []byte{byte(i)}, 30*time.Second)
+	}
+	if s := c.Size(); s > 5 {
+		t.Fatalf("LocalCache size = %d, want <= 5", s)
+	}
+}
+
+func TestLocalCacheWithZeroSize(t *testing.T) {
+	c := cache.NewLocalCache(0, 30*time.Second)
+	defer c.Close()
+	ctx := context.Background()
+	for i := 0; i < 20; i++ {
+		c.Set(ctx, fmt.Sprintf("k%d", i), []byte{byte(i)}, 30*time.Second)
+	}
+	if s := c.Size(); s != 20 {
+		t.Fatalf("LocalCache size=%d with maxSize=0, want 20 (unlimited)", s)
 	}
 }

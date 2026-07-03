@@ -1,0 +1,62 @@
+# S04: Exposure posture policy
+
+**Goal:** Close issue #3 exposure posture findings by making protected endpoints fail closed when `FD_API_KEY` is missing, removing `/metrics` from the public auth exception list, and hardening rate-limit client identity/state behavior.
+**Demo:** Default local compose remains usable for same-host development, while accidental non-loopback unauthenticated inference and sensitive diagnostics are blocked or explicitly opted in.
+
+## Must-Haves
+
+- Protected inference and diagnostic endpoints require a bearer token by default; empty `FD_API_KEY` no longer disables auth.
+- `/live`, `/ready`, `/health`, and `/v1/healthcheck` remain unauthenticated for probes per prior decision.
+- `/metrics` is not auth-exempt.
+- Gin no longer trusts spoofable forwarding headers by default for `ClientIP`.
+- Rate limiter state has bounded cleanup behavior instead of unbounded per-key growth.
+- README/operational docs describe the new auth posture without committing secrets.
+- Go test, lint, govulncheck, and runtime UAT pass.
+
+## Proof Level
+
+- This slice proves: TDD red/green plus static and runtime-executable UAT.
+
+## Integration Closure
+
+S04 consumes S01 audit validation and leaves S05 LocalCache correctness and S06 residual closure unchanged.
+
+## Verification
+
+- Adds explicit tests and evidence for auth fail-closed behavior, public probe carve-outs, metrics protection, and rate limiter state cleanup; no secrets are logged.
+
+## Tasks
+
+- [x] **T01: Added red tests for S04 exposure posture contracts.** `est:45m`
+  Add failing tests proving empty `FD_API_KEY` must reject protected endpoints, public probes remain open, `/metrics` requires auth, forwarded headers are not trusted by default, and rate limiter state is pruned/bounded.
+  - Files: `api/middleware/auth_test.go`, `api/middleware/ratelimit_test.go`, `api/main_test.go`
+  - Verify: cd api && go test ./middleware -run 'TestAPIKeyAuth|TestRateLimiter' && cd api && go test . -run 'TestRouterDoesNotTrustForwardedForByDefault'
+
+- [x] **T02: Made protected endpoints fail closed when `FD_API_KEY` is missing and protected `/metrics`.** `est:45m`
+  Change auth middleware so missing API key rejects protected endpoints instead of disabling auth. Keep probe endpoints public. Remove `/metrics` from public auth carve-outs. Preserve OpenAI-style error envelopes and avoid logging secrets.
+  - Files: `api/middleware/auth.go`, `api/middleware/auth_test.go`, `README.md`
+  - Verify: cd api && go test ./middleware -run TestAPIKeyAuth
+
+- [x] **T03: Disabled trusted forwarded headers by default and bounded rate limiter key state.** `est:1h`
+  Configure Gin to trust no forwarded proxies by default and add rate limiter cleanup so per-key state cannot grow unbounded indefinitely. Keep behavior configurable only if a future slice adds trusted proxy env policy; do not trust X-Forwarded-For by default.
+  - Files: `api/main.go`, `api/middleware/ratelimit.go`, `api/middleware/ratelimit_test.go`
+  - Verify: cd api && go test ./middleware -run TestRateLimiter && cd api && go test . -run 'TestRouterDoesNotTrustForwardedForByDefault'
+
+- [x] **T04: Completed S04 gates, runtime UAT, evidence artifact, and R030 validation.** `est:45m`
+  Run full Go tests, lint, govulncheck, static proof, rebuild API, run runtime UAT for public probes plus protected endpoint 401 behavior, save structured UAT, update requirements and evidence artifacts, complete S04.
+  - Files: `benchmark-results/m046-s04-exposure-posture.md`, `documents/issue-3-audit-remediation-plan-m046.md`, `.gsd/milestones/M046-zqzcu6/slices/S04/S04-SUMMARY.md`, `.gsd/milestones/M046-zqzcu6/slices/S04/S04-UAT.md`
+  - Verify: cd api && go test ./... && lint && govulncheck && docker compose up -d --build api && runtime UAT via gsd_uat_exec
+
+## Files Likely Touched
+
+- api/middleware/auth_test.go
+- api/middleware/ratelimit_test.go
+- api/main_test.go
+- api/middleware/auth.go
+- README.md
+- api/main.go
+- api/middleware/ratelimit.go
+- benchmark-results/m046-s04-exposure-posture.md
+- documents/issue-3-audit-remediation-plan-m046.md
+- .gsd/milestones/M046-zqzcu6/slices/S04/S04-SUMMARY.md
+- .gsd/milestones/M046-zqzcu6/slices/S04/S04-UAT.md

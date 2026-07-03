@@ -1,0 +1,53 @@
+# S02: Docker e2e suite for current service
+
+**Goal:** Создать поддерживаемый auth-aware black-box e2e suite против текущего Docker Compose сервиса.
+**Demo:** После этого одна команда запускает auth-aware black-box проверку реального Compose runtime.
+
+## Must-Haves
+
+- E2E suite запускается одной documented командой из `tests/integration`.
+- Suite проверяет public health/ready/live, auth fail-closed, authenticated embeddings, dimensions, cache HIT, cache flush/delete invalidation, health dependency/capacity context, and metrics gauges.
+- Suite не печатает секреты и использует explicit `FD_INTEGRATION_API_KEY`.
+- Runtime verification проходит против `fd_api`, `fd_redis`, `fd_tei`.
+- Evidence artifact сохранён в `benchmark-results/m050-s02-docker-e2e.md`.
+
+## Proof Level
+
+- This slice proves: runtime Docker Compose proof
+
+## Integration Closure
+
+S02 converts root integration from minimal actuality layer into current-service e2e smoke; failures feed back into tests rather than production code unless a real runtime bug is found.
+
+## Verification
+
+- Делает ключевые runtime regressions видимыми одной командой.
+
+## Tasks
+
+- [x] **T01: Определён текущий Docker e2e контракт для fd runtime.** `est:45m`
+  Определить точные checks для current Docker Compose runtime: public probes, health context, metrics gauges, auth fail-closed, authenticated embeddings, dimensions, cache HIT, flush, delete. Зафиксировать prerequisites and command shape without printing secrets.
+  - Files: `tests/integration/api_test.go`, `benchmark-results/m050-s02-docker-e2e.md`
+  - Verify: Artifact lists e2e contract and prerequisites; no code changes required.
+
+- [x] **T02: Расширен `tests/integration` до auth-aware Docker e2e suite.** `est:120m`
+  Расширить `tests/integration/api_test.go` текущими Docker e2e checks. Использовать helper functions for JSON requests, auth, cache status extraction and metrics text assertions. Не логировать секреты.
+  - Files: `tests/integration/api_test.go`
+  - Verify: `cd tests/integration && go test -v .` passes with skips when no `FD_INTEGRATION_API_KEY`; authenticated run planned in T03.
+
+- [x] **T03: Authenticated Docker Compose e2e proof passed against real containers.** `est:90m`
+  Подготовить локальный matching API key without printing it, restart/reuse Docker Compose API as needed, then run `cd tests/integration && FD_INTEGRATION_API_KEY=... go test -v .` against real containers. Record command outcomes without secrets.
+  - Files: `api/.env`, `benchmark-results/m050-s02-docker-e2e.md`
+  - Verify: Docker services healthy; authenticated e2e suite passes against `localhost:8000`.
+
+- [x] **T04: S02 evidence recorded and R044 validated.** `est:30m`
+  Finalize `benchmark-results/m050-s02-docker-e2e.md`, update R044 evidence, and close S02 if verification passes.
+  - Files: `benchmark-results/m050-s02-docker-e2e.md`, `.gsd/REQUIREMENTS.md`
+  - Verify: R044 has validation notes; final e2e evidence exists and command passed.
+
+## Files Likely Touched
+
+- tests/integration/api_test.go
+- benchmark-results/m050-s02-docker-e2e.md
+- api/.env
+- .gsd/REQUIREMENTS.md

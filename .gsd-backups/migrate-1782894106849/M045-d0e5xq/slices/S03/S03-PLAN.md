@@ -1,0 +1,55 @@
+# S03: Controlled startup proof
+
+**Goal:** Validate or reject the local snapshot model path mitigation with a controlled restart/startup measurement and rollback awareness.
+**Demo:** Startup proof artifact records time to TEI health, fd readiness, first embedding, and remaining ORT/ONNX warnings under the selected configuration.
+
+## Must-Haves
+
+- Explicit capture plan and rollback noted before restart.
+- TEI command uses the cached local USER-bge-m3 snapshot path as `--model-id`.
+- Startup timing and logs recorded from start to ready or timeout.
+- fd health ready and embedding smoke pass after startup.
+- R028 validated or deferred based on proof.
+
+## Proof Level
+
+- This slice proves: runtime proof with gsd_uat_exec evidence
+
+## Integration Closure
+
+Closes M045 with validated startup posture or documented external limitation.
+
+## Verification
+
+- Creates durable operational evidence for future restarts and records the failed offline-env candidate.
+
+## Tasks
+
+- [x] **T01: Recorded local-path preflight, rollback plan, and proof criteria after offline candidate failed.** `est:20m`
+  Before applying the local path restart proof, record current container state, failed offline proof result, exact local snapshot path, compose/override command sources, expected rollback command, timeout, and success criteria into the proof artifact.
+  - Files: `benchmark-results/m045-tei-local-path-startup-proof.md`, `documents/tei-startup-mitigation-m045.md`
+  - Verify: Proof artifact contains preflight state, failed offline candidate rationale, local snapshot path, and rollback plan before restart command executes.
+
+- [x] **T02: Applied local snapshot TEI command and measured successful startup.** `est:30m`
+  Update compose and override so TEI uses `--model-id /data/models--deepvk--USER-bge-m3/snapshots/<revision>` with the cached local snapshot path. Run `docker compose up -d tei` to apply the command, then poll Docker health until healthy or timeout. Capture logs from the new container start window.
+  - Files: `docker-compose.yaml`, `docker-compose.override.yaml`, `benchmark-results/m045-tei-local-path-startup-proof.md`
+  - Verify: Artifact records compose command exit, start timestamp, healthy timestamp or timeout, and TEI logs. Logs should show local path model_id and avoid Hub ONNX download attempts if the theory is correct.
+
+- [x] **T03: Verified fd and direct TEI runtime after local-path startup.** `est:15m`
+  After TEI is healthy, run fd `/health`, fd `/ready`, fd `/v1/embeddings`, and direct TEI `/embeddings`. Confirm runtime backend/model/dimensions unchanged from fd client perspective.
+  - Files: `benchmark-results/m045-tei-local-path-startup-proof.md`
+  - Verify: Smoke results are captured and pass with 1024-dimensional embeddings; fd runtime still reports TEI and model deepvk/USER-bge-m3.
+
+- [x] **T04: Validated R028 and updated docs to local snapshot startup posture.** `est:20m`
+  If proof passes, validate R028 and update docs to recommend local snapshot path for stable TEI startup. If proof fails, rollback to Hub ID command or document a blocker and defer R028.
+  - Files: `benchmark-results/m045-tei-local-path-startup-proof.md`, `.gsd/REQUIREMENTS.md`, `docs/same-host-embedding-service-contract.md`
+  - Verify: R028 status matches proof outcome and artifact records final decision.
+
+## Files Likely Touched
+
+- benchmark-results/m045-tei-local-path-startup-proof.md
+- documents/tei-startup-mitigation-m045.md
+- docker-compose.yaml
+- docker-compose.override.yaml
+- .gsd/REQUIREMENTS.md
+- docs/same-host-embedding-service-contract.md

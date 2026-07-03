@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M040-pbp9z1/S02/T01",
+  "timestamp": 1779435790410,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "bash -n tools/run_m040_s02_docker_restart_proof.sh",
+      "exitCode": 0,
+      "durationMs": 47,
+      "verdict": "pass"
+    },
+    {
+      "command": "python3 -m py_compile tools/verify_m040_s02_artifacts.py",
+      "exitCode": 0,
+      "durationMs": 83,
+      "verdict": "pass"
+    }
+  ]
+}

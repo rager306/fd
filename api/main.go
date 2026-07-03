@@ -16,6 +16,7 @@ import (
 
 	"fd-api/buildinfo"
 	"fd-api/cache"
+	"fd-api/queue"
 	"fd-api/embed"
 	"fd-api/handlers"
 	"fd-api/internal/envutil"
@@ -23,8 +24,7 @@ import (
 	"fd-api/middleware"
 	"fd-api/observability"
 
-	"github.com/gin-gonic/gin"
-)
+	"github.com/gin-gonic/gin")
 
 // Version is injected by release builds with -ldflags "-X main.Version=...".
 var Version = buildinfo.DefaultVersion
@@ -253,8 +253,11 @@ func main() {
 	runtime.GOMAXPROCS(numCPU)
 	logger.Info("starting fd-api", "cpus", numCPU)
 
-	// L1: Local cache — 10000 entries, 30s TTL
-	localCache := cache.NewLocalCache(10000, 30*time.Second)
+	// L1: Local cache — env-tunable size and TTL (M053 Phase 1a, Issue #9).
+	// Defaults preserve legacy behavior (10000 entries, 30s TTL).
+	l1MaxEntries := envutil.PositiveInt("FD_CACHE_MAX_SIZE", 10000)
+	l1TTL := envutil.DurationOrDefault("FD_CACHE_LOCAL_TTL", 30*time.Second)
+	localCache := cache.NewLocalCache(l1MaxEntries, l1TTL)
 
 	// L2: Redis binary cache with pool timeouts
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
@@ -282,7 +285,8 @@ func main() {
 	logger.Info("redis connected", "addr", redisHost, "cache_namespace", redisOptions.Namespace.String())
 
 	// Two-tier cache
-	tiered := cache.NewTieredCache(localCache, redisCache, 30*time.Second)
+	tiered := cache.NewTieredCache(localCache, redisCache, l1TTL)
+	logger.Info("cache configured", "l1_max_entries", l1MaxEntries, "l1_ttl", l1TTL.String(), "l2_namespace", redisOptions.Namespace.String())
 
 	httpClient := &http.Client{
 		Timeout: 30 * time.Second,
@@ -422,6 +426,29 @@ func main() {
 	r.POST("/warmup", warmupHandler.Trigger)
 	r.POST("/v1/cache/flush", cacheHandler.Flush)
 	r.POST("/v1/cache/delete", cacheHandler.Delete)
+
+	// M054-ybl4jr Phase 2: optional async bulk-ingestion queue. Backed by
+	// an in-memory bounded channel drained by a worker goroutine. Disabled
+	// by default for backward compatibility; enable via FD_QUEUE_ENABLED=true.
+	queueEnabled := envutil.BoolOrDefault("FD_QUEUE_ENABLED", false)
+	if queueEnabled {
+		queueCap := envutil.PositiveInt("FD_QUEUE_MAX_SIZE", 1024)
+		queueItems := make(chan queue.Item, queueCap)
+		resultStore := queue.NewResultStore()
+		queueHandler := handlers.NewQueueHandler(resultStore, queueItems, modelID, logger)
+		r.POST("/v1/queue", queueHandler.Submit)
+		r.GET("/v1/queue/:id", queueHandler.Poll)
+		logger.Info("queue enabled", "capacity", queueCap)
+		// Worker goroutine drains the bounded queue: single-pass
+		// TEI calls per item (time-windowed batching T03 pending).
+		queue.StartQueueWorker(context.Background(), resultStore, queueItems, embeddingClient, logger, queue.WorkerConfig{
+			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
+			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
+		})
+		defer resultStore.Close()
+	} else {
+		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
+	}
 	r.GET("/health", healthHandler)
 	r.GET("/v1/healthcheck", healthHandler)
 	// /v1/embeddings: validation middleware runs BEFORE the handler so

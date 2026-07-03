@@ -211,6 +211,8 @@ The Docker stack sets safe local defaults. Override values through `docker-compo
 | `REDIS_MAXMEMORY_POLICY` | `allkeys-lru` | Redis eviction policy. |
 | `REDIS_RDB_SAVE` | `300 1` | Redis RDB save policy. |
 | `REDIS_AOF_ENABLED` | `no` | Redis append-only file setting. |
+| `FD_CACHE_MAX_SIZE` | `10000` | L1 (in-memory) cache capacity in entries. Each entry is ~4 KB for 1024-dim float32 embeddings, so 10000 ≈ 40 MB. Set to `0` to disable size-based eviction (cache grows unbounded). Phase 1a (Issue #9). |
+| `FD_CACHE_LOCAL_TTL` | `30s` | L1 entry TTL. Go duration syntax (`30s`, `5m`, `1h`). Phase 1a (Issue #9). |
 
 Cache namespace isolation matters. When comparing runtime backends or changing model/tokenizer/chunking behavior, set a new namespace value or deliberately flush Redis. Otherwise cached vectors can make incompatible backends appear equivalent.
 
@@ -309,6 +311,27 @@ docker compose logs --tail=100 tei
 ```
 
 Do not log request bodies or secret values in operational diagnostics.
+
+### Async queue (Phase 2, Issue #9)
+
+When `FD_QUEUE_ENABLED=true`, fd exposes a bulk-ingestion async path through `POST /v1/queue`. The sync `/v1/embeddings` path stays unchanged. The queue is designed for burst workloads (e.g. knowledge-graph pipelines) where clients submit embedding requests and poll for results instead of blocking on TEI inference.
+
+**Behaviour:**
+- `POST /v1/queue` validates the request body (same rules as `/v1/embeddings`), enqueues the input, and returns **202 Accepted** with an `X-Request-Id` header. When the bounded queue is saturated the handler returns **503** + `Retry-After: 5`.
+- A single **background worker** goroutine drains the queue, collects up to `FD_QUEUE_BATCH_MAX_SIZE` (32) items within a `FD_QUEUE_BATCH_WINDOW_MS` (10 ms) window, and issues **one TEI call per batch**. Results are stored in an in-memory result store with a ~5 min TTL.
+- `GET /v1/queue/:id` returns **202** (`"pending"`) while processing, **200** with embeddings on completion, **500** on failure, or **404** when the result TTL has expired.
+- Results are **not** persisted across fd-api restarts. On shutdown the worker drains queued items (marking them failed) so pollers don't block forever.
+
+**Configuration:**
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `FD_QUEUE_ENABLED` | `false` | Feature gate for the async queue. |
+| `FD_QUEUE_MAX_SIZE` | `1024` | Capacity of the in-memory bounded queue. |
+| `FD_QUEUE_BATCH_MAX_SIZE` | `32` | Maximum items per worker TEI batch. |
+| `FD_QUEUE_BATCH_WINDOW_MS` | `10ms` | Max time the worker waits to collect a batch. |
+
+**Metrics:** `/metrics` exposes `fd_queue_depth`, `fd_queue_drain_total`, `fd_queue_submit_total{result="accepted|rejected"}`, `fd_queue_batch_size`, and `fd_queue_process_duration_seconds` gauges/histograms.
 
 ### Redis exposure and persistence
 
