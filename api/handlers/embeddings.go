@@ -189,6 +189,10 @@ func (h *EmbeddingsHandler) fillEmbeddingChunk(ctx context.Context, texts []stri
 	}
 
 	embs, err := h.teiClient.Embed(ctx, missTexts)
+	// M052-mmf99p Phase 0: record per-call batch fill ratio on every TEI call.
+	if tei, ok := h.teiClient.(interface{ ObserveBatchFill(int) }); ok {
+		tei.ObserveBatchFill(len(missTexts))
+	}
 	if err != nil {
 		h.logger.Error("embedding error", "error", err,
 			"chunk_start", chunkStart, "chunk_end", chunkEnd, "miss_count", len(missTexts))

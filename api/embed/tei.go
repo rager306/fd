@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 )
@@ -28,6 +29,35 @@ type TEIClient struct {
 	mu                  sync.Mutex
 	consecutiveFailures int
 	circuitOpenUntil    time.Time
+
+	// Observability hooks — filled by WithObservers, may be nil.
+	metrics struct {
+		observeDuration    func(time.Duration)
+		observeError       func(reason string)
+		incInFlight        func()
+		decInFlight        func()
+		observeBatchFill   func(inputs int)
+	}
+}
+
+// Observers carries optional metrics hooks. Any nil field is a no-op.
+type Observers struct {
+	ObserveDuration  func(time.Duration)
+	ObserveError     func(reason string)
+	IncInFlight      func()
+	DecInFlight      func()
+	ObserveBatchFill func(inputs int)
+}
+
+// WithObservers installs metrics hooks. Returns the receiver for chaining.
+// Pass Observers{} to detach all hooks.
+func (c *TEIClient) WithObservers(obs Observers) *TEIClient {
+	c.metrics.observeDuration = obs.ObserveDuration
+	c.metrics.observeError = obs.ObserveError
+	c.metrics.incInFlight = obs.IncInFlight
+	c.metrics.decInFlight = obs.DecInFlight
+	c.metrics.observeBatchFill = obs.ObserveBatchFill
+	return c
 }
 
 // NewTEIClient returns a TEIClient for baseURL/modelID using the supplied
@@ -124,6 +154,13 @@ func (c *TEIClient) Embed(ctx context.Context, texts []string) ([][]float32, err
 }
 
 func (c *TEIClient) doEmbedRequest(ctx context.Context, jsonBody []byte) (embeddings [][]float32, retriable bool, err error) {
+	started := time.Now()
+	if c.metrics.incInFlight != nil {
+		c.metrics.incInFlight()
+		defer c.metrics.decInFlight()
+	}
+	defer c.recordDuration(started, err)
+
 	req, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/embeddings", bytes.NewReader(jsonBody))
 	if err != nil {
 		return nil, false, err
@@ -167,6 +204,52 @@ func isRetriableTEIStatus(status int) bool {
 	default:
 		return false
 	}
+}
+
+// recordDuration observes the latency of a single TEI call. err is used to
+// also classify the failure reason for the metrics counter.
+func (c *TEIClient) recordDuration(started time.Time, err error) {
+	if c.metrics.observeDuration != nil {
+		c.metrics.observeDuration(time.Since(started))
+	}
+	if err != nil && c.metrics.observeError != nil {
+		c.metrics.observeError(classifyTEIError(err))
+	}
+}
+
+// classifyTEIError maps an error returned by embed.Embed to a canonical
+// reason label for fd_tei_errors_total. Returns "transport" for anything
+// not classifiable.
+func classifyTEIError(err error) string {
+	if err == nil {
+		return ""
+	}
+	msg := err.Error()
+	switch {
+	case errors.Is(err, context.DeadlineExceeded), errors.Is(err, context.Canceled):
+		return "timeout"
+	case strings.Contains(msg, "TEI returned status"):
+		return "http_error"
+	case strings.Contains(msg, "circuit open"):
+		return "circuit_open"
+	case strings.Contains(msg, "wrong count"):
+		return "model_mismatch"
+	}
+	return "transport"
+}
+
+// observeBatchFill records the fill ratio for one TEI call. Exposed for
+// callers that want to feed fill-ratio metrics from outside doEmbedRequest.
+func (c *TEIClient) observeBatchFill(inputs int) {
+	if c.metrics.observeBatchFill != nil && inputs > 0 {
+		c.metrics.observeBatchFill(inputs)
+	}
+}
+
+// ObserveBatchFill is a public helper used by handlers/embeddings to push
+// per-call batch fill ratio into the metrics hook installed via WithObservers.
+func (c *TEIClient) ObserveBatchFill(inputs int) {
+	c.observeBatchFill(inputs)
 }
 
 func (c *TEIClient) retryBackoff(attempt int) time.Duration {

@@ -237,6 +237,18 @@ fd retries model warmup at startup and, after the startup window is exhausted, k
 
 The recovery loop stops on its own when warmup succeeds or shutdown begins, and updates `/health.last_error` so the current failure reason stays visible. See the Operations section for what to expect during a cold start.
 
+### Observability metrics (Phase 0, Issue #9)
+
+fd exposes Prometheus-format metrics at `GET /metrics`. The Phase 0 instrumentation adds per-tier cache hit-rate, per-stage latency, TEI saturation, and batch-fill ratio. These metrics are the foundation for data-driven throughput tuning in Phase 1+ (cache capacity, coalescing, thread-tuning).
+
+**Cache** — `fd_cache_hits_total{result="hit|miss",tier="l1|l2|miss|all"}`, `fd_cache_entries{tier="l1|l2"}` gauges, `fd_cache_memory_bytes{tier}` approximate memory, `fd_cache_lookup_duration_seconds` histogram.
+
+**TEI (backend)** — `fd_tei_request_duration_seconds` histogram (11 buckets 5ms–10s), `fd_tei_requests_in_flight` gauge, `fd_tei_errors_total{reason="timeout|http_error|circuit_open|model_mismatch|transport"}` counter, `fd_tei_batch_fill_ratio` histogram (inputs per call / 32 cap).
+
+**Lifecycle** — `fd_in_flight_requests` gauge, `fd_in_flight_capacity` gauge, `fd_model_loaded` gauge.
+
+**HTTP** — `fd_requests_total{status}`, `fd_request_duration_seconds` histogram (7 buckets 5ms–5s covering cache-hot and cold-miss), `fd_batch_size` histogram, `fd_errors_total{code}` counter.
+
 ## Operations
 
 ### TEI startup

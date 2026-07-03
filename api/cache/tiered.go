@@ -16,7 +16,17 @@ type TieredCache struct {
 	localTTL time.Duration
 	logger   *slog.Logger
 	sf       singleflight.Group
+
+	observer CacheObserver
+
+	lookupDurationFn func(time.Duration)
 }
+
+// CacheObserver is invoked on every cache look-up outcome with the tier that
+// resolved the read ("l1", "l2", or "miss") and whether it produced a usable
+// hit. Observers must be cheap and non-blocking; fd uses this to feed
+// observability.Metrics counters. Observer may be nil.
+type CacheObserver func(tier string, hit bool)
 
 // NewTieredCache creates a two-tier cache.
 func NewTieredCache(local *LocalCache, redis *RedisCache, localTTL time.Duration) *TieredCache {
@@ -36,6 +46,35 @@ func NewTieredCacheWithLogger(local *LocalCache, redis *RedisCache, localTTL tim
 	}
 }
 
+// SetCacheObserver registers a callback that receives every cache look-up
+// outcome (tier name + hit boolean). Safe to call before or after the cache
+// starts handling traffic. Pass nil to detach. Observers are invoked
+// synchronously on the read path; they must be non-blocking.
+func (tc *TieredCache) SetCacheObserver(observer CacheObserver) {
+	tc.observer = observer
+}
+
+// observe dispatches to the registered observer if any. Centralized so call
+// sites stay short and consistent.
+func (tc *TieredCache) observe(tier string, hit bool) {
+	if tc.observer != nil {
+		tc.observer(tier, hit)
+	}
+}
+
+// SetLookupDurationObserver registers a callback invoked at the end of every
+// GetManyIfPresent (the hot-path cache lookup). Observers must be cheap.
+func (tc *TieredCache) SetLookupDurationObserver(fn func(time.Duration)) {
+	tc.lookupDurationFn = fn
+}
+
+// recordLookupDuration observes one cache lookup's duration.
+func (tc *TieredCache) recordLookupDuration(d time.Duration) {
+	if tc.lookupDurationFn != nil {
+		tc.lookupDurationFn(d)
+	}
+}
+
 // GetOrLoad checks L1 then L2, invoking loader if both miss.
 func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error) {
 	localKey := localCacheKey(key, dim)
@@ -46,6 +85,7 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 		emb, d := unmarshalEmbedding(data)
 		if d == dim {
 			tc.logger.Debug("cache l1 hit", "event", "cache_l1_hit", "key_hash", keyHash, "dim", dim)
+			tc.observe("l1", true)
 			return emb, nil
 		}
 		tc.logger.Debug("cache l1 dimension mismatch", "event", "cache_l1_dim_mismatch", "key_hash", keyHash, "requested_dim", dim, "stored_dim", d)
@@ -59,6 +99,7 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 			emb, d := unmarshalEmbedding(data)
 			if d == dim {
 				tc.logger.Debug("cache l1 hit", "event", "cache_l1_hit", "key_hash", keyHash, "dim", dim, "source", "singleflight_double_check")
+				tc.observe("l1", true)
 				return emb, nil
 			}
 			tc.logger.Debug("cache l1 dimension mismatch", "event", "cache_l1_dim_mismatch", "key_hash", keyHash, "requested_dim", dim, "stored_dim", d, "source", "singleflight_double_check")
@@ -70,6 +111,7 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 			tc.logger.Warn("cache l2 get failed", "event", "cache_l2_get_failed", "key_hash", keyHash, "dim", dim, "error", err)
 		} else if ok {
 			tc.logger.Debug("cache l2 hit", "event", "cache_l2_hit", "key_hash", keyHash, "dim", dim)
+			tc.observe("l2", true)
 			// backfill L1 with binary
 			data, err := marshalEmbedding(emb, dim)
 			if err != nil {
@@ -81,6 +123,7 @@ func (tc *TieredCache) GetOrLoad(ctx context.Context, key string, dim int, loade
 
 		// Both miss — invoke loader
 		tc.logger.Debug("cache miss load", "event", "cache_miss_load", "key_hash", keyHash, "dim", dim)
+		tc.observe("miss", false)
 		emb, err = loader(ctx)
 		if err != nil {
 			return nil, err
@@ -139,6 +182,20 @@ func (tc *TieredCache) LocalSize() int {
 	return tc.local.Size()
 }
 
+// RedisSize returns the approximate count of keys in the L2 Redis namespace.
+// Cost is O(N) over the namespace via SCAN; call at scrape cadence, not per
+// request. Returns 0 on error to keep the metric value simple.
+func (tc *TieredCache) RedisSize(ctx context.Context) int {
+	if tc.redis == nil {
+		return 0
+	}
+	n, err := tc.redis.Size(ctx)
+	if err != nil {
+		return 0
+	}
+	return n
+}
+
 // Ping checks L2 (Redis) connectivity.
 func (tc *TieredCache) Ping(ctx context.Context) error {
 	return tc.redis.Ping(ctx)
@@ -160,11 +217,20 @@ func (tc *TieredCache) GetIfPresent(ctx context.Context, key string, dim int) ([
 	return emb, ok
 }
 
+// ObserveCacheLookup records a single-key tier outcome for the
+// SingleKey fast path (GetIfPresent). Kept separate from bulk
+// GetManyIfPresent to avoid double-counting when callers use both.
+func (tc *TieredCache) ObserveCacheLookup(tier string, hit bool) {
+	tc.observe(tier, hit)
+}
+
 // GetManyIfPresent returns cached embeddings for keys without triggering a
 // model load. L1 is checked first for each key; L2 misses are fetched with a
 // single Redis MGET and backfilled into L1. Hits are keyed by input index so
 // callers can preserve duplicate text positions and response order.
 func (tc *TieredCache) GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32 {
+	started := time.Now()
+	defer tc.recordLookupDuration(time.Since(started))
 	hits := make(map[int][]float32, len(keys))
 	missIndexes := make([]int, 0, len(keys))
 	missKeys := make([]string, 0, len(keys))
@@ -184,15 +250,26 @@ func (tc *TieredCache) GetManyIfPresent(ctx context.Context, keys []string, dim 
 			continue
 		}
 		hits[i] = emb[:dim]
+		tc.observe("l1", true)
 	}
 	if len(missKeys) == 0 || tc.redis == nil {
+		for range missKeys {
+			tc.observe("miss", false)
+		}
 		return hits
 	}
 
 	redisHits, err := tc.redis.GetMany(ctx, missKeys, dim)
 	if err != nil {
 		tc.logger.Warn("cache l2 mget failed", "event", "cache_l2_mget_failed", "dim", dim, "miss_count", len(missKeys), "error", err)
+		for range missKeys {
+			tc.observe("miss", false)
+		}
 		return hits
+	}
+	missSeen := make(map[int]bool, len(missIndexes))
+	for i := range missKeys {
+		missSeen[i] = true
 	}
 	for missOffset, emb := range redisHits {
 		if len(emb) < dim {
@@ -206,6 +283,11 @@ func (tc *TieredCache) GetManyIfPresent(ctx context.Context, keys []string, dim 
 			tc.local.Set(ctx, localKey, data, tc.localTTL)
 		}
 		hits[originalIndex] = emb[:dim]
+		tc.observe("l2", true)
+		delete(missSeen, missOffset)
+	}
+	for range missSeen {
+		tc.observe("miss", false)
 	}
 	return hits
 }

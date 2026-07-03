@@ -35,11 +35,20 @@ type Metrics struct {
 	inFlightRequests    prometheus.Gauge
 	inFlightCapacity    prometheus.Gauge
 	cacheEntries        *prometheus.GaugeVec
+	cacheMemoryBytes    *prometheus.GaugeVec
 
-	runtimeMu        sync.RWMutex
-	runtimeState     *lifecycle.State
-	runtimeCapacity  int64
-	localCacheSizeFn func() int
+	teiRequestDuration  prometheus.Histogram
+	teiRequestsInFlight prometheus.Gauge
+	teiErrorsTotal      *prometheus.CounterVec
+	cacheLookupDuration prometheus.Histogram
+	teiBatchFillRatio   prometheus.Histogram
+
+	runtimeMu         sync.RWMutex
+	runtimeState      *lifecycle.State
+	runtimeCapacity   int64
+	localCacheSizeFn  func() int
+	redisCacheSizeFn  func() int
+	redisSizeTimeout  time.Duration
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
@@ -52,8 +61,8 @@ func NewMetrics() *Metrics {
 		}, []string{"status"}),
 		requestDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
 			Name:    "fd_request_duration_seconds",
-			Help:    "fd HTTP request duration in seconds.",
-			Buckets: []float64{0.05, 0.1, 0.5, 1.0},
+			Help:    "fd HTTP request duration in seconds. Covers both cache-hot (1-10ms) and cold-miss (100ms-5s) paths.",
+			Buckets: []float64{0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0},
 		}),
 		batchSize: prometheus.NewHistogram(prometheus.HistogramOpts{
 			Name:    "fd_batch_size",
@@ -70,8 +79,8 @@ func NewMetrics() *Metrics {
 		}),
 		cacheHitsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "fd_cache_hits_total",
-			Help: "Total fd cache lookups by result.",
-		}, []string{"result"}),
+			Help: "Total fd cache lookups by result and tier.",
+		}, []string{"result", "tier"}),
 		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "fd_cache_evictions_total",
 			Help: "Total fd in-memory cache evictions.",
@@ -88,6 +97,34 @@ func NewMetrics() *Metrics {
 			Name: "fd_cache_entries",
 			Help: "Current fd cache entries by tier where cheap to observe.",
 		}, []string{"tier"}),
+		cacheMemoryBytes: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			Name: "fd_cache_memory_bytes",
+			Help: "Approximate memory used by the fd cache by tier. Assumes 1024-dim float32 embeddings (4096 bytes per entry). Not exact — for operational sizing, not billing.",
+		}, []string{"tier"}),
+
+		teiRequestDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    "fd_tei_request_duration_seconds",
+			Help:    "Duration of TEI backend calls in seconds (HTTP round-trip + body parse).",
+			Buckets: []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.2, 0.5, 1.0, 2.5, 5.0, 10.0},
+		}),
+		teiRequestsInFlight: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "fd_tei_requests_in_flight",
+			Help: "Current TEI HTTP requests in flight.",
+		}),
+		teiErrorsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "fd_tei_errors_total",
+			Help: "Total TEI error counts by reason.",
+		}, []string{"reason"}),
+		cacheLookupDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    "fd_cache_lookup_duration_seconds",
+			Help:    "Time to look up an embedding in the tiered cache (L1 + L2 + backfill).",
+			Buckets: []float64{0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1},
+		}),
+		teiBatchFillRatio: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    "fd_tei_batch_fill_ratio",
+			Help:    "Per-call TEI batch fill ratio in [0.0, 1.0]. Higher means more inputs per TEI HTTP call. Cap denominator is fd's 32-input TEI batch limit.",
+			Buckets: []float64{0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0},
+		}),
 	}
 	metrics.registry.MustRegister(
 		metrics.requestsTotal,
@@ -100,7 +137,19 @@ func NewMetrics() *Metrics {
 		metrics.inFlightRequests,
 		metrics.inFlightCapacity,
 		metrics.cacheEntries,
+		metrics.cacheMemoryBytes,
+		metrics.teiRequestDuration,
+		metrics.teiRequestsInFlight,
+		metrics.teiErrorsTotal,
+		metrics.cacheLookupDuration,
+		metrics.teiBatchFillRatio,
 	)
+	// init label series for cache_memory_bytes so the gauge appears at
+	// startup rather than only after first data point, keeping /metrics
+	// shape predictable even on fresh deployments.
+	for _, tier := range []string{"l1", "l2"} {
+		metrics.cacheMemoryBytes.WithLabelValues(tier)
+	}
 	metrics.initLabelSeries()
 	return metrics
 }
@@ -112,9 +161,49 @@ func (m *Metrics) initLabelSeries() {
 	for _, code := range handlers.AllErrorCodes() {
 		m.errorsTotal.WithLabelValues(code)
 	}
+	// Cache hit-rate by tier: pre-register all result x tier combinations so
+	// /metrics exposes the full series even on a cold start. Existing
+	// result-only series stay compatible (additive tier label).
 	for _, result := range []string{"hit", "miss"} {
-		m.cacheHitsTotal.WithLabelValues(result)
+		for _, tier := range []string{"l1", "l2", "miss", "all"} {
+			m.cacheHitsTotal.WithLabelValues(result, tier)
+		}
 	}
+	for _, reason := range []string{"timeout", "http_error", "circuit_open", "model_mismatch", "transport"} {
+		m.teiErrorsTotal.WithLabelValues(reason)
+	}
+}
+
+// ObserveTEIRequestDuration records the duration of a single TEI call.
+// Called by TEIClient.doEmbedRequest at the end of each call (success or
+// failure). Cheap (~10ns) by design.
+func (m *Metrics) ObserveTEIRequestDuration(d time.Duration) {
+	m.teiRequestDuration.Observe(d.Seconds())
+}
+
+// IncTEIRequestsInFlight and DecTEIRequestsInFlight manage a gauge for
+// concurrent TEI calls. Safe to call from multiple goroutines.
+func (m *Metrics) IncTEIRequestsInFlight() { m.teiRequestsInFlight.Inc() }
+func (m *Metrics) DecTEIRequestsInFlight() { m.teiRequestsInFlight.Dec() }
+
+// IncTEIError records a TEI error with a canonical reason label.
+func (m *Metrics) IncTEIError(reason string) {
+	m.teiErrorsTotal.WithLabelValues(reason).Inc()
+}
+
+// ObserveCacheLookupDuration records the duration of a single cache lookup
+// (L1 + L2 + backfill). Called by TieredCache.GetManyIfPresent.
+func (m *Metrics) ObserveCacheLookupDuration(d time.Duration) {
+	m.cacheLookupDuration.Observe(d.Seconds())
+}
+
+// ObserveBatchFillRatio records the ratio of inputs in a TEI call relative
+// to the 32-input cap. Inputs above the cap are chunked in handlers.obs
+func (m *Metrics) ObserveBatchFillRatio(ratio float64) {
+	if ratio < 0 || ratio > 1 {
+		return // bucket is bounded, skip out-of-range observations
+	}
+	m.teiBatchFillRatio.Observe(ratio)
 }
 
 // Handler returns a Prometheus text-format HTTP handler for /metrics.
@@ -151,11 +240,25 @@ func (m *Metrics) SetRuntimeObservers(state *lifecycle.State, capacity int64, lo
 	m.localCacheSizeFn = localCacheSizeFn
 }
 
+// SetRedisCacheSizeObserver registers a callback returning the L2 Redis
+// namespace size. Called from observeRuntimeGauges at scrape cadence.
+// Safe to leave nil; the gauge stays at zero.
+func (m *Metrics) SetRedisCacheSizeObserver(fn func() int) {
+	m.runtimeMu.Lock()
+	defer m.runtimeMu.Unlock()
+	m.redisCacheSizeFn = fn
+}
+
+// Approximate memory used per embedding cache entry: 4096 bytes for
+// 1024-dim float32 (1024 * 4) + a small overhead for hash key + LRU bookkeeping.
+const approxEmbeddingBytes = 4096
+
 func (m *Metrics) observeRuntimeGauges() {
 	m.runtimeMu.RLock()
 	state := m.runtimeState
 	capacity := m.runtimeCapacity
 	localCacheSizeFn := m.localCacheSizeFn
+	redisCacheSizeFn := m.redisCacheSizeFn
 	m.runtimeMu.RUnlock()
 	if state != nil {
 		m.inFlightRequests.Set(float64(state.InFlightCount()))
@@ -164,7 +267,17 @@ func (m *Metrics) observeRuntimeGauges() {
 	}
 	m.inFlightCapacity.Set(float64(capacity))
 	if localCacheSizeFn != nil {
-		m.cacheEntries.WithLabelValues("l1").Set(float64(localCacheSizeFn()))
+		n := localCacheSizeFn()
+		m.cacheEntries.WithLabelValues("l1").Set(float64(n))
+		m.cacheMemoryBytes.WithLabelValues("l1").Set(float64(n) * approxEmbeddingBytes)
+	} else {
+		m.cacheEntries.WithLabelValues("l1").Set(0)
+		m.cacheMemoryBytes.WithLabelValues("l1").Set(0)
+	}
+	if redisCacheSizeFn != nil {
+		n := redisCacheSizeFn()
+		m.cacheEntries.WithLabelValues("l2").Set(float64(n))
+		m.cacheMemoryBytes.WithLabelValues("l2").Set(float64(n) * approxEmbeddingBytes)
 	}
 }
 
@@ -178,8 +291,19 @@ func (m *Metrics) SetModelLoaded(loaded bool) {
 }
 
 // ObserveCacheResult increments fd_cache_hits_total for future cache middleware.
+//
+// The call uses an "all" tier sentinel so legacy single-arg callers
+// (including integration tests) keep contributing to a stable series
+// without needing to know the new tier label. Prefer
+// ObserveCacheResultWithTier in new code.
 func (m *Metrics) ObserveCacheResult(result string) {
-	m.cacheHitsTotal.WithLabelValues(result).Inc()
+	m.cacheHitsTotal.WithLabelValues(result, "all").Inc()
+}
+
+// ObserveCacheResultWithTier increments fd_cache_hits_total with tier label
+// in addition to result. Tier must be "l1", "l2", "miss", or "all".
+func (m *Metrics) ObserveCacheResultWithTier(result, tier string) {
+	m.cacheHitsTotal.WithLabelValues(result, tier).Inc()
 }
 
 // ObserveCacheEviction increments fd_cache_evictions_total.

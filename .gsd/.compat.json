@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "lastWriter": "gsd-pi",
-  "lastProjectedAt": "2026-07-01T10:51:42.431Z",
+  "lastProjectedAt": "2026-07-03T09:17:02.727Z",
   "projections": {
     "phases/01-h8xt3d-m001-h8xt3d-review-remediation/01-ROADMAP.md": {
       "sha": "151d2e6b4b890deb",
@@ -4148,6 +4148,59 @@
         "M051-h1xr44",
         "M051-h1xr44/S01",
         "M051-h1xr44/S01/T05"
+      ]
+    },
+    "phases/52-mmf99p-phase-0-metrics-coverage-for-fd-throughp/52-ROADMAP.md": {
+      "sha": "8655e2c5ecefd4f3",
+      "entities": [
+        "M052-mmf99p"
+      ]
+    },
+    "phases/52-mmf99p-phase-0-metrics-coverage-for-fd-throughp/T01-PLAN.md": {
+      "sha": "2f9ad6f58c429525",
+      "entities": [
+        "M052-mmf99p",
+        "M052-mmf99p/S01",
+        "M052-mmf99p/S01/T01"
+      ]
+    },
+    "phases/52-mmf99p-phase-0-metrics-coverage-for-fd-throughp/T04-PLAN.md": {
+      "sha": "493f5ca3e8d0cc3f",
+      "entities": [
+        "M052-mmf99p",
+        "M052-mmf99p/S01",
+        "M052-mmf99p/S01/T04"
+      ]
+    },
+    "phases/52-mmf99p-phase-0-metrics-coverage-for-fd-throughp/T05-PLAN.md": {
+      "sha": "fd85eb07f3af31a0",
+      "entities": [
+        "M052-mmf99p",
+        "M052-mmf99p/S01",
+        "M052-mmf99p/S01/T05"
+      ]
+    },
+    "phases/52-mmf99p-phase-0-metrics-coverage-for-fd-throughp/T03-PLAN.md": {
+      "sha": "6e52f754cd010d1b",
+      "entities": [
+        "M052-mmf99p",
+        "M052-mmf99p/S01",
+        "M052-mmf99p/S01/T03"
+      ]
+    },
+    "phases/52-mmf99p-phase-0-metrics-coverage-for-fd-throughp/T02-PLAN.md": {
+      "sha": "a9987e2e700e2340",
+      "entities": [
+        "M052-mmf99p",
+        "M052-mmf99p/S01",
+        "M052-mmf99p/S01/T02"
+      ]
+    },
+    "phases/52-mmf99p-phase-0-metrics-coverage-for-fd-throughp/52-01-PLAN.md": {
+      "sha": "283ae788902b0743",
+      "entities": [
+        "M052-mmf99p",
+        "M052-mmf99p/S01"
       ]
     }
   },

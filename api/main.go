@@ -322,6 +322,17 @@ func main() {
 	// 500. Without this, T-E-15 fails — panic-induced 500s would leak
 	// server internals and lack the code/type envelope.
 	metrics := observability.NewMetrics()
+	// M052-mmf99p Phase 0: per-stage TEI observability hooks. Observers are
+	// nil-tolerant inside TEIClient (nil fields = no-op), so we install
+	// unconditionally here. Wiring after metrics declaration so the
+	// Observe* methods are guaranteed available.
+	teiClient.WithObservers(embed.Observers{
+		ObserveDuration:  metrics.ObserveTEIRequestDuration,
+		ObserveError:     metrics.IncTEIError,
+		IncInFlight:      metrics.IncTEIRequestsInFlight,
+		DecInFlight:      metrics.DecTEIRequestsInFlight,
+		ObserveBatchFill: func(n int) { metrics.ObserveBatchFillRatio(float64(n) / 32.0) },
+	})
 	traces := observability.NewTraceStoreFromEnv()
 	r.Use(handlers.RecoveryMiddleware(logger))
 	r.Use(middleware.CORSFromEnv())
@@ -343,6 +354,20 @@ func main() {
 	v1BatchHandler := handlers.NewV1BatchHandler(embeddingClient, tiered, logger)
 	cacheHandler := handlers.NewCacheHandler(tiered)
 	metrics.SetRuntimeObservers(lifecycleState, maxInFlightCapacity, tiered.LocalSize)
+	// M052-mmf99p Phase 0: wire cache tier observer and L2 size gauge.
+	// Captures per-tier hit-rate and rough L2 namespace occupancy for
+	// the throughput optimization backplane (Issue #9).
+	tiered.SetCacheObserver(func(tier string, hit bool) {
+		result := "miss"
+		if hit {
+			result = "hit"
+		}
+		metrics.ObserveCacheResultWithTier(result, tier)
+	})
+	metrics.SetRedisCacheSizeObserver(func() int {
+		return tiered.RedisSize(context.Background())
+	})
+	tiered.SetLookupDurationObserver(metrics.ObserveCacheLookupDuration)
 
 	runtimeHealth := runtimeConfig.Health(modelID, redisOptions.Namespace.String())
 	teiHealthURL := strings.TrimRight(teiURL, "/") + "/health"

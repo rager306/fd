@@ -372,6 +372,25 @@ func (c *RedisCache) Ping(ctx context.Context) error {
 	return c.client.Ping(ctx).Err()
 }
 
+// Size returns the approximate number of keys in this cache namespace.
+// Uses SCAN with the namespace pattern (prefix + namespace + ":*") so it
+// counts only keys owned by this RedisCache instance, not unrelated data
+// in the same Redis DB. Cost is O(N) over the namespace; callers should
+// invoke at scrape cadence (typically every 10-30s) rather than per request.
+// Returns 0 and a non-nil error if the scan fails partway; partial counts
+// are not returned to keep the metric boolean (0 on error).
+func (c *RedisCache) Size(ctx context.Context) (int, error) {
+	var count int
+	iter := c.client.Scan(ctx, 0, c.namespacePattern(), 500).Iterator()
+	for iter.Next(ctx) {
+		count++
+	}
+	if err := iter.Err(); err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // Close releases the Redis connection pool. Safe to call multiple times.
 func (c *RedisCache) Close() error {
 	return c.client.Close()
