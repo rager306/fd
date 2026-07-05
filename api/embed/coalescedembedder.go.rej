@@ -1,0 +1,15 @@
+--- embed/coalescedembedder.go
++++ embed/coalescedembedder.go
+@@ -137,10 +137,11 @@
+
+	var err error
+	select {
+	case <-ctx.Done():
+		err = ctx.Err()
+-		if err != nil {
++		switch err {
++		case context.DeadlineExceeded, context.Canceled:
+			c.metrics.IncCoalesceAbort(1)
+		}
+	case r := <-myReq.resp:
+		return r.embs, r.err

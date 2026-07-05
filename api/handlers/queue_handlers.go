@@ -124,7 +124,7 @@ func (h *QueueHandler) Poll(c *gin.Context) {
 			data[i] = obj
 		}
 		c.JSON(http.StatusOK, embed.EmbeddingsResponse{
-			Object: "list",
+			Object: "list", //nolint:goconst // ignore constant requirement for standard OpenAI list object
 			Data:   data,
 			Model:  h.modelID,
 			Usage: embed.Usage{

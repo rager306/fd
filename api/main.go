@@ -245,6 +245,7 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
+		//nolint:gocritic // exitAfterDefer: required for startup failure
 		os.Exit(1)
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
@@ -263,12 +264,14 @@ func main() {
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
+		//nolint:gocritic // exitAfterDefer: required for startup failure
 		os.Exit(1)
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // exitAfterDefer: required for startup failure
 		os.Exit(1)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -279,6 +282,7 @@ func main() {
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // exitAfterDefer: required for startup failure
 		os.Exit(1)
 	}
 	cancel()
@@ -520,6 +524,7 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // exitAfterDefer: required for startup failure
 		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)
