@@ -2,3 +2,8 @@
 **Vulnerability:** Critical readiness and health endpoints (`/health`, `/ready`, `/v1/healthcheck`) were blocked by authentication requirements when `FD_API_KEY` was set.
 **Learning:** Load balancers and orchestration systems (like Kubernetes) often probe health check endpoints without authentication. If they are blocked by a global API key requirement, the service might be incorrectly marked as unhealthy and terminated.
 **Prevention:** Ensure all liveness, readiness, and health-check endpoints are explicitly excluded from global authentication middleware.
+
+## 2024-05-24 - Length-based Timing Attack on API Key Comparison
+**Vulnerability:** `subtle.ConstantTimeCompare` was used directly on variable-length strings (token and API key) in the auth middleware.
+**Learning:** `subtle.ConstantTimeCompare` returns early if lengths differ, allowing attackers to discover the length of a secret via timing attacks.
+**Prevention:** Always hash secrets (e.g., using `crypto/sha256`) to guarantee equal length before comparing them with `subtle.ConstantTimeCompare`.
