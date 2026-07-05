@@ -228,6 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
+//nolint:gocyclo // acceptable main complexity
 func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -346,7 +347,7 @@ func main() {
 		ObserveError:     metrics.IncTEIError,
 		IncInFlight:      metrics.IncTEIRequestsInFlight,
 		DecInFlight:      metrics.DecTEIRequestsInFlight,
-		ObserveBatchFill: func(n int) { metrics.ObserveBatchFillRatio(float64(n) / 32.0) },
+		RecordBatchFillMetric: func(n int) { metrics.ObserveBatchFillRatio(float64(n) / 32.0) },
 	})
 	traces := observability.NewTraceStoreFromEnv()
 	r.Use(handlers.RecoveryMiddleware(logger))
@@ -372,7 +373,7 @@ func main() {
 	// M052-mmf99p Phase 0: wire cache tier observer and L2 size gauge.
 	// Captures per-tier hit-rate and rough L2 namespace occupancy for
 	// the throughput optimization backplane (Issue #9).
-	tiered.SetCacheObserver(func(tier string, hit bool) {
+	tiered.SetObserver(func(tier string, hit bool) {
 		result := "miss"
 		if hit {
 			result = "hit"
