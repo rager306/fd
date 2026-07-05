@@ -1,0 +1,59 @@
+go: github.com/golangci/golangci-lint/v2@v2.12.2 requires go >= 1.25.0; switching to go1.25.11
+api/main.go:231:1: cyclomatic complexity 18 of func `main` is high (> 15) (gocyclo)
+func main() {
+^
+api/embed/coalesce_baseline_test.go:42:15: G304: Potential file inclusion via variable (gosec)
+	data, err := os.ReadFile(root)
+	             ^
+api/embed/coalesce_baseline_test.go:86:9: G404: Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand) (gosec)
+	rng := rand.New(rand.NewSource(42))
+	       ^
+api/cache/tiered.go:233:32: defers: call to time.Since is not deferred (govet)
+	defer tc.recordLookupDuration(time.Since(started))
+	                              ^
+api/embed/coalesce_baseline_test.go:72:2: ineffectual assignment to calls (ineffassign)
+	calls = 0
+	^
+api/embed/coalesce_baseline_test.go:74:2: ineffectual assignment to totalTexts (ineffassign)
+	totalTexts = 0
+	^
+api/cache/tiered.go:29:6: exported: type name will be used as cache.CacheObserver by other packages, and that stutters; consider calling this Observer (revive)
+type CacheObserver func(tier string, hit bool)
+     ^
+api/embed/tei.go:251:21: confusing-naming: Method 'ObserveBatchFill' differs only by capitalization to method 'observeBatchFill' in the same source file (revive)
+func (c *TEIClient) ObserveBatchFill(inputs int) {
+                    ^
+api/observability/metrics.go:223:1: exported: exported method Metrics.DecTEIRequestsInFlight should have comment or be unexported (revive)
+func (m *Metrics) DecTEIRequestsInFlight() { m.teiRequestsInFlight.Dec() }
+^
+api/queue/types.go:21:2: exported: exported const StatusPending should have comment (or a comment on this block) or be unexported (revive)
+	StatusPending   Status = "pending"
+	^
+api/queue/worker.go:164:15: SA4010: this result of append is never used, except maybe in other appends (staticcheck)
+		indexByID = append(indexByID, &batch[i])
+		            ^
+api/embed/coalesce_baseline_test.go:70:81: runCorpusBurst - result calls is never used (unparam)
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
+                                                                                ^
+api/embed/coalescedembedder_test.go:42:11: TestCoalescingEmbedderBurst$1 - i is unused (unparam)
+		go func(i int) {
+		        ^
+api/fd_v2_queue_integration_test.go:32:51: setupQueueTestServer - batchSize always receives 32 (unparam)
+func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
+                                                  ^
+api/fd_v2_queue_integration_test.go:57:16: postQueue - t is unused (unparam)
+func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
+               ^
+api/observability/metrics.go:56:2: field redisSizeTimeout is unused (unused)
+	redisSizeTimeout  time.Duration
+	^
+16 issues:
+* gocyclo: 1
+* gosec: 2
+* govet: 1
+* ineffassign: 2
+* revive: 4
+* staticcheck: 1
+* unparam: 4
+* unused: 1
+exit status 1
