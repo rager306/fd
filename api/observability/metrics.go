@@ -85,7 +85,7 @@ func NewMetrics() *Metrics {
 		cacheHitsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "fd_cache_hits_total",
 			Help: "Total fd cache lookups by result and tier.",
-		}, []string{"result", "tier"}),
+		}, []string{"result", "tier"}), //nolint:goconst // metric label name
 		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "fd_cache_evictions_total",
 			Help: "Total fd in-memory cache evictions.",
@@ -220,6 +220,8 @@ func (m *Metrics) ObserveTEIRequestDuration(d time.Duration) {
 // IncTEIRequestsInFlight and DecTEIRequestsInFlight manage a gauge for
 // concurrent TEI calls. Safe to call from multiple goroutines.
 func (m *Metrics) IncTEIRequestsInFlight() { m.teiRequestsInFlight.Inc() }
+
+// DecTEIRequestsInFlight decrements the gauge for concurrent TEI calls.
 func (m *Metrics) DecTEIRequestsInFlight() { m.teiRequestsInFlight.Dec() }
 
 // IncTEIError records a TEI error with a canonical reason label.
