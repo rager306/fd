@@ -39,6 +39,7 @@ func TestCoalescingEmbedderBurst(t *testing.T) {
 	start := make(chan struct{})
 
 	for i := 0; i < N; i++ {
+		//nolint:unparam // test util
 		go func(i int) {
 			defer wg.Done()
 			<-start
@@ -83,7 +84,7 @@ func TestCoalescingEmbedderPassThroughOnZeroWindow(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			co.Embed(context.Background(), []string{"x"})
+			_, _ = co.Embed(context.Background(), []string{"x"})
 		}()
 	}
 	wg.Wait()
