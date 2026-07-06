@@ -15,6 +15,8 @@ import (
 
 const (
 	// HeaderCache reports whether /v1/embeddings used cache HIT or MISS.
+	constList = "list"
+	// HeaderCache reports whether /v1/embeddings used cache HIT or MISS.
 	HeaderCache = "X-Cache"
 	cacheHit    = "HIT"
 	cacheMiss   = "MISS"
@@ -260,7 +262,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: "list",
+		Object: constList,
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{
