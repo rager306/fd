@@ -39,6 +39,7 @@ func TestCoalescingEmbedderBurst(t *testing.T) {
 	start := make(chan struct{})
 
 	for i := 0; i < N; i++ {
+		//nolint:unparam // test util
 		go func(i int) {
 			defer wg.Done()
 			<-start
