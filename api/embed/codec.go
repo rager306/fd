@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
-	"unsafe"
 )
 
 // Encoding format constants. Used by /v1/embeddings and /embeddings/batch
@@ -20,41 +19,13 @@ const (
 	EncodingFormatBase64 = "base64"
 )
 
-var isLittleEndian bool
-
-func init() {
-	var i int32 = 0x01020304
-	//nolint:gosec // G103: performance optimization for byte casting
-	u := unsafe.Pointer(&i)
-	pb := (*byte)(u)
-	b := *pb
-	isLittleEndian = (b == 0x04)
-}
-
 // EncodeEmbedding serializes an embedding vector in the requested format.
 // `format` is one of EncodingFormatFloat or EncodingFormatBase64; the empty
 // string defaults to float. Any other value returns the float form (callers
 // should validate format before calling).
 func EncodeEmbedding(emb []float32, format string) string {
 	if format == EncodingFormatBase64 {
-		if len(emb) == 0 {
-			return ""
-		}
-		var src []byte
-		if isLittleEndian {
-			//nolint:gosec // G103: performance optimization for byte casting
-			src = unsafe.Slice((*byte)(unsafe.Pointer(&emb[0])), len(emb)*4)
-		} else {
-			src = make([]byte, len(emb)*4)
-			for i, v := range emb {
-				binary.LittleEndian.PutUint32(src[i*4:], math.Float32bits(v))
-			}
-		}
-
-		buf := make([]byte, base64.StdEncoding.EncodedLen(len(src)))
-		base64.StdEncoding.Encode(buf, src)
-		//nolint:gosec // G103: performance optimization for byte casting
-		return unsafe.String(unsafe.SliceData(buf), len(buf))
+		return base64.StdEncoding.EncodeToString(Float32SliceToBytes(emb))
 	}
 	b, _ := json.Marshal(emb)
 	return string(b)
@@ -64,17 +35,6 @@ func EncodeEmbedding(emb []float32, format string) string {
 // slice suitable for base64 encoding. Length must equal len(slice)*4.
 func Float32SliceToBytes(slice []float32) []byte {
 	b := make([]byte, len(slice)*4)
-	if len(slice) == 0 {
-		return b
-	}
-
-	if isLittleEndian {
-		//nolint:gosec // G103: performance optimization for byte casting
-		src := unsafe.Slice((*byte)(unsafe.Pointer(&slice[0])), len(slice)*4)
-		copy(b, src)
-		return b
-	}
-
 	for i, v := range slice {
 		binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
 	}

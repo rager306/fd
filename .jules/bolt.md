@@ -1,7 +1,3 @@
-## 2025-02-12 - Fast Base64 Encoding
-**Learning:** `base64.StdEncoding.EncodeToString` allocates a string internally. We can avoid this allocation and speed up encoding by passing a stack-allocated buffer to `base64.StdEncoding.Encode` and returning it as a string without allocation using `unsafe.String(unsafe.SliceData(buf), len(buf))`.
-**Action:** Use fixed-size stack-allocated buffers and `base64.StdEncoding.Encode` in hot paths instead of `base64.StdEncoding.EncodeToString`.
-
-## 2025-02-12 - Fast Base64 Encoding
-**Learning:** `base64.StdEncoding.EncodeToString` allocates a string internally. We can avoid this allocation and speed up encoding by passing a stack-allocated buffer to `base64.StdEncoding.Encode` and returning it as a string without allocation using `unsafe.String(unsafe.SliceData(buf), len(buf))`.
-**Action:** Use fixed-size stack-allocated buffers and `base64.StdEncoding.Encode` in hot paths instead of `base64.StdEncoding.EncodeToString`.
+## 2023-10-27 - Cache Key Generation Overhead
+**Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
+**Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.

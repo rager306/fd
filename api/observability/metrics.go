@@ -85,7 +85,7 @@ func NewMetrics() *Metrics {
 		cacheHitsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "fd_cache_hits_total",
 			Help: "Total fd cache lookups by result and tier.",
-		}, []string{"result", "tier"}),
+		}, []string{"result", tierConst}),
 		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "fd_cache_evictions_total",
 			Help: "Total fd in-memory cache evictions.",
@@ -418,3 +418,5 @@ func (m *Metrics) ObserveQueueBatchSize(n int) {
 func (m *Metrics) ObserveQueueProcessDuration(d time.Duration) {
 	m.queueProcessDuration.Observe(d.Seconds())
 }
+
+const tierConst = "tier"
