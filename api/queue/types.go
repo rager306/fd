@@ -14,12 +14,16 @@ import (
 	"errors"
 )
 
+
 // Status is the lifecycle of a submitted queue item.
 type Status string
 
 const (
+	// StatusPending ...
 	StatusPending   Status = "pending"
+	// StatusCompleted ...
 	StatusCompleted Status = "completed"
+	// StatusFailed ...
 	StatusFailed    Status = "failed"
 )
 
