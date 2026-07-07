@@ -260,7 +260,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: "list", //nolint:goconst // OpenAPI defined literal
+		Object: "list",
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{

@@ -29,12 +29,12 @@ func (e *queueTestEmbedder) Embed(ctx context.Context, texts []string) ([][]floa
 	return out, nil
 }
 
-func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) { //nolint:unparam // future use
+func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 	t.Helper()
 	_ = observability.NewMetrics()
 	_ = queue.NewResultStore()
 	store := queue.NewResultStore()
-	t.Cleanup(func() { _ = store.Close() })
+	t.Cleanup(func() { store.Close() })
 	items := make(chan queue.Item, queueCap)
 	emb := &queueTestEmbedder{}
 
@@ -54,7 +54,7 @@ func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *
 	return r, store, items, emb, cancel
 }
 
-func postQueue(_ *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
+func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/queue", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -78,7 +78,7 @@ func TestQueueSubmitAndPollCompleted(t *testing.T) {
 	// Poll up to 2 seconds for completion.
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		req := httptest.NewRequest(http.MethodGet, "/v1/queue/"+id, http.NoBody)
+		req := httptest.NewRequest(http.MethodGet, "/v1/queue/"+id, nil)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 		if w.Code == http.StatusOK {
@@ -139,7 +139,7 @@ func TestQueuePollReturns404ForUnknownId(t *testing.T) {
 	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
 	defer cancel()
 
-	req := httptest.NewRequest(http.MethodGet, "/v1/queue/nonexistent", http.NoBody)
+	req := httptest.NewRequest(http.MethodGet, "/v1/queue/nonexistent", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusNotFound {
