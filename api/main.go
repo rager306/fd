@@ -500,7 +500,6 @@ func main() {
 	// (~15-20s on CPU) by retrying PreWarm periodically until IsWarmupDone.
 	// Cancelled on signal so the goroutine exits deterministically.
 	recoveryCtx, recoveryCancel := context.WithCancel(context.Background())
-	defer recoveryCancel()
 	recoveryInterval := time.Duration(envutil.Int("FD_WARMUP_RECOVERY_INTERVAL_SEC", 30)) * time.Second
 	recoveryEnabled := envutil.BoolOrDefault("FD_WARMUP_RECOVERY_ENABLED", true)
 	logger.Info("warmup recovery config",
@@ -518,10 +517,12 @@ func main() {
 		lifecycle.DefaultShutdownTimeout,
 	); err != nil {
 		logger.Error("shutdown failed", "error", err)
+		recoveryCancel()
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
 		os.Exit(1)
 	}
+	recoveryCancel()
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
 }
