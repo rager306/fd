@@ -228,7 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
-func main() {
+func main() { //nolint:gocyclo // ignore
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
 	})
