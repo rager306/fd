@@ -96,15 +96,6 @@ func newRequestID() string {
 	}
 	bytes[6] = (bytes[6] & 0x0f) | 0x40
 	bytes[8] = (bytes[8] & 0x3f) | 0x80
-	var buf [36]byte
-	hex.Encode(buf[:], bytes[:])
-	copy(buf[24:36], buf[20:32])
-	buf[23] = '-'
-	copy(buf[19:23], buf[16:20])
-	buf[18] = '-'
-	copy(buf[14:18], buf[12:16])
-	buf[13] = '-'
-	copy(buf[9:13], buf[8:12])
-	buf[8] = '-'
-	return string(buf[:])
+	encoded := hex.EncodeToString(bytes[:])
+	return encoded[0:8] + "-" + encoded[8:12] + "-" + encoded[12:16] + "-" + encoded[16:20] + "-" + encoded[20:32]
 }

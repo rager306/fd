@@ -1,3 +1,3 @@
-## 2024-07-08 - Avoid string allocation when hex encoding
-**Learning:** Using `hex.EncodeToString` allocates a new string. When hex encoding in a hot path, encoding directly into a pre-allocated byte array or slice using `hex.Encode` and then converting it to string (or combining with other strings like building a UUID) reduces memory allocations and significantly speeds up the code execution.
-**Action:** When a hex-encoded string is needed, use `hex.Encode` into a pre-allocated stack buffer instead of `hex.EncodeToString`.
+## 2023-10-27 - Cache Key Generation Overhead
+**Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
+**Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.

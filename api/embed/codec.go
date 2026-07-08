@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
-	"unsafe"
 )
 
 // Encoding format constants. Used by /v1/embeddings and /embeddings/batch
@@ -26,10 +25,7 @@ const (
 // should validate format before calling).
 func EncodeEmbedding(emb []float32, format string) string {
 	if format == EncodingFormatBase64 {
-		b := Float32SliceToBytes(emb)
-		buf := make([]byte, base64.StdEncoding.EncodedLen(len(b)))
-		base64.StdEncoding.Encode(buf, b)
-		return unsafe.String(unsafe.SliceData(buf), len(buf)) //nolint:gosec // G103: performance optimization for byte casting
+		return base64.StdEncoding.EncodeToString(Float32SliceToBytes(emb))
 	}
 	b, _ := json.Marshal(emb)
 	return string(b)
