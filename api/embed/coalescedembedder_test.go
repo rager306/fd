@@ -39,7 +39,7 @@ func TestCoalescingEmbedderBurst(t *testing.T) {
 	start := make(chan struct{})
 
 	for i := 0; i < N; i++ {
-		go func(i int) {
+		go func() {
 			defer wg.Done()
 			<-start
 			texts := []string{
@@ -55,7 +55,7 @@ func TestCoalescingEmbedderBurst(t *testing.T) {
 			if len(got) != 3 {
 				t.Errorf("got %d embeddings, want 3", len(got))
 			}
-		}(i)
+		}()
 	}
 	close(start)
 	wg.Wait()
