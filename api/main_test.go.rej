@@ -1,0 +1,20 @@
+--- api/main_test.go
++++ api/main_test.go
+@@ -274,7 +274,7 @@
+	if err != nil {
+		t.Fatalf("failed to dial container: %v", err)
+	}
+-	defer c.Close()
++	defer func() { _ = c.Close() }()
+
+	out, err := io.ReadAll(c)
+	if err != nil {
+@@ -286,7 +286,7 @@
+	if err != nil {
+		t.Fatalf("failed to dial live endpoint: %v", err)
+	}
+-	defer c.Close()
++	defer func() { _ = c.Close() }()
+ }
+
+ func findFreePort() (int, error) {

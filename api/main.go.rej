@@ -1,0 +1,11 @@
+--- api/main.go
++++ api/main.go
+@@ -456,7 +456,7 @@
+	}
+	if opts.QueueCapacity > 0 {
+		resultStore := queue.NewResultStore()
+-		defer resultStore.Close()
++		defer func() { _ = resultStore.Close() }()
+
+		requestQueue = make(chan queue.Item, opts.QueueCapacity)
+		batchSize := envutil.Int("QUEUE_BATCH_SIZE", 32)

@@ -1,0 +1,10 @@
+--- api/fd_v2_queue_integration_test.go
++++ api/fd_v2_queue_integration_test.go
+@@ -34,7 +34,7 @@
+	gin.SetMode(gin.TestMode)
+
+	store := queue.NewResultStore()
+-	t.Cleanup(func() { store.Close() })
++	t.Cleanup(func() { _ = store.Close() })
+
+	requestQueue := make(chan queue.Item, queueCap)
