@@ -1,0 +1,13 @@
+--- api/queue/types.go
++++ api/queue/types.go
+@@ -17,8 +17,8 @@
+ type Status string
+
+ const (
+-	// exported const StatusPending should have comment (or a comment on this block) or be unexported (revive)
+-	StatusPending   Status = "pending"
++	// StatusPending is the initial state of an item in the queue.
++	StatusPending Status = "pending"
+	StatusProcessing Status = "processing"
+	StatusDone      Status = "done"
+	StatusFailed    Status = "failed"

@@ -1,0 +1,13 @@
+--- api/embed/tei.go
++++ api/embed/tei.go
+@@ -248,8 +248,8 @@
+	}
+ }
+
+-// ObserveBatchFill is a public helper used by handlers/embeddings to push
++// ObserveBatchFillMetrics is a public helper used by handlers/embeddings to push
+ // per-call batch fill ratio into the metrics hook installed via WithObservers.
+-func (c *TEIClient) ObserveBatchFill(inputs int) {
++func (c *TEIClient) ObserveBatchFillMetrics(inputs int) {
+	c.observeBatchFill(inputs)
+ }

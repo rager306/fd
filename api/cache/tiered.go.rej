@@ -1,0 +1,64 @@
+--- api/cache/tiered.go
++++ api/cache/tiered.go
+@@ -26,7 +26,8 @@
+	Namespace string
+ }
+
+-type CacheObserver func(tier string, hit bool)
++// Observer is the callback signature for monitoring cache outcomes.
++type Observer func(tier string, hit bool)
+
+ // TieredCache implements the embed.EmbeddingCache interface, coordinating L1 local and L2 Redis logic.
+ type TieredCache struct {
+@@ -35,7 +36,7 @@
+	logger  *slog.Logger
+
+	singleflight singleflight.Group
+-	observer     CacheObserver
++	observer     Observer
+ }
+
+ func NewTieredCache(l1 *LocalCache, l2 *RedisCache, logger *slog.Logger) *TieredCache {
+@@ -51,7 +52,7 @@
+ }
+
+ // SetObserver configures the cache to emit outcomes to the provided callback.
+-func (tc *TieredCache) SetObserver(o CacheObserver) {
++func (tc *TieredCache) SetObserver(o Observer) {
+	tc.observer = o
+ }
+
+@@ -230,7 +231,7 @@
+ func (tc *TieredCache) GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32 {
+	started := time.Now()
+-	defer tc.recordLookupDuration(time.Since(started))
++	defer func() { tc.recordLookupDuration(time.Since(started)) }()
+
+	hits := make(map[int][]float32, len(keys))
+	missIndexes := make([]int, 0, len(keys))
+--- api/embed/coalesce_baseline_test.go
++++ api/embed/coalesce_baseline_test.go
+@@ -39,7 +39,7 @@
+	if root == "" {
+		t.Skip("TEST_CORPUS_ROOT is not set")
+	}
+-	data, err := os.ReadFile(root)
++	data, err := os.ReadFile(root) //nolint:gosec // G304: test data
+	if err != nil {
+		t.Fatalf("failed to read test corpus: %v", err)
+	}
+@@ -67,11 +67,11 @@
+
+ // runCorpusBurst launches concurrency workers that loop through tests until ctx expires,
+ // waiting on e.Embed()
+-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) {
++func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (int, int, []time.Duration) {
+	// Dummy implementation of test logic
+-	calls = 0
+-	totalTexts = 0
++	calls := 0
++	totalTexts := 0
+
+	// Using standard rand instead of crypto as this is just deterministic test data generator
+-	rng := rand.New(rand.NewSource(42))
++	rng := rand.New(rand.NewSource(42)) //nolint:gosec // G404: test data deterministic generation
