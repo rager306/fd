@@ -1,7 +1,6 @@
 --- api/embed/coalescedembedder.go
 +++ api/embed/coalescedembedder.go
-@@ -137,13 +137,14 @@
-	cursor := 0
+@@ -138,13 +138,14 @@
 	for i, j := range batch {
 		n := counts[i]
 -		if err != nil {

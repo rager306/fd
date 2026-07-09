@@ -260,7 +260,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: "list", //nolint:goconst // response object type
+		Object: "list", //nolint:goconst // response object
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{
