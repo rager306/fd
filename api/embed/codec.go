@@ -15,6 +15,7 @@ var isLittleEndian bool
 
 func init() {
 	var i int32 = 0x01020304
+	//nolint:gosec // G103: performance optimization for byte casting
 	u := unsafe.Pointer(&i)
 	pb := (*byte)(u)
 	b := *pb

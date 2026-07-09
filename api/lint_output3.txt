@@ -1,0 +1,10 @@
+go: github.com/golangci/golangci-lint/v2@v2.12.2 requires go >= 1.25.0; switching to go1.25.12
+api/main.go:1: : # fd-api [fd-api.test]
+./main.go:249:3: undefined: recoveryCancel
+./main.go:269:3: undefined: recoveryCancel
+./main.go:277:3: undefined: recoveryCancel
+./main.go:289:3: undefined: recoveryCancel (typecheck)
+// Package main starts the fd embedding service: loads TEI runtime config and serves /v1/embeddings + observability endpoints on the configured port.
+1 issues:
+* typecheck: 1
+exit status 1
