@@ -260,7 +260,6 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		//nolint:goconst // string used in structs
 		Object: "list",
 		Data:   data,
 		Model:  modelID,

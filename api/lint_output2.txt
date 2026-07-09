@@ -1,7 +1,0 @@
-go: github.com/golangci/golangci-lint/v2@v2.12.2 requires go >= 1.25.0; switching to go1.25.12
-api/queue/id.go:1: : # fd-api/queue [fd-api/queue.test]
-queue/worker.go:161:2: declared and not used: indexByID (typecheck)
-package queue
-1 issues:
-* typecheck: 1
-exit status 1
