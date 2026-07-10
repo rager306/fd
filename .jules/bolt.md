@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2024-07-11 - Base64 Encoding Allocations
+**Learning:** In Go, using `base64.StdEncoding.EncodeToString` creates a second allocation (one for the byte buffer, one for the string). By allocating a byte slice (`make([]byte, encodedLen)`), using `base64.StdEncoding.Encode`, and converting to string via `unsafe.String`, we can reduce allocations in hot paths like embedding base64 encoding from 2 to 1.
+**Action:** To avoid string allocations when base64-encoding strings in hot paths, avoid `base64.StdEncoding.EncodeToString`. Instead, encode into a pre-allocated buffer using `base64.StdEncoding.Encode` and convert to a string without allocation using `unsafe.String(unsafe.SliceData(buf), len(buf))`.
