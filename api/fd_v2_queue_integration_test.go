@@ -29,12 +29,13 @@ func (e *queueTestEmbedder) Embed(ctx context.Context, texts []string) ([][]floa
 	return out, nil
 }
 
-func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
+//nolint:unparam // mock test server setup
+func setupQueueTestServer(t *testing.T, queueCap int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 	t.Helper()
 	_ = observability.NewMetrics()
 	_ = queue.NewResultStore()
 	store := queue.NewResultStore()
-	t.Cleanup(func() { store.Close() })
+	t.Cleanup(func() { _ = store.Close() })
 	items := make(chan queue.Item, queueCap)
 	emb := &queueTestEmbedder{}
 
@@ -42,7 +43,7 @@ func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engin
 
 	ctx, cancel := context.WithCancel(context.Background())
 	queue.StartQueueWorker(ctx, store, items, emb, logger, queue.WorkerConfig{
-		BatchMaxSize: batchSize,
+		BatchMaxSize: 32,
 		BatchWindow:  20 * time.Millisecond,
 	})
 
@@ -54,7 +55,7 @@ func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engin
 	return r, store, items, emb, cancel
 }
 
-func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
+func postQueue(_ *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/queue", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -63,7 +64,7 @@ func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseReco
 }
 
 func TestQueueSubmitAndPollCompleted(t *testing.T) {
-	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
+	r, _, _, _, cancel := setupQueueTestServer(t, 8)
 	defer cancel()
 
 	resp := postQueue(t, r, `{"model":"deepvk/USER-bge-m3","input":["hello","world"]}`)
@@ -78,7 +79,7 @@ func TestQueueSubmitAndPollCompleted(t *testing.T) {
 	// Poll up to 2 seconds for completion.
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
-		req := httptest.NewRequest(http.MethodGet, "/v1/queue/"+id, nil)
+		req := httptest.NewRequest(http.MethodGet, "/v1/queue/"+id, http.NoBody)
 		w := httptest.NewRecorder()
 		r.ServeHTTP(w, req)
 		if w.Code == http.StatusOK {
@@ -97,7 +98,7 @@ func TestQueueSubmitAndPollCompleted(t *testing.T) {
 }
 
 func TestQueueRejectsInvalidInput(t *testing.T) {
-	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
+	r, _, _, _, cancel := setupQueueTestServer(t, 8)
 	defer cancel()
 
 	resp := postQueue(t, r, `{"model":"deepvk/USER-bge-m3","input":[]}`)
@@ -108,7 +109,7 @@ func TestQueueRejectsInvalidInput(t *testing.T) {
 
 func TestQueueBackpressureRejectsWhenFull(t *testing.T) {
 	// Use a small queue capacity and a delayed embedder to keep the queue full.
-	r, _, _, _, cancel := setupQueueTestServer(t, 1, 32)
+	r, _, _, _, cancel := setupQueueTestServer(t, 1)
 	defer cancel()
 
 	// First submission fills the channel.
@@ -136,10 +137,10 @@ func TestQueueBackpressureRejectsWhenFull(t *testing.T) {
 }
 
 func TestQueuePollReturns404ForUnknownId(t *testing.T) {
-	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
+	r, _, _, _, cancel := setupQueueTestServer(t, 8)
 	defer cancel()
 
-	req := httptest.NewRequest(http.MethodGet, "/v1/queue/nonexistent", nil)
+	req := httptest.NewRequest(http.MethodGet, "/v1/queue/nonexistent", http.NoBody)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	if w.Code != http.StatusNotFound {
