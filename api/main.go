@@ -245,7 +245,7 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exitAfterDefer: intentional exit
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
 
@@ -263,13 +263,13 @@ func main() {
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exitAfterDefer: intentional exit
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exitAfterDefer: intentional exit
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := redisCache.Ping(ctx); err != nil {
@@ -279,7 +279,7 @@ func main() {
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exitAfterDefer: intentional exit
 	}
 	cancel()
 	logger.Info("redis connected", "addr", redisHost, "cache_namespace", redisOptions.Namespace.String())
@@ -520,7 +520,7 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exitAfterDefer: intentional exit
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
