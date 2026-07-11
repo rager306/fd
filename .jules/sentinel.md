@@ -6,3 +6,7 @@
 **Vulnerability:** `subtle.ConstantTimeCompare` used directly on variable-length API keys/tokens.
 **Learning:** `ConstantTimeCompare` returns early if lengths differ, allowing an attacker to guess the secret's length via timing attacks.
 **Prevention:** Always hash secrets (e.g., with SHA-256) before passing them to `ConstantTimeCompare` to guarantee equal length.
+## 2026-07-11 - Potential File Inclusion Vulnerability
+**Vulnerability:** `os.ReadFile` called with an unsanitized variable path (G304).
+**Learning:** The `gosec` linter flags dynamic variables passed to file operations because they can lead to path traversal if the input is untrusted.
+**Prevention:** Sanitize file paths using `filepath.Clean` before passing them to operations like `os.ReadFile` to resolve this and ensure paths are safe.
