@@ -39,9 +39,7 @@ func load44FZCorpus(t *testing.T) []string {
 	// to the repo root, then tests/44-FZ-2026-articles.jsonl.
 	_, file, _, _ := runtime.Caller(0)
 	root := filepath.Join(filepath.Dir(file), "..", "..", "tests", "44-FZ-2026-articles.jsonl")
-	cleanRoot := filepath.Clean(root)
-	//nolint:gosec // test data file inclusion
-	data, err := os.ReadFile(cleanRoot)
+	data, err := os.ReadFile(root)
 	if err != nil {
 		t.Skipf("corpus not available at %s: %v", root, err)
 	}

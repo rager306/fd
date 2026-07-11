@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"crypto/sha256"
 	"crypto/subtle"
 	"os"
 	"strings"
@@ -50,11 +49,7 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 			return
 		}
 		token := strings.TrimPrefix(authorization, bearerPrefix)
-
-		// Hash both tokens to prevent length-based timing attacks before constant time compare
-		hashedToken := sha256.Sum256([]byte(token))
-		hashedKey := sha256.Sum256([]byte(apiKey))
-		if subtle.ConstantTimeCompare(hashedToken[:], hashedKey[:]) != 1 {
+		if subtle.ConstantTimeCompare([]byte(token), []byte(apiKey)) != 1 {
 			handlers.WriteError(c, handlers.CodeUnauthorized, "authorization", "invalid bearer token")
 			c.Abort()
 			return
