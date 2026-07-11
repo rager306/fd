@@ -36,7 +36,7 @@ type TEIClient struct {
 		observeError       func(reason string)
 		incInFlight        func()
 		decInFlight        func()
-		observeBatchFill   func(inputs int)
+		recordBatchFill   func(inputs int)
 	}
 }
 
@@ -56,7 +56,7 @@ func (c *TEIClient) WithObservers(obs Observers) *TEIClient {
 	c.metrics.observeError = obs.ObserveError
 	c.metrics.incInFlight = obs.IncInFlight
 	c.metrics.decInFlight = obs.DecInFlight
-	c.metrics.observeBatchFill = obs.ObserveBatchFill
+	c.metrics.recordBatchFill = obs.ObserveBatchFill
 	return c
 }
 
@@ -238,18 +238,18 @@ func classifyTEIError(err error) string {
 	return "transport"
 }
 
-// observeBatchFill records the fill ratio for one TEI call. Exposed for
+// recordBatchFill records the fill ratio for one TEI call. Exposed for
 // callers that want to feed fill-ratio metrics from outside doEmbedRequest.
-func (c *TEIClient) observeBatchFill(inputs int) {
-	if c.metrics.observeBatchFill != nil && inputs > 0 {
-		c.metrics.observeBatchFill(inputs)
+func (c *TEIClient) recordBatchFill(inputs int) {
+	if c.metrics.recordBatchFill != nil && inputs > 0 {
+		c.metrics.recordBatchFill(inputs)
 	}
 }
 
 // ObserveBatchFill is a public helper used by handlers/embeddings to push
 // per-call batch fill ratio into the metrics hook installed via WithObservers.
 func (c *TEIClient) ObserveBatchFill(inputs int) {
-	c.observeBatchFill(inputs)
+	c.recordBatchFill(inputs)
 }
 
 func (c *TEIClient) retryBackoff(attempt int) time.Duration {
