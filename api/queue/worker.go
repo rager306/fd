@@ -158,10 +158,8 @@ func processBatch(ctx context.Context, batch []Item, emb embed.Embedder) []Resul
 
 	// Concat all texts preserving per-item boundaries.
 	var texts []string
-	indexByID := make([]*Item, 0, len(batch))
 	for i := range batch {
 		texts = append(texts, batch[i].Texts...)
-		indexByID = append(indexByID, &batch[i]) //nolint:staticcheck // unused but mapped for future usage
 	}
 
 	if ctx.Err() != nil {
