@@ -20,10 +20,10 @@ const queueRetryAfterSeconds = "5"
 // The handler is constructed only when FD_QUEUE_ENABLED=true; otherwise
 // callers see 404 not_found from the standard NoRoute handler.
 type QueueHandler struct {
-	store     *queue.ResultStore
-	items     chan<- queue.Item
-	logger    *slog.Logger
-	modelID   string
+	store   *queue.ResultStore
+	items   chan<- queue.Item
+	logger  *slog.Logger
+	modelID string
 }
 
 // NewQueueHandler wires the bounded channel, result store, and model identity.
@@ -116,15 +116,15 @@ func (h *QueueHandler) Poll(c *gin.Context) {
 		data := make([]embed.EmbeddingObj, len(res.Embeddings))
 		for i, emb := range res.Embeddings {
 			obj := embed.EmbeddingObj{
-				Object:    "embedding",
-				Index:     i,
+				Object:     "embedding",
+				Index:      i,
 				Dimensions: 1024,
 			}
 			obj.SetVector(emb)
 			data[i] = obj
 		}
 		c.JSON(http.StatusOK, embed.EmbeddingsResponse{
-			Object: "list",
+			Object: "list", //nolint:goconst // list
 			Data:   data,
 			Model:  h.modelID,
 			Usage: embed.Usage{

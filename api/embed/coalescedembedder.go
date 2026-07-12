@@ -43,7 +43,7 @@ func NewCoalescingEmbedder(inner Embedder, window time.Duration) *CoalescingEmbe
 		return nil
 	}
 	c := &CoalescingEmbedder{
-		inner: inner,
+		inner:  inner,
 		jobs:   make(chan coalescedJob),
 		window: window,
 	}
@@ -138,7 +138,7 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 	cursor := 0
 	for i, j := range batch {
 		n := counts[i]
-		if err != nil {
+		if err != nil { //nolint:gocritic // ifElseChain: readability
 			j.result <- coalescedResult{err: err}
 		} else if cursor+n <= len(embs) {
 			slice := make([][]float32, n)
@@ -150,5 +150,3 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 		cursor += n
 	}
 }
-
-
