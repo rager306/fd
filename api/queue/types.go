@@ -18,9 +18,12 @@ import (
 type Status string
 
 const (
-	StatusPending   Status = "pending"
+	// StatusPending indicates the job is pending.
+	StatusPending Status = "pending"
+	// StatusCompleted indicates the job is completed.
 	StatusCompleted Status = "completed"
-	StatusFailed    Status = "failed"
+	// StatusFailed indicates the job has failed.
+	StatusFailed Status = "failed"
 )
 
 // Result holds the outcome of a worker-processed queue item. Embeddings
@@ -40,12 +43,12 @@ type Result struct {
 // the request without contacting TEI directly. SubmitCtx should be the
 // request's context (cancellation here stops waiting).
 type Item struct {
-	ID         string
-	Texts      []string
-	Dims       int
-	Response   chan Result // buffered 1; worker writes once, submitter reads once
-	SubmitCtx  context.Context
-	CreatedAt  int64
+	ID        string
+	Texts     []string
+	Dims      int
+	Response  chan Result // buffered 1; worker writes once, submitter reads once
+	SubmitCtx context.Context
+	CreatedAt int64
 }
 
 // ErrQueueDisabled indicates the queue feature was queried while the

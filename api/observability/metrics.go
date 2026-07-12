@@ -37,23 +37,22 @@ type Metrics struct {
 	cacheEntries        *prometheus.GaugeVec
 	cacheMemoryBytes    *prometheus.GaugeVec
 
-	teiRequestDuration  prometheus.Histogram
-	teiRequestsInFlight prometheus.Gauge
-	teiErrorsTotal      *prometheus.CounterVec
-	cacheLookupDuration prometheus.Histogram
-	teiBatchFillRatio   prometheus.Histogram
-	queueDepth          prometheus.Gauge
-	queueDrainTotal     prometheus.Counter
-	queueSubmitTotal    *prometheus.CounterVec
-	queueBatchSize      prometheus.Histogram
+	teiRequestDuration   prometheus.Histogram
+	teiRequestsInFlight  prometheus.Gauge
+	teiErrorsTotal       *prometheus.CounterVec
+	cacheLookupDuration  prometheus.Histogram
+	teiBatchFillRatio    prometheus.Histogram
+	queueDepth           prometheus.Gauge
+	queueDrainTotal      prometheus.Counter
+	queueSubmitTotal     *prometheus.CounterVec
+	queueBatchSize       prometheus.Histogram
 	queueProcessDuration prometheus.Histogram
 
-	runtimeMu         sync.RWMutex
-	runtimeState      *lifecycle.State
-	runtimeCapacity   int64
-	localCacheSizeFn  func() int
-	redisCacheSizeFn  func() int
-	redisSizeTimeout  time.Duration
+	runtimeMu        sync.RWMutex
+	runtimeState     *lifecycle.State
+	runtimeCapacity  int64
+	localCacheSizeFn func() int
+	redisCacheSizeFn func() int
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
@@ -85,7 +84,7 @@ func NewMetrics() *Metrics {
 		cacheHitsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "fd_cache_hits_total",
 			Help: "Total fd cache lookups by result and tier.",
-		}, []string{"result", "tier"}),
+		}, []string{"result", "tier"}), //nolint:goconst // tier
 		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "fd_cache_evictions_total",
 			Help: "Total fd in-memory cache evictions.",
@@ -220,6 +219,8 @@ func (m *Metrics) ObserveTEIRequestDuration(d time.Duration) {
 // IncTEIRequestsInFlight and DecTEIRequestsInFlight manage a gauge for
 // concurrent TEI calls. Safe to call from multiple goroutines.
 func (m *Metrics) IncTEIRequestsInFlight() { m.teiRequestsInFlight.Inc() }
+
+// DecTEIRequestsInFlight decrements the in-flight TEI requests counter.
 func (m *Metrics) DecTEIRequestsInFlight() { m.teiRequestsInFlight.Dec() }
 
 // IncTEIError records a TEI error with a canonical reason label.
