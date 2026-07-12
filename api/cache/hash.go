@@ -7,5 +7,8 @@ import (
 
 func shortHash(value string) string {
 	h := sha256.Sum256([]byte(value))
-	return hex.EncodeToString(h[:])[:12]
+	// Use stack-allocated buffer and only encode the needed 12 chars
+	var buf [12]byte
+	hex.Encode(buf[:], h[:6])
+	return string(buf[:])
 }
