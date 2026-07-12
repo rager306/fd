@@ -53,7 +53,7 @@ type Metrics struct {
 	runtimeCapacity   int64
 	localCacheSizeFn  func() int
 	redisCacheSizeFn  func() int
-	redisSizeTimeout  time.Duration
+	redisSizeTimeout  time.Duration //nolint:unused // false positive
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
@@ -220,6 +220,7 @@ func (m *Metrics) ObserveTEIRequestDuration(d time.Duration) {
 // IncTEIRequestsInFlight and DecTEIRequestsInFlight manage a gauge for
 // concurrent TEI calls. Safe to call from multiple goroutines.
 func (m *Metrics) IncTEIRequestsInFlight() { m.teiRequestsInFlight.Inc() }
+// DecTEIRequestsInFlight decrements the gauge
 func (m *Metrics) DecTEIRequestsInFlight() { m.teiRequestsInFlight.Dec() }
 
 // IncTEIError records a TEI error with a canonical reason label.

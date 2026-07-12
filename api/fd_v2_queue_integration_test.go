@@ -54,7 +54,7 @@ func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *
 	return r, store, items, emb, cancel
 }
 
-func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
+func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseRecorder { //nolint:unparam // false positive in test logic
 	req := httptest.NewRequest(http.MethodPost, "/v1/queue", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
