@@ -520,7 +520,8 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		recoveryCancel()
+		os.Exit(1) //nolint:gocritic // exitAfterDefer: manual cleanup before exit
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
