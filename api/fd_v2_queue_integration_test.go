@@ -29,12 +29,12 @@ func (e *queueTestEmbedder) Embed(ctx context.Context, texts []string) ([][]floa
 	return out, nil
 }
 
-func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
+func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 	t.Helper()
 	_ = observability.NewMetrics()
 	_ = queue.NewResultStore()
 	store := queue.NewResultStore()
-	t.Cleanup(func() { store.Close() })
+	t.Cleanup(func() { _ = store.Close() })
 	items := make(chan queue.Item, queueCap)
 	emb := &queueTestEmbedder{}
 

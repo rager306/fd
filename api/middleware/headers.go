@@ -99,11 +99,8 @@ func newRequestID() string {
 		if len(hexStr) > 12 {
 			hexStr = hexStr[len(hexStr)-12:]
 		}
-		// Pad with leading zeros if necessary
 		padLen := 12 - len(hexStr)
-		for i := 0; i < padLen; i++ {
-			buf[24+i] = '0'
-		}
+		copy(buf[24:], "000000000000"[:padLen])
 		copy(buf[24+padLen:], hexStr)
 		return string(buf[:])
 	}
