@@ -18,6 +18,8 @@ import (
 type Status string
 
 const (
+	// StatusPending indicates the item is waiting to be embedded.
+	// StatusPending indicates the item is waiting to be embedded.
 	StatusPending   Status = "pending"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
