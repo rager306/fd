@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -38,8 +39,7 @@ func load44FZCorpus(t *testing.T) []string {
 	// to the repo root, then tests/44-FZ-2026-articles.jsonl.
 	_, file, _, _ := runtime.Caller(0)
 	root := filepath.Join(filepath.Dir(file), "..", "..", "tests", "44-FZ-2026-articles.jsonl")
-	root = filepath.Clean(root)
-	data, err := os.ReadFile(root) //nolint:gosec // G304: loading local test fixture
+	data, err := os.ReadFile(root)
 	if err != nil {
 		t.Skipf("corpus not available at %s: %v", root, err)
 	}
@@ -67,9 +67,11 @@ func load44FZCorpus(t *testing.T) []string {
 	return texts
 }
 
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) {
 	t.Helper()
+	calls = 0
 	durations = nil
+	totalTexts = 0
 	var mu sync.Mutex
 	var callsCounter atomic.Int64
 
@@ -81,10 +83,9 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	wrapped := &atomicCounterEmbedder{inner: e, counter: &callsCounter}
 
 	// Shuffle inputs so goroutines don't all hit the same first article.
+	rng := rand.New(rand.NewSource(42))
 	jobs := append([]string(nil), texts...)
-	for i := range jobs {
-		jobs[i], jobs[len(jobs)-1-i] = jobs[len(jobs)-1-i], jobs[i]
-	}
+	rng.Shuffle(len(jobs), func(i, j int) { jobs[i], jobs[j] = jobs[j], jobs[i] })
 
 	for i := 0; i < concurrency && i < len(jobs); i++ {
 		wg.Add(1)

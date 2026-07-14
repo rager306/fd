@@ -124,7 +124,7 @@ func (h *QueueHandler) Poll(c *gin.Context) {
 			data[i] = obj
 		}
 		c.JSON(http.StatusOK, embed.EmbeddingsResponse{
-			Object: "list", //nolint:goconst // literal used in response object
+			Object: "list",
 			Data:   data,
 			Model:  h.modelID,
 			Usage: embed.Usage{
