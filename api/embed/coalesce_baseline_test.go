@@ -38,8 +38,8 @@ func load44FZCorpus(t *testing.T) []string {
 	// Resolve corpus path relative to this test file. Several segments up
 	// to the repo root, then tests/44-FZ-2026-articles.jsonl.
 	_, file, _, _ := runtime.Caller(0)
-	root := filepath.Join(filepath.Dir(file), "..", "..", "tests", "44-FZ-2026-articles.jsonl")
-	data, err := os.ReadFile(root)
+	root := filepath.Clean(filepath.Join(filepath.Dir(file), "..", "..", "tests", "44-FZ-2026-articles.jsonl"))
+	data, err := os.ReadFile(root) //nolint:gosec // G304: loading local test fixture
 	if err != nil {
 		t.Skipf("corpus not available at %s: %v", root, err)
 	}
@@ -83,7 +83,7 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	wrapped := &atomicCounterEmbedder{inner: e, counter: &callsCounter}
 
 	// Shuffle inputs so goroutines don't all hit the same first article.
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewSource(42)) //nolint:gosec // G404: test data shuffling
 	jobs := append([]string(nil), texts...)
 	rng.Shuffle(len(jobs), func(i, j int) { jobs[i], jobs[j] = jobs[j], jobs[i] })
 
