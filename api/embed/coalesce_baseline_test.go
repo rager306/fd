@@ -67,13 +67,11 @@ func load44FZCorpus(t *testing.T) []string {
 	return texts
 }
 
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) { //nolint:unparam // return parameters are used in callers
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) { //nolint:unparam // testing init
 	t.Helper()
 	calls = 0
 	durations = nil
 	totalTexts = 0
-	_ = calls
-	_ = totalTexts
 	var mu sync.Mutex
 	var callsCounter atomic.Int64
 
