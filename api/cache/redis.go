@@ -197,18 +197,19 @@ func (c *RedisCache) key(text string, dim int) string {
 	buf[65] = 'd'
 
 	var suffixLen int
-	if dim == 1024 {
+	switch dim {
+	case 1024:
 		buf[66] = '1'
 		buf[67] = '0'
 		buf[68] = '2'
 		buf[69] = '4'
 		suffixLen = 70
-	} else if dim == 512 {
+	case 512:
 		buf[66] = '5'
 		buf[67] = '1'
 		buf[68] = '2'
 		suffixLen = 69
-	} else {
+	default:
 		dimStr := strconv.Itoa(dim)
 		copy(buf[66:], dimStr)
 		suffixLen = 66 + len(dimStr)
