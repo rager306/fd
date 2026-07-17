@@ -34,11 +34,15 @@ type corpusChunk struct {
 }
 
 func load44FZCorpus(t *testing.T) []string {
-	t.Helper()
+
 	// Resolve corpus path relative to this test file. Several segments up
 	// to the repo root, then tests/44-FZ-2026-articles.jsonl.
 	_, file, _, _ := runtime.Caller(0)
 	root := filepath.Join(filepath.Dir(file), "..", "..", "tests", "44-FZ-2026-articles.jsonl")
+	root = filepath.Clean(root)
+	//nolint:gosec // G304: loading local test fixture
+	root = filepath.Clean(root)
+	//nolint:gosec // G304: loading local test fixture
 	data, err := os.ReadFile(root)
 	if err != nil {
 		t.Skipf("corpus not available at %s: %v", root, err)
@@ -66,12 +70,8 @@ func load44FZCorpus(t *testing.T) []string {
 	}
 	return texts
 }
-
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) {
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
 	t.Helper()
-	calls = 0
-	durations = nil
-	totalTexts = 0
 	var mu sync.Mutex
 	var callsCounter atomic.Int64
 
@@ -83,6 +83,8 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	wrapped := &atomicCounterEmbedder{inner: e, counter: &callsCounter}
 
 	// Shuffle inputs so goroutines don't all hit the same first article.
+	//nolint:gosec // G404: test data randomization
+	//nolint:gosec // G404: test data randomization
 	rng := rand.New(rand.NewSource(42))
 	jobs := append([]string(nil), texts...)
 	rng.Shuffle(len(jobs), func(i, j int) { jobs[i], jobs[j] = jobs[j], jobs[i] })

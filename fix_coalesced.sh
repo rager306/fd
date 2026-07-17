@@ -1,0 +1,24 @@
+cat << 'INNER_EOF' > patch.diff
+<<<<<<< SEARCH
+		if err != nil {
+			j.result <- coalescedResult{err: err}
+		} else if cursor+n <= len(embs) {
+			slice := make([][]float32, n)
+			copy(slice, embs[cursor:cursor+n])
+			j.result <- coalescedResult{embs: slice}
+		} else {
+			j.result <- coalescedResult{err: fmt.Errorf("out of bounds")}
+		}
+=======
+		switch {
+		case err != nil:
+			j.result <- coalescedResult{err: err}
+		case cursor+n <= len(embs):
+			slice := make([][]float32, n)
+			copy(slice, embs[cursor:cursor+n])
+			j.result <- coalescedResult{embs: slice}
+		default:
+			j.result <- coalescedResult{err: fmt.Errorf("out of bounds")}
+		}
+>>>>>>> REPLACE
+INNER_EOF
