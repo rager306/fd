@@ -18,6 +18,7 @@ import (
 type Status string
 
 const (
+	// StatusPending indicates the job is queued.
 	StatusPending   Status = "pending"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
