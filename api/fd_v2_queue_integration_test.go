@@ -42,7 +42,7 @@ func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *
 
 	ctx, cancel := context.WithCancel(context.Background())
 	queue.StartQueueWorker(ctx, store, items, emb, logger, queue.WorkerConfig{
-		BatchMaxSize: batchSize,
+		BatchMaxSize: batchSize, //nolint:unparam // batchSize is required config
 		BatchWindow:  20 * time.Millisecond,
 	})
 
