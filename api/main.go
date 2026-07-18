@@ -380,7 +380,7 @@ func main() {
 	// M052-mmf99p Phase 0: wire cache tier observer and L2 size gauge.
 	// Captures per-tier hit-rate and rough L2 namespace occupancy for
 	// the throughput optimization backplane (Issue #9).
-	tiered.SetCacheObserver(func(tier string, hit bool) {
+	tiered.SetObserver(func(tier string, hit bool) {
 		result := "miss"
 		if hit {
 			result = "hit"

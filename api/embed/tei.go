@@ -240,7 +240,7 @@ func classifyTEIError(err error) string {
 
 // observeBatchFill records the fill ratio for one TEI call. Exposed for
 // callers that want to feed fill-ratio metrics from outside doEmbedRequest.
-func (c *TEIClient) observeBatchFill(inputs int) {
+func (c *TEIClient) doObserveBatchFill(inputs int) {
 	if c.metrics.observeBatchFill != nil && inputs > 0 {
 		c.metrics.observeBatchFill(inputs)
 	}
@@ -249,7 +249,7 @@ func (c *TEIClient) observeBatchFill(inputs int) {
 // ObserveBatchFill is a public helper used by handlers/embeddings to push
 // per-call batch fill ratio into the metrics hook installed via WithObservers.
 func (c *TEIClient) ObserveBatchFill(inputs int) {
-	c.observeBatchFill(inputs)
+	c.doObserveBatchFill(inputs)
 }
 
 func (c *TEIClient) retryBackoff(attempt int) time.Duration {
