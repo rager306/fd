@@ -17,11 +17,8 @@ import (
 // Status is the lifecycle of a submitted queue item.
 type Status string
 
-// Allowed states for a queue item.
 const (
-	// StatusPending indicates the job is queued.
 	StatusPending   Status = "pending"
-	// StatusCompleted indicates the job finished successfully.
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
 )

@@ -228,7 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
-func main() { //nolint:gocyclo // main setup
+func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
 	})
@@ -372,7 +372,7 @@ func main() { //nolint:gocyclo // main setup
 	// M052-mmf99p Phase 0: wire cache tier observer and L2 size gauge.
 	// Captures per-tier hit-rate and rough L2 namespace occupancy for
 	// the throughput optimization backplane (Issue #9).
-	tiered.SetObserver(func(tier string, hit bool) {
+	tiered.SetCacheObserver(func(tier string, hit bool) {
 		result := "miss"
 		if hit {
 			result = "hit"
@@ -456,7 +456,7 @@ func main() { //nolint:gocyclo // main setup
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer func() { _ = resultStore.Close() }()
+		defer resultStore.Close()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}
@@ -520,8 +520,7 @@ func main() { //nolint:gocyclo // main setup
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		recoveryCancel()
-		os.Exit(1) //nolint:gocritic // exitAfterDefer: manually called deferred recoveryCancel
+		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
