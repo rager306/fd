@@ -1,4 +1,4 @@
-version: "2"
+# version: "2"
 
 run:
   timeout: 5m
@@ -44,7 +44,7 @@ linters:
       # that would hurt readability. Production code is still linted.
       # golangci-lint v2 path-pattern uses doublestar glob. _test.go match
       # prevents noise on table-driven test fixtures.
-      path-pattern: "!**/*_test.go"
+      path-pattern: "!.*_test.go"
     errorlint:
       checks: ["all"]
     gocyclo:
@@ -98,5 +98,5 @@ issues:
     # goconst in _test.go: test fixtures legitimately repeat string literals
     # (e.g., "input" for input param name across table-driven cases). Production
     # code is still linted by goconst.
-    - path: "**/*_test\\.go"
+    - path: ".*_test\\.go"
       linters: [goconst]
