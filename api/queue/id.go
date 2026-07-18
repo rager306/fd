@@ -11,5 +11,7 @@ import (
 func NewRequestID() string {
 	var buf [8]byte
 	_, _ = rand.Read(buf[:])
-	return hex.EncodeToString(buf[:])
+	var hexBuf [16]byte
+	hex.Encode(hexBuf[:], buf[:])
+	return string(hexBuf[:])
 }

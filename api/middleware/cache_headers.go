@@ -31,7 +31,7 @@ func CacheHeaders() gin.HandlerFunc {
 		c.Next()
 		c.Writer = original
 
-		status := buffered.Status()
+		status := buffered.ResponseWriter.Status()
 		body := buffered.body.Bytes()
 		if status != http.StatusOK {
 			original.WriteHeader(status)
@@ -70,7 +70,11 @@ func isCacheHeaderPath(path string) bool {
 
 func responseETag(body []byte) string {
 	sum := sha256.Sum256(body)
-	return `"` + hex.EncodeToString(sum[:]) + `"`
+	var buf [66]byte
+	buf[0] = '"'
+	hex.Encode(buf[1:65], sum[:])
+	buf[65] = '"'
+	return string(buf[:])
 }
 
 func etagMatches(ifNoneMatch, etag string) bool {
