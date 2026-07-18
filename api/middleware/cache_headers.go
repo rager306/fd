@@ -31,7 +31,7 @@ func CacheHeaders() gin.HandlerFunc {
 		c.Next()
 		c.Writer = original
 
-		status := buffered.Status()
+		status := buffered.ResponseWriter.Status()
 		body := buffered.body.Bytes()
 		if status != http.StatusOK {
 			original.WriteHeader(status)

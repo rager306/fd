@@ -84,7 +84,7 @@ func (w *headerWriter) setEmbeddingHeaders() {
 	if req.Dimensions != nil {
 		dimensions = *req.Dimensions
 	}
-	header := w.Header()
+	header := w.ResponseWriter.Header()
 	header.Set(HeaderModelID, w.modelID)
 	header.Set(HeaderDimensions, strconv.Itoa(dimensions))
 }
