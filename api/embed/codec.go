@@ -8,7 +8,15 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
+	"unsafe"
 )
+
+var systemByteOrder []byte
+
+func init() {
+	x := uint32(0x01020304)
+	systemByteOrder = (*[4]byte)(unsafe.Pointer(&x))[:] //nolint:gosec // G103: checking system endianness
+}
 
 // Encoding format constants. Used by /v1/embeddings and /embeddings/batch
 // to choose between float arrays and base64-encoded float32 LE bytes.
@@ -23,9 +31,18 @@ const (
 // `format` is one of EncodingFormatFloat or EncodingFormatBase64; the empty
 // string defaults to float. Any other value returns the float form (callers
 // should validate format before calling).
+//
+//nolint:gosec // G103: performance optimization for byte casting
 func EncodeEmbedding(emb []float32, format string) string {
 	if format == EncodingFormatBase64 {
-		return base64.StdEncoding.EncodeToString(Float32SliceToBytes(emb))
+		if len(emb) == 0 {
+			return ""
+		}
+		if systemByteOrder[0] != 0x04 {
+			return base64.StdEncoding.EncodeToString(Float32SliceToBytes(emb))
+		}
+		b := unsafe.Slice((*byte)(unsafe.Pointer(&emb[0])), len(emb)*4)
+		return base64.StdEncoding.EncodeToString(b)
 	}
 	b, _ := json.Marshal(emb)
 	return string(b)
@@ -43,14 +60,25 @@ func Float32SliceToBytes(slice []float32) []byte {
 
 // BytesToFloat32Slice is the inverse of Float32SliceToBytes, used by tests
 // and any future decode path (e.g. /v1/embeddings echo for symmetry).
+//
+//nolint:gosec // G103: performance optimization for byte casting
 func BytesToFloat32Slice(b []byte) []float32 {
 	if len(b)%4 != 0 {
 		return nil
 	}
-	out := make([]float32, len(b)/4)
-	for i := range out {
-		bits := binary.LittleEndian.Uint32(b[i*4:])
-		out[i] = math.Float32frombits(bits)
+	if len(b) == 0 {
+		return []float32{}
 	}
+	if systemByteOrder[0] != 0x04 {
+		out := make([]float32, len(b)/4)
+		for i := range out {
+			bits := binary.LittleEndian.Uint32(b[i*4:])
+			out[i] = math.Float32frombits(bits)
+		}
+		return out
+	}
+
+	out := make([]float32, len(b)/4)
+	copy(unsafe.Slice((*byte)(unsafe.Pointer(&out[0])), len(b)), b)
 	return out
 }
