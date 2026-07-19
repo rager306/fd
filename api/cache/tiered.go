@@ -17,16 +17,16 @@ type TieredCache struct {
 	logger   *slog.Logger
 	sf       singleflight.Group
 
-	observer Observer
+	observer CacheObserver
 
 	lookupDurationFn func(time.Duration)
 }
 
-// Observer is invoked on every cache look-up outcome with the tier that
+// CacheObserver is invoked on every cache look-up outcome with the tier that
 // resolved the read ("l1", "l2", or "miss") and whether it produced a usable
 // hit. Observers must be cheap and non-blocking; fd uses this to feed
 // observability.Metrics counters. Observer may be nil.
-type Observer func(tier string, hit bool)
+type CacheObserver func(tier string, hit bool)
 
 // NewTieredCache creates a two-tier cache.
 func NewTieredCache(local *LocalCache, redis *RedisCache, localTTL time.Duration) *TieredCache {
@@ -46,11 +46,11 @@ func NewTieredCacheWithLogger(local *LocalCache, redis *RedisCache, localTTL tim
 	}
 }
 
-// SetObserver registers a callback that receives every cache look-up
+// SetCacheObserver registers a callback that receives every cache look-up
 // outcome (tier name + hit boolean). Safe to call before or after the cache
 // starts handling traffic. Pass nil to detach. Observers are invoked
 // synchronously on the read path; they must be non-blocking.
-func (tc *TieredCache) SetObserver(observer Observer) {
+func (tc *TieredCache) SetCacheObserver(observer CacheObserver) {
 	tc.observer = observer
 }
 

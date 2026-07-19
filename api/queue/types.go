@@ -18,7 +18,6 @@ import (
 type Status string
 
 const (
-	// StatusPending is the pending state.
 	StatusPending   Status = "pending"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
