@@ -39,7 +39,7 @@ func TestCoalescingEmbedderBurst(t *testing.T) {
 	start := make(chan struct{})
 
 	for i := 0; i < N; i++ {
-		go func(i int) {
+		go func(i int) { //nolint:unparam // intentionally capturing loop variable
 			defer wg.Done()
 			<-start
 			texts := []string{
