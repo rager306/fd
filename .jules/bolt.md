@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2024-05-18 - Zero-allocation struct slice casting for serialization
+**Learning:** When serializing a primitive slice like `[]float32` into base64, iterating and explicitly converting it into a new byte array via `binary.LittleEndian` causes high allocation and limits throughput. We can instead check the system endianness and cast the slice pointers directly to completely bypass allocation on compatible systems.
+**Action:** Use `unsafe.Slice` to cast slice memory representations into a `[]byte` slice when encoding to bytes on compatible little-endian platforms to achieve 0-allocation serialization. Ensure linter compliance with `//nolint:gosec` with an explanation.
