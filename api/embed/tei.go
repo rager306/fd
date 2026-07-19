@@ -46,7 +46,7 @@ type Observers struct {
 	ObserveError     func(reason string)
 	IncInFlight      func()
 	DecInFlight      func()
-	ObserveBatchFill func(inputs int)
+	RecordBatchFill func(inputs int)
 }
 
 // WithObservers installs metrics hooks. Returns the receiver for chaining.
@@ -56,7 +56,7 @@ func (c *TEIClient) WithObservers(obs Observers) *TEIClient {
 	c.metrics.observeError = obs.ObserveError
 	c.metrics.incInFlight = obs.IncInFlight
 	c.metrics.decInFlight = obs.DecInFlight
-	c.metrics.observeBatchFill = obs.ObserveBatchFill
+	c.metrics.observeBatchFill = obs.RecordBatchFill
 	return c
 }
 
@@ -246,9 +246,9 @@ func (c *TEIClient) observeBatchFill(inputs int) {
 	}
 }
 
-// ObserveBatchFill is a public helper used by handlers/embeddings to push
+// RecordBatchFill is a public helper used by handlers/embeddings to push
 // per-call batch fill ratio into the metrics hook installed via WithObservers.
-func (c *TEIClient) ObserveBatchFill(inputs int) {
+func (c *TEIClient) RecordBatchFill(inputs int) {
 	c.observeBatchFill(inputs)
 }
 
