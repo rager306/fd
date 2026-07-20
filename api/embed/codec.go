@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
+	"unsafe"
 )
 
 // Encoding format constants. Used by /v1/embeddings and /embeddings/batch
@@ -34,6 +35,21 @@ func EncodeEmbedding(emb []float32, format string) string {
 // Float32SliceToBytes converts a float32 slice to a little-endian byte
 // slice suitable for base64 encoding. Length must equal len(slice)*4.
 func Float32SliceToBytes(slice []float32) []byte {
+	if len(slice) == 0 {
+		return nil
+	}
+	var x uint16 = 0x00FF
+	isLittleEndian := *(*byte)(unsafe.Pointer(&x)) == 0xFF //nolint:gosec // G103: checking system endianness
+
+	if isLittleEndian {
+		// ⚡ Bolt: Zero-allocation optimization.
+		// Instead of allocating a new byte array and iterating, we cast the
+		// float32 slice's underlying memory directly to a byte slice. This is
+		// safe for read-only operations (like base64 encoding) and reduces
+		// execution time and memory allocations significantly on little-endian architectures.
+		return unsafe.Slice((*byte)(unsafe.Pointer(&slice[0])), len(slice)*4)
+	}
+
 	b := make([]byte, len(slice)*4)
 	for i, v := range slice {
 		binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
