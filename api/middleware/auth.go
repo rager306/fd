@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"crypto/sha256"
 	"crypto/subtle"
 	"os"
 	"strings"
@@ -31,6 +32,10 @@ func APIKeyAuthFromEnv() gin.HandlerFunc {
 // APIKeyAuth requires Authorization: Bearer <apiKey> on protected endpoints.
 // Public endpoints are limited to cheap liveness/metadata/docs surfaces.
 func APIKeyAuth(apiKey string) gin.HandlerFunc {
+	// Pre-compute the hash of the expected API key to avoid re-hashing on every request
+	// and to ensure equal lengths for ConstantTimeCompare to prevent timing attacks.
+	apiKeyHash := sha256.Sum256([]byte(apiKey))
+
 	return func(c *gin.Context) {
 		if isAuthPublicPath(c.Request.URL.Path) || c.Request.Method == "OPTIONS" {
 			c.Next()
@@ -49,7 +54,8 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 			return
 		}
 		token := strings.TrimPrefix(authorization, bearerPrefix)
-		if subtle.ConstantTimeCompare([]byte(token), []byte(apiKey)) != 1 {
+		tokenHash := sha256.Sum256([]byte(token))
+		if subtle.ConstantTimeCompare(tokenHash[:], apiKeyHash[:]) != 1 {
 			handlers.WriteError(c, handlers.CodeUnauthorized, "authorization", "invalid bearer token")
 			c.Abort()
 			return
