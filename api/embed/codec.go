@@ -43,12 +43,14 @@ func Float32SliceToBytes(slice []float32) []byte {
 	if len(slice) == 0 {
 		return nil
 	}
-	if isLittleEndian {
-		return unsafe.Slice((*byte)(unsafe.Pointer(&slice[0])), len(slice)*4) //nolint:gosec // G103: zero-allocation memory cast
-	}
 	b := make([]byte, len(slice)*4)
-	for i, v := range slice {
-		binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
+	if isLittleEndian {
+		src := unsafe.Slice((*byte)(unsafe.Pointer(&slice[0])), len(slice)*4) //nolint:gosec // G103: fast path for little endian systems
+		copy(b, src)
+	} else {
+		for i, v := range slice {
+			binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
+		}
 	}
 	return b
 }

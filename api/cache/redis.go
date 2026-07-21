@@ -8,11 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"unsafe"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -214,7 +214,7 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim)) //nolint:gosec // G115: bounds-checked above
-	if isLittleEndian {
+	if isLittleEndian && len(embedding) > 0 {
 		src := unsafe.Slice((*byte)(unsafe.Pointer(&embedding[0])), dim*4) //nolint:gosec // G103: fast path for little endian systems
 		copy(buf[2:], src)
 	} else {
