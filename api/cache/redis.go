@@ -12,11 +12,17 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
 
 const defaultRedisCacheTTL = 24 * time.Hour
+
+var isLittleEndian = func() bool {
+	x := uint16(0x00FF)
+	return *(*byte)(unsafe.Pointer(&x)) == 0xFF //nolint:gosec // G103: checking system endianness
+}()
 
 // RedisCacheNamespace controls correctness-affecting Redis key namespace fields.
 // Optional values are hashed before they are included in keys so model/tokenizer
@@ -208,8 +214,14 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim)) //nolint:gosec // G115: bounds-checked above
-	for i := 0; i < dim; i++ {
-		binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+	if isLittleEndian && len(embedding) > 0 {
+		_ = embedding[dim-1] // enforce bounds check
+		src := unsafe.Slice((*byte)(unsafe.Pointer(&embedding[0])), dim*4) //nolint:gosec // G103: fast path for little endian systems
+		copy(buf[2:], src)
+	} else {
+		for i := 0; i < dim; i++ {
+			binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+		}
 	}
 	return buf, nil
 }
