@@ -215,6 +215,7 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim)) //nolint:gosec // G115: bounds-checked above
 	if isLittleEndian && len(embedding) > 0 {
+		_ = embedding[dim-1] // enforce bounds check
 		src := unsafe.Slice((*byte)(unsafe.Pointer(&embedding[0])), dim*4) //nolint:gosec // G103: fast path for little endian systems
 		copy(buf[2:], src)
 	} else {
