@@ -138,14 +138,13 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 	cursor := 0
 	for i, j := range batch {
 		n := counts[i]
-		switch {
-		case err != nil:
+		if err != nil { //nolint:gocritic // ifElseChain: check error
 			j.result <- coalescedResult{err: err}
-		case cursor+n <= len(embs):
+		} else if cursor+n <= len(embs) {
 			slice := make([][]float32, n)
 			copy(slice, embs[cursor:cursor+n])
 			j.result <- coalescedResult{embeddings: slice}
-		default:
+		} else {
 			j.result <- coalescedResult{err: fmt.Errorf("coalesce split: cursor %d+%d > len(embs) %d", cursor, n, len(embs))}
 		}
 		cursor += n

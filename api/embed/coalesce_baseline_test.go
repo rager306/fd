@@ -69,9 +69,7 @@ func load44FZCorpus(t *testing.T) []string {
 
 func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
 	t.Helper()
-
 	durations = nil
-
 	var mu sync.Mutex
 	var callsCounter atomic.Int64
 

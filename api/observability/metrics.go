@@ -219,8 +219,6 @@ func (m *Metrics) ObserveTEIRequestDuration(d time.Duration) {
 // IncTEIRequestsInFlight and DecTEIRequestsInFlight manage a gauge for
 // concurrent TEI calls. Safe to call from multiple goroutines.
 func (m *Metrics) IncTEIRequestsInFlight() { m.teiRequestsInFlight.Inc() }
-// DecTEIRequestsInFlight decrements the TEI inflight gauge.
-// DecTEIRequestsInFlight decrements the TEI inflight gauge.
 // DecTEIRequestsInFlight decreases the in flight counter
 func (m *Metrics) DecTEIRequestsInFlight() { m.teiRequestsInFlight.Dec() }
 
