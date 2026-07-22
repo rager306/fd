@@ -12,6 +12,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
+
+	"fd-api/internal/endian"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -208,8 +211,16 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim)) //nolint:gosec // G115: bounds-checked above
-	for i := 0; i < dim; i++ {
-		binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+	if dim == 0 {
+		return buf, nil
+	}
+	if endian.IsLittleEndian {
+		src := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(embedding))), dim*4)
+		copy(buf[2:], src)
+	} else {
+		for i := 0; i < dim; i++ {
+			binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+		}
 	}
 	return buf, nil
 }
@@ -229,8 +240,16 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 		return nil, 0
 	}
 	emb := make([]float32, dim)
-	for i := 0; i < dim; i++ {
-		emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
+	if dim == 0 {
+		return emb, dim
+	}
+	if endian.IsLittleEndian {
+		src := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(emb))), dim*4)
+		copy(src, data[2:2+dim*4])
+	} else {
+		for i := 0; i < dim; i++ {
+			emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
+		}
 	}
 	return emb, dim
 }
