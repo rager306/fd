@@ -20,9 +20,8 @@ type Status string
 const (
 	// StatusPending means pending
 	StatusPending   Status = "pending"
-	// StatusCompleted means done
-	// StatusCompleted means done
 	StatusCompleted Status = "completed"
+	// StatusFailed means failed
 	StatusFailed    Status = "failed"
 )
 

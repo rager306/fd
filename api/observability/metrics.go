@@ -53,11 +53,9 @@ type Metrics struct {
 	runtimeCapacity   int64
 	localCacheSizeFn  func() int
 	redisCacheSizeFn  func() int
-
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
-const tierLabel = "tier"
 func NewMetrics() *Metrics {
 	metrics := &Metrics{
 		registry: prometheus.NewRegistry(),
@@ -86,7 +84,7 @@ func NewMetrics() *Metrics {
 		cacheHitsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "fd_cache_hits_total",
 			Help: "Total fd cache lookups by result and tier.",
-		}, []string{"result", tierLabel }),
+		}, []string{"result", "tier" /* nolint:goconst */}),
 		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "fd_cache_evictions_total",
 			Help: "Total fd in-memory cache evictions.",
@@ -102,11 +100,11 @@ func NewMetrics() *Metrics {
 		cacheEntries: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "fd_cache_entries",
 			Help: "Current fd cache entries by tier where cheap to observe.",
-		}, []string{tierLabel }),
+		}, []string{"tier" /* nolint:goconst */}),
 		cacheMemoryBytes: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "fd_cache_memory_bytes",
 			Help: "Approximate memory used by the fd cache by tier. Assumes 1024-dim float32 embeddings (4096 bytes per entry). Not exact — for operational sizing, not billing.",
-		}, []string{tierLabel }),
+		}, []string{"tier" /* nolint:goconst */}),
 
 		teiRequestDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
 			Name:    "fd_tei_request_duration_seconds",
