@@ -248,7 +248,7 @@ func (c *TEIClient) observeBatchFill(inputs int) {
 
 // ObserveBatchFill is a public helper used by handlers/embeddings to push
 // per-call batch fill ratio into the metrics hook installed via WithObservers.
-func (c *TEIClient) ObserveBatchFill(inputs int) { //nolint:revive // expected
+func (c *TEIClient) ObserveBatchFill(inputs int) {
 	c.observeBatchFill(inputs)
 }
 
