@@ -260,7 +260,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: objectList,
+		Object: "list", //nolint:goconst // ignore
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{
@@ -269,5 +269,3 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 		},
 	}
 }
-
-const objectList = "list"
