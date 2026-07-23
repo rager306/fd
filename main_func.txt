@@ -1,234 +1,9 @@
-// Package main starts the fd embedding service: loads TEI runtime config and serves /v1/embeddings + observability endpoints on the configured port.
-package main
-
-import (
-	"context"
-	"errors"
-	"fmt"
-	"log/slog"
-	"net/http"
-	"os"
-	"os/signal"
-	"runtime"
-	"strings"
-	"syscall"
-	"time"
-
-	"fd-api/buildinfo"
-	"fd-api/cache"
-	"fd-api/queue"
-	"fd-api/embed"
-	"fd-api/handlers"
-	"fd-api/internal/envutil"
-	"fd-api/lifecycle"
-	"fd-api/middleware"
-	"fd-api/observability"
-
-	"github.com/gin-gonic/gin")
-
-// Version is injected by release builds with -ldflags "-X main.Version=...".
-var Version = buildinfo.DefaultVersion
-
-// BuildHash is injected by release builds with -ldflags "-X main.BuildHash=...".
-var BuildHash = buildinfo.DefaultBuildHash
-
-// BuildDate is injected by release builds with -ldflags "-X main.BuildDate=...".
-var BuildDate = buildinfo.DefaultBuildDate
-
-func getEnv(key, defaultValue string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return defaultValue
-}
-
-func configureTrustedProxies(r *gin.Engine) {
-	// Fail closed for client identity: without an explicit trusted-proxy
-	// policy, Gin must not trust spoofable X-Forwarded-For headers for
-	// ClientIP(). This keeps rate limiting keyed to the direct peer by default.
-	if err := r.SetTrustedProxies(nil); err != nil {
-		panic("configure trusted proxies: " + err.Error())
-	}
-}
-
-func getLogLevel(value string) slog.Level {
-	switch strings.ToLower(value) {
-	case "debug":
-		return slog.LevelDebug
-	case "warn", "warning":
-		return slog.LevelWarn
-	case "error":
-		return slog.LevelError
-	default:
-		return slog.LevelInfo
-	}
-}
-
-type embeddingBackend string
-
-const embeddingBackendTEI embeddingBackend = "tei"
-
-type embeddingRuntimeConfig struct {
-	Backend embeddingBackend
-}
-
-// Health returns safe runtime metadata for the active TEI backend.
-// TEI returns backend, model, fixed dimensions, production-default flag,
-// and cache namespace — no internal URLs, paths, or secrets.
-func (c *embeddingRuntimeConfig) Health(modelID, cacheNamespace string) *handlers.RuntimeHealth {
-	if c == nil || c.Backend != embeddingBackendTEI {
-		return nil
-	}
-	return &handlers.RuntimeHealth{
-		Backend:           string(c.Backend),
-		Model:             modelID,
-		Dimensions:        1024, // deepvk/USER-bge-m3 is 1024-dimensional
-		ProductionDefault: true,
-		CacheNamespace:    cacheNamespace,
-	}
-}
-
-func loadEmbeddingRuntimeConfig() (*embeddingRuntimeConfig, error) {
-	backend := embeddingBackend(strings.ToLower(getEnv("EMBEDDING_BACKEND", string(embeddingBackendTEI))))
-	if backend == "" {
-		backend = embeddingBackendTEI
-	}
-	if backend != embeddingBackendTEI {
-		return nil, fmt.Errorf("EMBEDDING_BACKEND=%q is not supported; fd currently supports TEI only", backend)
-	}
-	return &embeddingRuntimeConfig{Backend: embeddingBackendTEI}, nil
-}
-
-const defaultWarmupTimeout = 5 * time.Second
-
-func closeResource(name string, resource interface{ Close() error }, logger *slog.Logger) {
-	if resource == nil {
-		return
-	}
-	if err := resource.Close(); err != nil {
-		logger.Warn(name+" close failed", "error", err)
-	}
-}
-
-type serverErrorSignal struct {
-	err error
-}
-
-func (serverErrorSignal) Signal() {}
-
-func (serverErrorSignal) String() string { return "server_error" }
-
-func reportHTTPServerError(logger *slog.Logger, addr string, listen func() error, shutdownCh chan<- os.Signal) {
-	logger.Info("listening", "addr", addr)
-	if err := listen(); err != nil {
-		if errors.Is(err, http.ErrServerClosed) {
-			return
-		}
-		logger.Error("server error", "error", err)
-		select {
-		case shutdownCh <- serverErrorSignal{err: err}:
-		default:
-			logger.Error("server error shutdown signal dropped", "error", err)
-		}
-	}
-}
-
-type warmupRetryPolicy struct {
-	maxAttempts int
-	backoff     func(attempt int) time.Duration
-}
-
-func defaultWarmupRetryPolicy() warmupRetryPolicy {
-	return warmupRetryPolicy{
-		maxAttempts: 3,
-		backoff: func(attempt int) time.Duration {
-			return 2 * time.Second << max(attempt-1, 0)
-		},
-	}
-}
-
-// warmupRetryPolicyFromEnv builds the startup warmup retry policy from
-// environment. This expands the startup window over the legacy
-// defaultWarmupRetryPolicy so fd-api survives a slow TEI startup (CPU BERT
-// load ~15-20s) without operator intervention. Backoff is a fixed interval
-// rather than exponential: the legacy doubling backoff (2s,4s,8s) blew past
-// the TEI load window and looked like a hang in logs.
-//
-// Env knobs (all safe to leave unset):
-//   FD_WARMUP_START_MAX_ATTEMPTS  default 5   (>=1, clamped)
-//   FD_WARMUP_START_BACKOFF_SEC   default 5   (>=0, 0 disables backoff)
-func warmupRetryPolicyFromEnv() warmupRetryPolicy {
-	maxAttempts := envutil.Int("FD_WARMUP_START_MAX_ATTEMPTS", 5)
-	if maxAttempts < 1 {
-		maxAttempts = 1
-	}
-	backoffSeconds := envutil.Int("FD_WARMUP_START_BACKOFF_SEC", 5)
-	backoff := time.Duration(backoffSeconds) * time.Second
-	return warmupRetryPolicy{
-		maxAttempts: maxAttempts,
-		backoff: func(int) time.Duration { return backoff },
-	}
-}
-
-func startModelWarmup(logger *slog.Logger, state *lifecycle.State, model embed.Embedder, timeout time.Duration) {
-	startModelWarmupWithPolicy(logger, state, model, timeout, defaultWarmupRetryPolicy())
-}
-
-func startModelWarmupWithPolicy(logger *slog.Logger, state *lifecycle.State, model embed.Embedder, timeout time.Duration, policy warmupRetryPolicy) {
-	if policy.maxAttempts < 1 {
-		policy.maxAttempts = 1
-	}
-	if policy.backoff == nil {
-		policy.backoff = func(int) time.Duration { return 0 }
-	}
-
-	go func() {
-		started := time.Now()
-		logger.Info("model warmup started", "timeout", timeout.String(), "max_attempts", policy.maxAttempts)
-		var lastErr error
-		for attempt := 1; attempt <= policy.maxAttempts; attempt++ {
-			attemptStarted := time.Now()
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			err := lifecycle.PreWarm(ctx, model)
-			cancel()
-			if err == nil {
-				state.MarkWarmupDone()
-				logger.Info("model warmup done", "attempt", attempt, "latency_ms", time.Since(started).Milliseconds())
-				return
-			}
-
-			lastErr = err
-			state.SetLastError(err)
-			logger.Warn("model warmup attempt failed", "attempt", attempt, "max_attempts", policy.maxAttempts, "error", err, "latency_ms", time.Since(attemptStarted).Milliseconds())
-			if attempt == policy.maxAttempts {
-				break
-			}
-			if err := sleepWarmupBackoff(context.Background(), policy.backoff(attempt)); err != nil {
-				lastErr = err
-				state.SetLastError(err)
-				break
-			}
-		}
-
-		logger.Error("model warmup failed", "error", lastErr, "attempts", policy.maxAttempts, "latency_ms", time.Since(started).Milliseconds())
-	}()
-}
-
-func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
-	if d <= 0 {
-		return nil
-	}
-	timer := time.NewTimer(d)
-	defer timer.Stop()
-	select {
-	case <-timer.C:
 		return nil
 	case <-ctx.Done():
 		return ctx.Err()
 	}
 }
 
-//nolint:gocyclo // initialization complexity is expected in main
 func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -246,7 +21,8 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
-		os.Exit(1) //nolint:gocritic // exitAfterDefer: os.Exit in main is acceptable //nolint:gocritic // exit in main is acceptable
+		recoveryCancel()
+		os.Exit(1)
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
 
@@ -264,13 +40,15 @@ func main() {
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
-		os.Exit(1) //nolint:gocritic // exitAfterDefer: os.Exit in main is acceptable //nolint:gocritic // exit in main is acceptable
+		recoveryCancel()
+		os.Exit(1)
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1) //nolint:gocritic // exitAfterDefer: os.Exit in main is acceptable //nolint:gocritic // exit in main is acceptable
+		recoveryCancel()
+		os.Exit(1)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := redisCache.Ping(ctx); err != nil {
@@ -280,7 +58,8 @@ func main() {
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
-		os.Exit(1) //nolint:gocritic // exitAfterDefer: os.Exit in main is acceptable //nolint:gocritic // exit in main is acceptable
+		recoveryCancel()
+		os.Exit(1)
 	}
 	cancel()
 	logger.Info("redis connected", "addr", redisHost, "cache_namespace", redisOptions.Namespace.String())
@@ -521,8 +300,7 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1) //nolint:gocritic // exitAfterDefer: os.Exit in main is acceptable //nolint:gocritic // exit in main is acceptable //nolint:gocritic // exit in main is acceptable
+		recoveryCancel()
+		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)
-	closeResource("local cache", localCache, logger)
-}

@@ -1,0 +1,22 @@
+<<<<<<< SEARCH
+		if err != nil {
+			j.result <- coalescedResult{err: err}
+		} else if cursor+n <= len(embs) {
+			slice := make([][]float32, n)
+			copy(slice, embs[cursor:cursor+n])
+			j.result <- coalescedResult{embeddings: slice}
+		} else {
+			j.result <- coalescedResult{err: fmt.Errorf("coalesce split: cursor %d+%d > len(embs) %d", cursor, n, len(embs))}
+		}
+=======
+		switch {
+		case err != nil:
+			j.result <- coalescedResult{err: err}
+		case cursor+n <= len(embs):
+			slice := make([][]float32, n)
+			copy(slice, embs[cursor:cursor+n])
+			j.result <- coalescedResult{embeddings: slice}
+		default:
+			j.result <- coalescedResult{err: fmt.Errorf("coalesce split: cursor %d+%d > len(embs) %d", cursor, n, len(embs))}
+		}
+>>>>>>> REPLACE
