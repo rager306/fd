@@ -138,7 +138,7 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 	cursor := 0
 	for i, j := range batch {
 		n := counts[i]
-		if err != nil {
+		if err != nil { //nolint:gocritic // ifElseChain: clearer logic
 			j.result <- coalescedResult{err: err}
 		} else if cursor+n <= len(embs) {
 			slice := make([][]float32, n)

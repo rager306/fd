@@ -39,7 +39,7 @@ func load44FZCorpus(t *testing.T) []string {
 	// to the repo root, then tests/44-FZ-2026-articles.jsonl.
 	_, file, _, _ := runtime.Caller(0)
 	root := filepath.Join(filepath.Dir(file), "..", "..", "tests", "44-FZ-2026-articles.jsonl")
-	data, err := os.ReadFile(root)
+	data, err := os.ReadFile(filepath.Clean(root)) //nolint:gosec // G304: loading local test fixture
 	if err != nil {
 		t.Skipf("corpus not available at %s: %v", root, err)
 	}
@@ -67,11 +67,9 @@ func load44FZCorpus(t *testing.T) []string {
 	return texts
 }
 
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) {
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (totalTexts int, durations []time.Duration) {
 	t.Helper()
-	calls = 0
 	durations = nil
-	totalTexts = 0
 	var mu sync.Mutex
 	var callsCounter atomic.Int64
 
@@ -83,7 +81,7 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	wrapped := &atomicCounterEmbedder{inner: e, counter: &callsCounter}
 
 	// Shuffle inputs so goroutines don't all hit the same first article.
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewSource(42)) //nolint:gosec // G404: deterministic shuffling in test
 	jobs := append([]string(nil), texts...)
 	rng.Shuffle(len(jobs), func(i, j int) { jobs[i], jobs[j] = jobs[j], jobs[i] })
 
@@ -112,7 +110,7 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	startGate.Done()
 	wg.Wait()
 
-	calls = int(callsCounter.Load())
+
 	totalTexts = concurrency
 
 	// Compute percentile from collected durations.
@@ -159,7 +157,7 @@ func TestCoalescingBaseline44FZProof(t *testing.T) {
 	// With coalescing off (window=0): pass-through.
 	control := NewCoalescingEmbedder(inner, 0)
 	defer control.Close()
-	_, totalControl, durationsControl := runCorpusBurst(t, control, texts, concurrency)
+	totalControl, durationsControl := runCorpusBurst(t, control, texts, concurrency)
 	callsControl := inner.calls.Load()
 	t.Logf("baseline (window=0): downstream calls=%d, totalInputs=%d", callsControl, totalControl)
 
@@ -169,7 +167,7 @@ func TestCoalescingBaseline44FZProof(t *testing.T) {
 	// concurrent goroutines and merges them into a few TEI calls.
 	co := NewCoalescingEmbedder(inner, 5*time.Millisecond)
 	defer co.Close()
-	_, totalCo, durationsCo := runCorpusBurst(t, co, texts, concurrency)
+	totalCo, durationsCo := runCorpusBurst(t, co, texts, concurrency)
 	callsCo := inner.calls.Load()
 	t.Logf("coalesced (window=5ms): downstream calls=%d, totalInputs=%d", callsCo, totalCo)
 
