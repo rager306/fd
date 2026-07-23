@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"math"
+	"unsafe"
 )
 
 // Encoding format constants. Used by /v1/embeddings and /embeddings/batch
@@ -34,9 +35,21 @@ func EncodeEmbedding(emb []float32, format string) string {
 // Float32SliceToBytes converts a float32 slice to a little-endian byte
 // slice suitable for base64 encoding. Length must equal len(slice)*4.
 func Float32SliceToBytes(slice []float32) []byte {
+	if len(slice) == 0 {
+		return []byte{}
+	}
 	b := make([]byte, len(slice)*4)
-	for i, v := range slice {
-		binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
+
+	// Fast path for little-endian systems (x86, ARM, etc.)
+	x := uint16(0x00FF)
+	isLittle := *(*byte)(unsafe.Pointer(&x)) == 0xFF //nolint:gosec // G103: checking system endianness
+	if isLittle {
+		src := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(slice))), len(slice)*4)
+		copy(b, src)
+	} else {
+		for i, v := range slice {
+			binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
+		}
 	}
 	return b
 }
@@ -47,10 +60,22 @@ func BytesToFloat32Slice(b []byte) []float32 {
 	if len(b)%4 != 0 {
 		return nil
 	}
+	if len(b) == 0 {
+		return []float32{}
+	}
 	out := make([]float32, len(b)/4)
-	for i := range out {
-		bits := binary.LittleEndian.Uint32(b[i*4:])
-		out[i] = math.Float32frombits(bits)
+
+	// Fast path for little-endian systems (x86, ARM, etc.)
+	x := uint16(0x00FF)
+	isLittle := *(*byte)(unsafe.Pointer(&x)) == 0xFF //nolint:gosec // G103: checking system endianness
+	if isLittle {
+		dst := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(out))), len(b))
+		copy(dst, b)
+	} else {
+		for i := range out {
+			bits := binary.LittleEndian.Uint32(b[i*4:])
+			out[i] = math.Float32frombits(bits)
+		}
 	}
 	return out
 }
