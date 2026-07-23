@@ -67,7 +67,7 @@ func load44FZCorpus(t *testing.T) []string {
 	return texts
 }
 
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (totalTexts int, durations []time.Duration) {
 	t.Helper()
 	durations = nil
 	var mu sync.Mutex
@@ -110,7 +110,7 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	startGate.Done()
 	wg.Wait()
 
-	calls = int(callsCounter.Load())
+
 	totalTexts = concurrency
 
 	// Compute percentile from collected durations.
@@ -157,7 +157,7 @@ func TestCoalescingBaseline44FZProof(t *testing.T) {
 	// With coalescing off (window=0): pass-through.
 	control := NewCoalescingEmbedder(inner, 0)
 	defer control.Close()
-	_, totalControl, durationsControl := runCorpusBurst(t, control, texts, concurrency)
+	totalControl, durationsControl := runCorpusBurst(t, control, texts, concurrency)
 	callsControl := inner.calls.Load()
 	t.Logf("baseline (window=0): downstream calls=%d, totalInputs=%d", callsControl, totalControl)
 
@@ -167,7 +167,7 @@ func TestCoalescingBaseline44FZProof(t *testing.T) {
 	// concurrent goroutines and merges them into a few TEI calls.
 	co := NewCoalescingEmbedder(inner, 5*time.Millisecond)
 	defer co.Close()
-	_, totalCo, durationsCo := runCorpusBurst(t, co, texts, concurrency)
+	totalCo, durationsCo := runCorpusBurst(t, co, texts, concurrency)
 	callsCo := inner.calls.Load()
 	t.Logf("coalesced (window=5ms): downstream calls=%d, totalInputs=%d", callsCo, totalCo)
 

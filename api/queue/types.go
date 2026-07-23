@@ -20,6 +20,7 @@ type Status string
 const (
 	// StatusPending represents a pending item
 	StatusPending   Status = "pending"
+	// StatusCompleted represents a completed item
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
 )

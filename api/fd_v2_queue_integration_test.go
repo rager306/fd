@@ -29,7 +29,7 @@ func (e *queueTestEmbedder) Embed(ctx context.Context, texts []string) ([][]floa
 	return out, nil
 }
 
-func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
+func setupQueueTestServer(t *testing.T, queueCap int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 	t.Helper()
 	_ = observability.NewMetrics()
 	_ = queue.NewResultStore()
@@ -42,7 +42,7 @@ func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *
 
 	ctx, cancel := context.WithCancel(context.Background())
 	queue.StartQueueWorker(ctx, store, items, emb, logger, queue.WorkerConfig{
-		BatchMaxSize: batchSize,
+		BatchMaxSize: 32,
 		BatchWindow:  20 * time.Millisecond,
 	})
 
@@ -63,7 +63,7 @@ func postQueue(r http.Handler, body string) *httptest.ResponseRecorder {
 }
 
 func TestQueueSubmitAndPollCompleted(t *testing.T) {
-	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
+	r, _, _, _, cancel := setupQueueTestServer(t, 8)
 	defer cancel()
 
 	resp := postQueue(r, `{"model":"deepvk/USER-bge-m3","input":["hello","world"]}`)
@@ -97,7 +97,7 @@ func TestQueueSubmitAndPollCompleted(t *testing.T) {
 }
 
 func TestQueueRejectsInvalidInput(t *testing.T) {
-	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
+	r, _, _, _, cancel := setupQueueTestServer(t, 8)
 	defer cancel()
 
 	resp := postQueue(r, `{"model":"deepvk/USER-bge-m3","input":[]}`)
@@ -108,7 +108,7 @@ func TestQueueRejectsInvalidInput(t *testing.T) {
 
 func TestQueueBackpressureRejectsWhenFull(t *testing.T) {
 	// Use a small queue capacity and a delayed embedder to keep the queue full.
-	r, _, _, _, cancel := setupQueueTestServer(t, 1, 32)
+	r, _, _, _, cancel := setupQueueTestServer(t, 1)
 	defer cancel()
 
 	// First submission fills the channel.
@@ -136,7 +136,7 @@ func TestQueueBackpressureRejectsWhenFull(t *testing.T) {
 }
 
 func TestQueuePollReturns404ForUnknownId(t *testing.T) {
-	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
+	r, _, _, _, cancel := setupQueueTestServer(t, 8)
 	defer cancel()
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/queue/nonexistent", http.NoBody)

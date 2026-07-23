@@ -22,9 +22,9 @@ const (
 	requestStatusTimeout = "timeout"
 )
 
-// Metrics owns fd's Prometheus collectors and registry.
 const labelTier = "tier"
 
+// Metrics owns fd's Prometheus collectors and registry.
 type Metrics struct {
 	registry            *prometheus.Registry
 	requestsTotal       *prometheus.CounterVec
