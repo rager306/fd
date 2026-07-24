@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2025-05-18 - Avoid manual inlining and expensive hashing in hot paths
+**Learning:** Manually replacing `strings.HasPrefix` with slice bounds checking offers zero performance benefit because the Go compiler automatically inlines it. Furthermore, adding cryptographic hashing (like `sha256.Sum256`) to every incoming request inside HTTP middleware (like authentication), even if well-intentioned for security, severely degrades throughput and contradicts the goal of performance optimization.
+**Action:** Do not manually inline standard library string functions; trust the compiler. When optimizing, rigorously benchmark both the "before" and "after" state to guarantee an actual net performance increase, especially when introducing new security functions.
