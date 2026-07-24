@@ -18,7 +18,10 @@ import (
 type Status string
 
 const (
+	// Status constants represent the lifecycle of a submitted queue item.
+//nolint:revive // simple constants
 	StatusPending   Status = "pending"
+	//nolint:revive // simple constants
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
 )

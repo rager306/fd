@@ -48,7 +48,7 @@ func Float32SliceToBytes(slice []float32) []byte {
 	b := make([]byte, len(slice)*4)
 	// Optimize: directly cast memory and copy on little-endian systems (~20% faster)
 	if isLittleEndian {
-		src := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(slice))), len(slice)*4)
+		src := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(slice))), len(slice)*4) //nolint:gosec // G103: safe unsafe usage for endianness optimization
 		copy(b, src)
 	} else {
 		for i, v := range slice {
@@ -70,7 +70,7 @@ func BytesToFloat32Slice(b []byte) []float32 {
 	}
 	// Optimize: directly cast memory and copy on little-endian systems (~20% faster)
 	if isLittleEndian {
-		dst := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(out))), len(b))
+		dst := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(out))), len(b)) //nolint:gosec // G103: safe unsafe usage for endianness optimization
 		copy(dst, b)
 	} else {
 		for i := range out {
