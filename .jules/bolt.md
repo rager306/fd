@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2024-07-24 - Redis Serialization Overhead
+**Learning:** In Go, iterating element-by-element with `binary.LittleEndian.PutUint32` to serialize `[]float32` embeddings into `[]byte` is heavily CPU-bound in hot paths. Because IEEE-754 floats on little-endian machines are already stored in the identical binary layout as little-endian bytes, we can use `unsafe.Slice` to directly cast the memory and `copy()` it. This leverages optimized SIMD `runtime.memmove` and dramatically reduces CPU cycles in Redis `Get`/`Set` operations.
+**Action:** For high-throughput array serialization in Go (like ML embeddings), check system endianness. If little-endian, bypass standard library binary loops and safely cast the backing arrays using `unsafe.SliceData` and `copy()`. Add `//nolint:gosec // G103` explicitly.

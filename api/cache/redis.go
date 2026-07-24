@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -189,8 +190,14 @@ func (c *RedisCache) namespacePattern() string {
 	return c.prefix + c.namespace + ":*"
 }
 
+func isLittleEndian() bool {
+	x := uint16(0x00FF)
+	return *(*byte)(unsafe.Pointer(&x)) == 0xFF //nolint:gosec // G103: checking system endianness
+}
+
 // marshalEmbedding encodes [dim:uint16][float32*dim] — 2+4*dim bytes.
 // Replaces JSON (~8KB for 1024d → 4098 bytes).
+// Optimized to avoid element-by-element iteration when on little-endian architectures.
 func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 	if dim <= 0 {
 		return nil, fmt.Errorf("dimension must be positive, got %d", dim)
@@ -208,9 +215,16 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim)) //nolint:gosec // G115: bounds-checked above
-	for i := 0; i < dim; i++ {
-		binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+
+	if isLittleEndian() {
+		src := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(embedding))), dim*4)
+		copy(buf[2:], src)
+	} else {
+		for i := 0; i < dim; i++ {
+			binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
+		}
 	}
+
 	return buf, nil
 }
 
@@ -220,6 +234,7 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 const maxUint16 = 0xFFFF
 
 // unmarshalEmbedding decodes binary format back to []float32.
+// Optimized to avoid element-by-element iteration when on little-endian architectures.
 func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 	if len(data) < 2 {
 		return nil, 0
@@ -229,9 +244,16 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 		return nil, 0
 	}
 	emb := make([]float32, dim)
-	for i := 0; i < dim; i++ {
-		emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
+
+	if isLittleEndian() {
+		dst := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(emb))), dim*4)
+		copy(dst, data[2:2+dim*4])
+	} else {
+		for i := 0; i < dim; i++ {
+			emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
+		}
 	}
+
 	return emb, dim
 }
 
