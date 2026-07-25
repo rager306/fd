@@ -22,7 +22,7 @@ type TieredCache struct {
 	lookupDurationFn func(time.Duration)
 }
 
-// CacheObserver is invoked on every cache look-up outcome with the tier that
+// Observer is invoked on every cache look-up outcome with the tier that
 // resolved the read ("l1", "l2", or "miss") and whether it produced a usable
 // hit. Observers must be cheap and non-blocking; fd uses this to feed
 // observability.Metrics counters. Observer may be nil.
