@@ -22,6 +22,7 @@ const (
 	StatusPending   Status = "pending"
 	// StatusCompleted indicates the item was processed successfully.
 	StatusCompleted Status = "completed"
+	// StatusFailed indicates the item failed to process.
 	StatusFailed    Status = "failed"
 )
 
