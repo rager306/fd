@@ -10,3 +10,7 @@
 **Vulnerability:** Numerous test functions failed to explicitly check the error return value from resource closure functions (like `Close()`).
 **Learning:** Even in tests, failing to check `Close()` methods (like those on database connections, temporary stores, or HTTP response bodies) can mask underlying failures where buffers are not properly flushed or sockets are not gracefully terminated, potentially leading to resource leaks or subtle test flakes.
 **Prevention:** Always verify or explicitly discard error returns using `_ = resource.Close()` inside `defer` statements and `t.Cleanup` blocks, even in test code.
+## 2026-07-26 - HTTP/3 QPACK Vulnerability via quic-go
+**Vulnerability:** The repository depended on `github.com/quic-go/quic-go@v0.59.0`, which contains a known HTTP/3 QPACK Trailer Expansion Memory Exhaustion vulnerability (GO-2026-5676).
+**Learning:** Network-level libraries (like HTTP/3 implementations) frequently suffer from protocol-level DOS vulnerabilities. These are typically opaque to application developers but can be trivially exploited remotely by malicious traffic.
+**Prevention:** Regularly scan dependencies using `govulncheck` in the CI pipeline and aggressively update networking libraries to patch protocol parsing or memory exhaustion vulnerabilities.
