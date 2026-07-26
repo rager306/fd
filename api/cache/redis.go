@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -238,9 +239,16 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // HashText returns the sha256-hex digest of text. Used as the cache key
 // component for the embedding text (the dim and prefix are added by
 // the key() method to form the full Redis key).
+// Optimized to reduce heap allocations.
 func (c *RedisCache) HashText(text string) string {
-	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	var btext []byte
+	if len(text) > 0 {
+		btext = unsafe.Slice(unsafe.StringData(text), len(text))
+	}
+	h := sha256.Sum256(btext)
+	var dst [64]byte
+	hex.Encode(dst[:], h[:])
+	return string(dst[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns
