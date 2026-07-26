@@ -18,8 +18,11 @@ import (
 type Status string
 
 const (
+	// StatusPending is the initial queue status
 	StatusPending   Status = "pending"
+	// StatusCompleted is the successful queue status
 	StatusCompleted Status = "completed"
+	// StatusFailed is the failed queue status
 	StatusFailed    Status = "failed"
 )
 

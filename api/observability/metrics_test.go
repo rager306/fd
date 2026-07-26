@@ -72,7 +72,7 @@ func TestMetricsHandlerExposesRuntimeCapacityAndCacheGauges(t *testing.T) {
 	for _, want := range []string{
 		"fd_in_flight_requests 1",
 		"fd_in_flight_capacity 10",
-		`fd_cache_entries{tier="l1"} 3`,
+		`fd_cache_entries{tier_label="l1"} 3`,
 	} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("metrics output missing %q:\n%s", want, body)
@@ -129,8 +129,8 @@ func TestMetricsModelLoadedAndCacheResult(t *testing.T) {
 	body := w.Body.String()
 	for _, want := range []string{
 		"fd_model_loaded 1",
-		`fd_cache_hits_total{result="hit",tier="all"}`,
-		`fd_cache_hits_total{result="miss",tier="all"}`,
+		`fd_cache_hits_total{result="hit",tier_label="all"}`,
+		`fd_cache_hits_total{result="miss",tier_label="all"}`,
 		"fd_cache_evictions_total 1",
 	} {
 		if !strings.Contains(body, want) {
@@ -231,9 +231,9 @@ func TestMetricsCacheHitWithTierResult(t *testing.T) {
 	r.GET("/metrics", metrics.Handler())
 	body := serveMetricsRequest(r, "GET", "/metrics", "").Body.String()
 	for _, want := range []string{
-		`fd_cache_hits_total{result="hit",tier="l1"} 1`,
-		`fd_cache_hits_total{result="hit",tier="l2"} 1`,
-		`fd_cache_hits_total{result="miss",tier="miss"} 1`,
+		`fd_cache_hits_total{result="hit",tier_label="l1"} 1`,
+		`fd_cache_hits_total{result="hit",tier_label="l2"} 1`,
+		`fd_cache_hits_total{result="miss",tier_label="miss"} 1`,
 	} {
 		if !strings.Contains(body, want) {
 			t.Fatalf("missing %q in tiered cache hits:\n%s", want, body)
@@ -264,7 +264,7 @@ func TestMetricsRuntimeGaugesIncludeCacheMemory(t *testing.T) {
 	r := gin.New()
 	r.GET("/metrics", metrics.Handler())
 	body := serveMetricsRequest(r, "GET", "/metrics", "").Body.String()
-	if !strings.Contains(body, `fd_cache_memory_bytes{tier="l1"} 204800`) {
+	if !strings.Contains(body, `fd_cache_memory_bytes{tier_label="l1"} 204800`) {
 		t.Fatalf("L1 memory: 50 entries × 4096 bytes = 204800:\n%s", body)
 	}
 }
