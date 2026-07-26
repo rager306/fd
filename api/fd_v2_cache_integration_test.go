@@ -149,7 +149,7 @@ func TestFdV2CacheMissThenHit(t *testing.T) {
 
 	metricsResponse := httptest.NewRecorder()
 	r.ServeHTTP(metricsResponse, httptest.NewRequest(http.MethodGet, "/metrics", http.NoBody))
-	if !strings.Contains(metricsResponse.Body.String(), `fd_cache_hits_total{result="hit",tier="all"} 1`) {
+	if !strings.Contains(metricsResponse.Body.String(), `fd_cache_hits_total{result="hit",tier_label="all"} 1`) {
 		t.Fatalf("metrics missing hit counter:\n%s", metricsResponse.Body.String())
 	}
 }
