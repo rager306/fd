@@ -6,3 +6,7 @@
 **Vulnerability:** In `APIKeyAuth` middleware, `subtle.ConstantTimeCompare` was used to compare the provided token and the configured API key directly. `ConstantTimeCompare` immediately returns 0 if the two slices have different lengths, which exposes the length of the expected API key via a timing side-channel.
 **Learning:** Even when using "constant-time" comparison functions, length differences can introduce early returns. This leaks information about the secret, narrowing the search space for brute-force attacks.
 **Prevention:** When comparing secrets of potentially different lengths, hash both the expected secret and the provided input using a cryptographic hash function (like SHA-256) *before* passing them to `ConstantTimeCompare`. This guarantees both inputs are exactly the same length (e.g., 32 bytes).
+## 2026-07-26 - Unchecked Resource Disposals in Tests
+**Vulnerability:** Numerous test functions failed to explicitly check the error return value from resource closure functions (like `Close()`).
+**Learning:** Even in tests, failing to check `Close()` methods (like those on database connections, temporary stores, or HTTP response bodies) can mask underlying failures where buffers are not properly flushed or sockets are not gracefully terminated, potentially leading to resource leaks or subtle test flakes.
+**Prevention:** Always verify or explicitly discard error returns using `_ = resource.Close()` inside `defer` statements and `t.Cleanup` blocks, even in test code.
