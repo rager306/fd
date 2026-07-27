@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2023-10-27 - Zero-Allocation ETag Generation
+**Learning:** In Go, string concatenation (`+`) combined with `hex.EncodeToString` forces multiple intermediate heap allocations (the hex string, and the final concatenated string). When generating frequently used, predictably-sized strings like quoted ETags in middleware hot-paths, this adds unnecessary garbage collection pressure.
+**Action:** Pre-allocate a single array buffer on the stack (e.g. `var dst [66]byte`), manually set literal characters like quotes at the boundaries (`dst[0] = '"'`), and write encoded bytes directly into the slice `hex.Encode(dst[1:65], src)`. Convert the entire buffer to a string at the end (`string(dst[:])`) to eliminate intermediate allocations.
