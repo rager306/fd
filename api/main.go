@@ -228,7 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
-func main() { //nolint:gocyclo // Main handles multiple setup steps intentionally
+func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
 	})
@@ -456,7 +456,7 @@ func main() { //nolint:gocyclo // Main handles multiple setup steps intentionall
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer func() { _ = resultStore.Close() }()
+		defer resultStore.Close()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}
@@ -520,7 +520,7 @@ func main() { //nolint:gocyclo // Main handles multiple setup steps intentionall
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1) //nolint:gocritic // deliberate exit
+		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
