@@ -98,5 +98,5 @@ issues:
     # goconst in _test.go: test fixtures legitimately repeat string literals
     # (e.g., "input" for input param name across table-driven cases). Production
     # code is still linted by goconst.
-    - path: "**/*_test\\.go"
+    - path: "(?i).*_test\\.go"
       linters: [goconst]
