@@ -161,7 +161,7 @@ func processBatch(ctx context.Context, batch []Item, emb embed.Embedder) []Resul
 	indexByID := make([]*Item, 0, len(batch))
 	for i := range batch {
 		texts = append(texts, batch[i].Texts...)
-		indexByID = append(indexByID, &batch[i])
+		indexByID = append(indexByID, &batch[i]) //nolint:staticcheck // intentional build-up for batch map
 	}
 
 	if ctx.Err() != nil {
