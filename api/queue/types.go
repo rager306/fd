@@ -18,8 +18,11 @@ import (
 type Status string
 
 const (
+	// StatusPending is the initial state of an item
 	StatusPending   Status = "pending"
+	// StatusCompleted is the final state of an item
 	StatusCompleted Status = "completed"
+	// StatusFailed is the error state of an item
 	StatusFailed    Status = "failed"
 )
 
