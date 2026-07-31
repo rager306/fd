@@ -11,8 +11,8 @@ import (
 // when sliced.
 func shortHash(value string) string {
 	var h [32]byte
-	if len(value) > 0 {
-		h = sha256.Sum256(unsafe.Slice(unsafe.StringData(value), len(value)))
+	if value != "" {
+		h = sha256.Sum256(unsafe.Slice(unsafe.StringData(value), len(value))) //nolint:gosec // use of unsafe is audited
 	} else {
 		h = sha256.Sum256(nil)
 	}
