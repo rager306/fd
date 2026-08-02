@@ -12,20 +12,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
-
-// isLittleEndian detects system endianness at runtime to enable fast-path
-// binary casting for float slices on compatible architectures.
-var isLittleEndian = func() bool {
-	var i int32 = 0x01020304
-	u := unsafe.Pointer(&i)
-	pb := (*byte)(u)
-	b := *pb
-	return b == 0x04
-}()
 
 const defaultRedisCacheTTL = 24 * time.Hour
 
@@ -219,14 +208,8 @@ func marshalEmbedding(embedding []float32, dim int) ([]byte, error) {
 
 	buf := make([]byte, 2+dim*4)
 	binary.LittleEndian.PutUint16(buf[0:2], uint16(dim)) //nolint:gosec // G115: bounds-checked above
-
-	if isLittleEndian {
-		srcBytes := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(embedding))), dim*4)
-		copy(buf[2:], srcBytes)
-	} else {
-		for i := 0; i < dim; i++ {
-			binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
-		}
+	for i := 0; i < dim; i++ {
+		binary.LittleEndian.PutUint32(buf[2+i*4:2+(i+1)*4], math.Float32bits(embedding[i]))
 	}
 	return buf, nil
 }
@@ -246,13 +229,8 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 		return nil, 0
 	}
 	emb := make([]float32, dim)
-	if isLittleEndian {
-		dstBytes := unsafe.Slice((*byte)(unsafe.Pointer(unsafe.SliceData(emb))), dim*4)
-		copy(dstBytes, data[2:])
-	} else {
-		for i := 0; i < dim; i++ {
-			emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
-		}
+	for i := 0; i < dim; i++ {
+		emb[i] = math.Float32frombits(binary.LittleEndian.Uint32(data[2+i*4 : 2+(i+1)*4]))
 	}
 	return emb, dim
 }
