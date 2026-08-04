@@ -176,7 +176,7 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 				if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 					t.Fatalf("unmarshal response: %v", err)
 				}
-				if resp.Object != "list" { //nolint:goconst // OpenAI spec literal
+				if resp.Object != "list" {
 					t.Errorf("expected object=list, got %s", resp.Object)
 				}
 				if len(resp.Data) != 1 {
