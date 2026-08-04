@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2024-05-18 - String Sub-slicing Memory Leak
+**Learning:** Taking a sub-slice of a string resulting from `hex.EncodeToString` keeps the entire original backing array alive in memory. This is problematic in high-frequency paths like cache key generation (`shortHash`), where retaining a large backing array for a small prefix leads to memory leaks and unnecessary heap allocations.
+**Action:** When truncating hex-encoded output in Go, allocate a precisely-sized stack buffer (e.g., `var dst [12]byte`), encode only the required prefix into it (`hex.Encode(dst[:], h[:6])`), and cast it directly to a string (`string(dst[:])`). This prevents the memory leak and reduces heap allocations.
