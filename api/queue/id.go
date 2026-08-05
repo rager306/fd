@@ -11,5 +11,8 @@ import (
 func NewRequestID() string {
 	var buf [8]byte
 	_, _ = rand.Read(buf[:])
-	return hex.EncodeToString(buf[:])
+	// Optimization: Single-allocation string conversion for request IDs.
+	var dst [16]byte
+	hex.Encode(dst[:], buf[:])
+	return string(dst[:])
 }
