@@ -43,10 +43,10 @@ const (
 	// because the middleware only validates input size; it does not
 	// perform the actual chunking.
 
-	// maxInputChars approximates 512 tokens at ~4 chars/token. Inputs longer
-	// than this are rejected with 413 input_too_long instead of being
-	// silently truncated by the model.
-	maxInputChars = 2048
+	// Per-input limits are token-based and enforced by the embedding backend,
+	// which owns the exact model tokenizer. This middleware must not guess a
+	// token count from bytes/chars: that rejects valid multilingual inputs and
+	// understates deepvk/USER-bge-m3's 8192-token context.
 
 	// maxTotalInputChars caps the SUM of all input lengths in a single
 	// request, mirroring OpenAI's 300,000 total-token-per-request limit
@@ -58,7 +58,7 @@ const (
 // ValidateEmbeddingsRequest is a gin middleware that:
 //   - caps request body size at maxRequestBodyBytes (413 payload_too_large)
 //   - parses JSON into embed.EmbeddingsRequest
-//   - validates input array (non-empty, len<=32, all strings, each <=2048 chars)
+//   - validates input array (non-empty, len<=128, all strings)
 //   - validates dimensions (must be 512 or 1024 if set)
 //   - validates encoding_format (float|base64 if set) — T04 responsibility
 //
@@ -165,15 +165,11 @@ func validateEmbeddingsPayload(c *gin.Context, req *embed.EmbeddingsRequest) boo
 }
 
 func validateInputLengths(c *gin.Context, input []string) bool {
-	// Per-input length AND total length (mirrors OpenAI 300k token cap).
+	// The backend performs exact per-input token validation. Here we enforce
+	// only a transport-level aggregate guard without claiming token semantics.
 	totalChars := 0
-	for i, t := range input {
-		if len(t) > maxInputChars {
-			handlers.WriteError(c, handlers.CodeInputTooLong, "input",
-				fmt.Sprintf("input[%d] exceeds max length %d chars (got %d)", i, maxInputChars, len(t)))
-			return false
-		}
-		totalChars += len(t)
+	for _, text := range input {
+		totalChars += len(text)
 	}
 	if totalChars <= maxTotalInputChars {
 		return true

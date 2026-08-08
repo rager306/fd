@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultModelMaxInputLengthTokens = 512
+	defaultModelMaxInputLengthTokens = 8192
 	defaultModelMaxBatchSize         = 32
 	defaultModelDevice               = "cpu"
 )

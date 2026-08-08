@@ -134,12 +134,16 @@ func TestValidationBatchAt128Boundary(t *testing.T) {
 	}
 }
 
-func TestValidationInputTooLong(t *testing.T) {
-	// 2049 chars > maxInputChars=2048
-	longText := strings.Repeat("x", 2049)
+func TestValidationDoesNotGuessTokenCountFromCharacters(t *testing.T) {
+	// Per-input admission is token-based and belongs to the backend tokenizer.
+	// A 2049-character multilingual input must not be rejected by a fake
+	// 4-chars/token heuristic in middleware.
+	longText := strings.Repeat("я", 2049)
 	body, _ := json.Marshal(gin.H{"input": []string{longText}})
 	w := runMiddleware(t, string(body), int64(len(body)))
-	assertCode(t, w, handlers.CodeInputTooLong, http.StatusRequestEntityTooLarge, "input")
+	if w.Code != http.StatusOK {
+		t.Fatalf("token-agnostic middleware rejected input: status=%d body=%s", w.Code, w.Body.String())
+	}
 }
 
 func TestValidationDimensionsInvalid(t *testing.T) {

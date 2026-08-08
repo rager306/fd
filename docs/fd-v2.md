@@ -10,7 +10,7 @@
 ## 0. Контекст
 
 `fd` — это local HTTP embedding service, обслуживающий daily-archive (scientific KG pipeline).
-Модель: `deepvk/USER-bge-m3`, размерности 1024 / 512 (Matryoshka), max input length 512 tokens.
+Модель: `deepvk/USER-bge-m3`, размерности 1024 / 512 (Matryoshka), max input length 8192 tokens (`model_max_length=8192`, `max_position_embeddings=8194`, SentenceTransformer `max_seq_length=8192`).
 
 **Current runtime posture (M042): TEI-only.** ONNX references in historical artifacts are research-only and not part of the current active build/runtime path.
 
@@ -120,11 +120,9 @@ Response (200):
 ### 2.1 P0 — функциональные баги (MUST FIX)
 
 **R-P0-1**: Input length validation
-- Если `len(input[i]) > MAX_INPUT_LENGTH_TOKENS` (для BGE-M3 = 512 tokens, ~2048 chars), вернуть **413 Payload Too Large** с OpenAI-style error:
-  ```json
-  {"error": {"code": "input_too_long", "type": "invalid_request_error", "param": "input", "message": "input[0] exceeds max length 512 tokens (got ~8192 tokens)"}}
-  ```
-- Валидация ДО отправки в model (не silent timeout).
+- Лимит BGE-M3 равен **8192 токенам**, не символам. API middleware не должен оценивать токены через `len(text)` или коэффициент chars/token: это неверно для русского и multilingual corpus.
+- Точный tokenizer принадлежит model backend. Backend отклоняет превышение токенового лимита; API сохраняет структурированный `413 input_too_long` и никогда не включает silent truncation.
+- `GET /info` обязан возвращать `max_input_length_tokens=8192`. Transport-level body/aggregate guards остаются отдельными byte/char safety limits и не выдаются за model capability.
 
 **R-P0-2**: Batch size validation
 - Если `len(input) > MAX_BATCH_SIZE` (recommend 32, настраивается), вернуть **413**:
@@ -174,7 +172,7 @@ Response (200):
     {
       "id": "deepvk/USER-bge-m3",
       "dimensions": [512, 1024],
-      "max_input_length_tokens": 512,
+      "max_input_length_tokens": 8192,
       "max_batch_size": 32,
       "loaded": true,
       "warmup_done": true,
@@ -254,7 +252,7 @@ fd_model_loaded 1
     "code": "input_too_long",
     "type": "invalid_request_error",
     "param": "input",
-    "message": "input[0] exceeds max length 512 tokens (got ~8192 tokens)"
+    "message": "input exceeds model max length 8192 tokens"
   }
 }
 ```
@@ -383,7 +381,7 @@ fd_model_loaded 1
 | HTTP | code | type | Когда | Message template |
 |---|---|---|---|---|
 | 400 | `input_required` | `invalid_request_error` | `input` field missing | `input is required` |
-| 400 | `input_too_long` | `invalid_request_error` | input[i] > 512 tokens | `input[0] exceeds max length 512 tokens (got ~{N} tokens)` |
+| 413 | `input_too_long` | `invalid_request_error` | backend tokenizer reports input[i] > 8192 tokens | `input exceeds model max length 8192 tokens` |
 | 400 | `batch_too_large` | `invalid_request_error` | `len(input)` > 32 | `batch size {N} exceeds max 32; split into smaller batches` |
 | 400 | `dimensions_invalid` | `invalid_request_error` | `dimensions` not 512/1024 | `dimensions must be 1024 or 512, got {N}` |
 | 400 | `dimensions_required` | `invalid_request_error` | `dimensions` missing AND required | `dimensions is required` |
@@ -475,7 +473,6 @@ paths:
                   maxItems: 32
                   items:
                     type: string
-                    maxLength: 2048
                 dimensions:
                   type: integer
                   enum: [512, 1024]
@@ -536,7 +533,7 @@ T-E-3: POST /v1/embeddings {"input":["a"],"dimensions":99999} → 400, code=dime
 T-E-4: POST /v1/embeddings {"input":[123]} → 400, code=invalid_request_error, NOT "json: cannot unmarshal"
 T-E-5: POST /v1/embeddings {malformed → 400, code=invalid_json
 T-E-6: POST /v1/embeddings {"input":["a"]*100} → 413, code=batch_too_large
-T-E-7: POST /v1/embeddings {"input":["x"*10000]} → 413, code=input_too_long
+T-E-7: POST /v1/embeddings with a tokenizer-verified >8192-token input → 413, code=input_too_long
 T-E-8: GET /v1/embeddings → 405, NOT 404
 T-E-9: POST /v1/embeddings {"input":["a"]} (no auth, если R-P1-8) → 401, code=unauthorized
 T-E-10: GET /v9999 → 404, code=not_found
@@ -676,8 +673,8 @@ Caller: splits into chunks of 32, retries
 **F-8: Input too long (caller bug)**
 ```
 Caller: POST /v1/embeddings {"input":["x"*10000]}
-Server: validate, input[0] > 512 tokens (~2048 chars)
-Response: 413, code=input_too_long, message="input[0] exceeds max length 512 tokens (got ~2500 tokens)"
+Backend tokenizer: validate input[0] > 8192 tokens
+Response: 413, code=input_too_long, message="input exceeds model max length 8192 tokens"
 Caller: truncates, retries
 ```
 
