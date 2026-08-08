@@ -1,6 +1,3 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
-## 2026-08-08 - Zero-Allocation Byte Slice Hashing
-**Learning:** Go's `sha256.Sum256` only reads memory, meaning it's safe to use `unsafe.StringData` and `unsafe.Slice` to convert string hash inputs into byte slices without a heap allocation or copying overhead. Also, `hex.EncodeToString(h[:])[:12]` causes a memory leak because taking a subslice of a string keeps the entire original backing array alive.
-**Action:** Use `unsafe` casting with `//nolint:gosec` for read-only hashing in extreme hot-paths. Prevent hex-encoding memory leaks by allocating exactly the bytes you need (`var dst [12]byte`) and explicitly generating only that prefix (`hex.Encode(dst[:], h[:6])`).
