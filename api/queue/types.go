@@ -18,9 +18,12 @@ import (
 type Status string
 
 const (
-	StatusPending   Status = "pending"
-	StatusCompleted Status = "completed"
-	StatusFailed    Status = "failed"
+	StatusPending   Status = "pending" //nolint:revive // simple constant
+
+	StatusCompleted Status = "completed" //nolint:revive // simple constant
+
+	StatusFailed    Status = "failed" //nolint:revive // simple constant
+
 )
 
 // Result holds the outcome of a worker-processed queue item. Embeddings

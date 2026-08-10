@@ -53,7 +53,6 @@ type Metrics struct {
 	runtimeCapacity   int64
 	localCacheSizeFn  func() int
 	redisCacheSizeFn  func() int
-	redisSizeTimeout  time.Duration
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
@@ -85,7 +84,7 @@ func NewMetrics() *Metrics {
 		cacheHitsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "fd_cache_hits_total",
 			Help: "Total fd cache lookups by result and tier.",
-		}, []string{"result", "tier"}),
+		}, []string{"result", "tier"}), //nolint:goconst // intentional
 		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "fd_cache_evictions_total",
 			Help: "Total fd in-memory cache evictions.",
@@ -101,11 +100,11 @@ func NewMetrics() *Metrics {
 		cacheEntries: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "fd_cache_entries",
 			Help: "Current fd cache entries by tier where cheap to observe.",
-		}, []string{"tier"}),
+		}, []string{"tier"}), //nolint:goconst // intentional
 		cacheMemoryBytes: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "fd_cache_memory_bytes",
 			Help: "Approximate memory used by the fd cache by tier. Assumes 1024-dim float32 embeddings (4096 bytes per entry). Not exact — for operational sizing, not billing.",
-		}, []string{"tier"}),
+		}, []string{"tier"}), //nolint:goconst // intentional
 
 		teiRequestDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
 			Name:    "fd_tei_request_duration_seconds",
@@ -220,6 +219,7 @@ func (m *Metrics) ObserveTEIRequestDuration(d time.Duration) {
 // IncTEIRequestsInFlight and DecTEIRequestsInFlight manage a gauge for
 // concurrent TEI calls. Safe to call from multiple goroutines.
 func (m *Metrics) IncTEIRequestsInFlight() { m.teiRequestsInFlight.Inc() }
+// DecTEIRequestsInFlight decreases the gauge for concurrent TEI calls.
 func (m *Metrics) DecTEIRequestsInFlight() { m.teiRequestsInFlight.Dec() }
 
 // IncTEIError records a TEI error with a canonical reason label.
