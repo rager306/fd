@@ -67,6 +67,7 @@ func load44FZCorpus(t *testing.T) []string {
 	return texts
 }
 
+//nolint:unparam // intentional
 func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
 	t.Helper()
 	durations = nil

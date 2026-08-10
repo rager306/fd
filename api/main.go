@@ -522,7 +522,7 @@ func main() {
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
 		recoveryCancel()
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exit is fatal, defer will not run
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)

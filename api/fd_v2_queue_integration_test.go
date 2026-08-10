@@ -29,6 +29,7 @@ func (e *queueTestEmbedder) Embed(ctx context.Context, texts []string) ([][]floa
 	return out, nil
 }
 
+//nolint:unparam // intentional
 func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 	t.Helper()
 	_ = observability.NewMetrics()
