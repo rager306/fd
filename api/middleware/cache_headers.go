@@ -70,7 +70,15 @@ func isCacheHeaderPath(path string) bool {
 
 func responseETag(body []byte) string {
 	sum := sha256.Sum256(body)
-	return `"` + hex.EncodeToString(sum[:]) + `"`
+
+	// Optimization: assemble the quoted ETag string directly into a stack-allocated buffer
+	// to avoid multiple heap allocations from hex.EncodeToString and string concatenation.
+	// Reduces allocations from 3 to 1 per invocation.
+	var dst [66]byte
+	dst[0] = '"'
+	hex.Encode(dst[1:65], sum[:])
+	dst[65] = '"'
+	return string(dst[:])
 }
 
 func etagMatches(ifNoneMatch, etag string) bool {
