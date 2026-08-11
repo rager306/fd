@@ -228,7 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
-func main() {
+func main() { //nolint:gocyclo // main is inherently complex
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
 	})
@@ -245,7 +245,7 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exit immediately
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
 
@@ -263,13 +263,13 @@ func main() {
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exit immediately
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exit immediately
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := redisCache.Ping(ctx); err != nil {
@@ -279,7 +279,7 @@ func main() {
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exit immediately
 	}
 	cancel()
 	logger.Info("redis connected", "addr", redisHost, "cache_namespace", redisOptions.Namespace.String())
@@ -372,7 +372,7 @@ func main() {
 	// M052-mmf99p Phase 0: wire cache tier observer and L2 size gauge.
 	// Captures per-tier hit-rate and rough L2 namespace occupancy for
 	// the throughput optimization backplane (Issue #9).
-	tiered.SetCacheObserver(func(tier string, hit bool) {
+	tiered.SetObserver(func(tier string, hit bool) {
 		result := "miss"
 		if hit {
 			result = "hit"
@@ -456,7 +456,7 @@ func main() {
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer resultStore.Close()
+		defer func() { _ = resultStore.Close() }()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}
@@ -520,7 +520,7 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		os.Exit(1) //nolint:gocritic // exit immediately
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
