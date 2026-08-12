@@ -43,7 +43,7 @@ func NewCoalescingEmbedder(inner Embedder, window time.Duration) *CoalescingEmbe
 		return nil
 	}
 	c := &CoalescingEmbedder{
-		inner: inner,
+		inner:  inner,
 		jobs:   make(chan coalescedJob),
 		window: window,
 	}
@@ -150,5 +150,3 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 		cursor += n
 	}
 }
-
-
