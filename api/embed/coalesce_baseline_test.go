@@ -19,18 +19,18 @@ import (
 // corpusPart reflects the JSON shape of tests/44-FZ-2026-articles.jsonl.
 // Only fields used by the baseline are decoded.
 type corpusPart struct {
-	DocID   string        `json:"doc_id"`
-	Chapter int           `json:"chapter"`
-	Article string        `json:"article"`
-	Title   string        `json:"title"`
+	DocID   string         `json:"doc_id"`
+	Chapter int            `json:"chapter"`
+	Article string         `json:"article"`
+	Title   string         `json:"title"`
 	Parts   []corpusChunk `json:"parts"`
 }
 
 // corpusChunk is one part of an article. Its Text field is what we send
 // to the embedder as input.
 type corpusChunk struct {
-	Number int    `json:"number"`
-	Text   string `json:"text"`
+	Number  int    `json:"number"`
+	Text    string `json:"text"`
 }
 
 func load44FZCorpus(t *testing.T) []string {
@@ -39,7 +39,7 @@ func load44FZCorpus(t *testing.T) []string {
 	// to the repo root, then tests/44-FZ-2026-articles.jsonl.
 	_, file, _, _ := runtime.Caller(0)
 	root := filepath.Join(filepath.Dir(file), "..", "..", "tests", "44-FZ-2026-articles.jsonl")
-	data, err := os.ReadFile(root)
+	data, err := os.ReadFile(root) //nolint:gosec // read file in test is safe
 	if err != nil {
 		t.Skipf("corpus not available at %s: %v", root, err)
 	}
@@ -67,11 +67,10 @@ func load44FZCorpus(t *testing.T) []string {
 	return texts
 }
 
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) {
+//nolint:unparam // testing func
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
 	t.Helper()
-	calls = 0
 	durations = nil
-	totalTexts = 0
 	var mu sync.Mutex
 	var callsCounter atomic.Int64
 
@@ -83,7 +82,7 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	wrapped := &atomicCounterEmbedder{inner: e, counter: &callsCounter}
 
 	// Shuffle inputs so goroutines don't all hit the same first article.
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewSource(42)) //nolint:gosec // weak rng is acceptable for test
 	jobs := append([]string(nil), texts...)
 	rng.Shuffle(len(jobs), func(i, j int) { jobs[i], jobs[j] = jobs[j], jobs[i] })
 
