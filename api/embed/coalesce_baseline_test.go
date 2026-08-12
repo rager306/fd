@@ -39,7 +39,7 @@ func load44FZCorpus(t *testing.T) []string {
 	// to the repo root, then tests/44-FZ-2026-articles.jsonl.
 	_, file, _, _ := runtime.Caller(0)
 	root := filepath.Join(filepath.Dir(file), "..", "..", "tests", "44-FZ-2026-articles.jsonl")
-	data, err := os.ReadFile(root)
+	data, err := os.ReadFile(root) //nolint:gosec // this is intentional in tests
 	if err != nil {
 		t.Skipf("corpus not available at %s: %v", root, err)
 	}
@@ -67,7 +67,7 @@ func load44FZCorpus(t *testing.T) []string {
 	return texts
 }
 
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) {
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
 	t.Helper()
 	calls = 0
 	durations = nil
