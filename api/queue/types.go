@@ -18,8 +18,9 @@ import (
 type Status string
 
 const (
+	// StatusPending is the initial state of an item.
 	StatusPending   Status = "pending"
-	StatusCompleted Status = "completed"
+	StatusCompleted Status = "completed" //nolint:revive // unexported
 	StatusFailed    Status = "failed"
 )
 

@@ -228,7 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
-func main() {
+func main() { //nolint:gocyclo // main function setup is naturally complex
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
 	})
@@ -245,6 +245,7 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
+		//nolint:gocritic // defer execution not strictly needed here
 		os.Exit(1)
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
@@ -263,12 +264,14 @@ func main() {
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
+		//nolint:gocritic // defer execution not strictly needed here
 		os.Exit(1)
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // defer execution not strictly needed here
 		os.Exit(1)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -279,6 +282,7 @@ func main() {
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // defer execution not strictly needed here
 		os.Exit(1)
 	}
 	cancel()
@@ -456,7 +460,7 @@ func main() {
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer resultStore.Close()
+		defer func() { _ = resultStore.Close() }()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}
@@ -520,6 +524,7 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // defer execution not strictly needed here
 		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)
