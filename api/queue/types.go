@@ -41,12 +41,12 @@ type Result struct {
 // the request without contacting TEI directly. SubmitCtx should be the
 // request's context (cancellation here stops waiting).
 type Item struct {
-	ID        string
-	Texts     []string
-	Dims      int
-	Response  chan Result // buffered 1; worker writes once, submitter reads once
-	SubmitCtx context.Context
-	CreatedAt int64
+	ID         string
+	Texts      []string
+	Dims       int
+	Response   chan Result // buffered 1; worker writes once, submitter reads once
+	SubmitCtx  context.Context
+	CreatedAt  int64
 }
 
 // ErrQueueDisabled indicates the queue feature was queried while the

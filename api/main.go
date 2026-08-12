@@ -245,7 +245,8 @@ func main() { //nolint:gocyclo // main function setup is naturally complex
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
-		os.Exit(1) //nolint:gocritic // defer execution not strictly needed here
+		//nolint:gocritic // defer execution not strictly needed here
+		os.Exit(1)
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
 
@@ -263,13 +264,15 @@ func main() { //nolint:gocyclo // main function setup is naturally complex
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
-		os.Exit(1) //nolint:gocritic // defer execution not strictly needed here
+		//nolint:gocritic // defer execution not strictly needed here
+		os.Exit(1)
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1) //nolint:gocritic // defer execution not strictly needed here
+		//nolint:gocritic // defer execution not strictly needed here
+		os.Exit(1)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := redisCache.Ping(ctx); err != nil {
@@ -279,7 +282,8 @@ func main() { //nolint:gocyclo // main function setup is naturally complex
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
-		os.Exit(1) //nolint:gocritic // defer execution not strictly needed here
+		//nolint:gocritic // defer execution not strictly needed here
+		os.Exit(1)
 	}
 	cancel()
 	logger.Info("redis connected", "addr", redisHost, "cache_namespace", redisOptions.Namespace.String())
@@ -520,7 +524,8 @@ func main() { //nolint:gocyclo // main function setup is naturally complex
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1) //nolint:gocritic // defer execution not strictly needed here
+		//nolint:gocritic // defer execution not strictly needed here
+		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)

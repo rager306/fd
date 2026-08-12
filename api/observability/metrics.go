@@ -37,22 +37,22 @@ type Metrics struct {
 	cacheEntries        *prometheus.GaugeVec
 	cacheMemoryBytes    *prometheus.GaugeVec
 
-	teiRequestDuration   prometheus.Histogram
-	teiRequestsInFlight  prometheus.Gauge
-	teiErrorsTotal       *prometheus.CounterVec
-	cacheLookupDuration  prometheus.Histogram
-	teiBatchFillRatio    prometheus.Histogram
-	queueDepth           prometheus.Gauge
-	queueDrainTotal      prometheus.Counter
-	queueSubmitTotal     *prometheus.CounterVec
-	queueBatchSize       prometheus.Histogram
+	teiRequestDuration  prometheus.Histogram
+	teiRequestsInFlight prometheus.Gauge
+	teiErrorsTotal      *prometheus.CounterVec
+	cacheLookupDuration prometheus.Histogram
+	teiBatchFillRatio   prometheus.Histogram
+	queueDepth          prometheus.Gauge
+	queueDrainTotal     prometheus.Counter
+	queueSubmitTotal    *prometheus.CounterVec
+	queueBatchSize      prometheus.Histogram
 	queueProcessDuration prometheus.Histogram
 
-	runtimeMu        sync.RWMutex
-	runtimeState     *lifecycle.State
-	runtimeCapacity  int64
-	localCacheSizeFn func() int
-	redisCacheSizeFn func() int
+	runtimeMu         sync.RWMutex
+	runtimeState      *lifecycle.State
+	runtimeCapacity   int64
+	localCacheSizeFn  func() int
+	redisCacheSizeFn  func() int
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
