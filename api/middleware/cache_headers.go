@@ -68,9 +68,16 @@ func isCacheHeaderPath(path string) bool {
 	return path == "/v1/embeddings" || path == "/info"
 }
 
+// responseETag computes a quoted ETag string for the response body.
+// ⚡ Bolt optimization: Assembles the quoted hex string using a stack-allocated
+// byte array to avoid multiple heap allocations from string concatenation.
 func responseETag(body []byte) string {
 	sum := sha256.Sum256(body)
-	return `"` + hex.EncodeToString(sum[:]) + `"`
+	var dst [66]byte
+	dst[0] = '"'
+	hex.Encode(dst[1:65], sum[:])
+	dst[65] = '"'
+	return string(dst[:])
 }
 
 func etagMatches(ifNoneMatch, etag string) bool {
