@@ -162,7 +162,7 @@ func TestWorkerStopsOnContextCancel(t *testing.T) {
 // submit 3 items quickly, expect 1 TEI call with 3 texts combined.
 func TestWorkerBatchesMultipleItems(t *testing.T) {
 	store := NewResultStore()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	items := make(chan Item, 8)
 	emb := &fakeEmbedder{}
 
@@ -205,7 +205,7 @@ func TestWorkerBatchesMultipleItems(t *testing.T) {
 // when many items arrive in the same window.
 func TestWorkerRespectsMaxBatchSize(t *testing.T) {
 	store := NewResultStore()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	items := make(chan Item, 20)
 	emb := &fakeEmbedder{}
 
