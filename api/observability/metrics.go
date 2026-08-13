@@ -53,7 +53,6 @@ type Metrics struct {
 	runtimeCapacity   int64
 	localCacheSizeFn  func() int
 	redisCacheSizeFn  func() int
-	redisSizeTimeout  time.Duration
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
