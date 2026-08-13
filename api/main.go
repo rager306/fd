@@ -228,6 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
+//nolint:gocyclo // setup complexity
 func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -520,7 +521,8 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		recoveryCancel()
+		os.Exit(1) //nolint:gocritic // intentional exit
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
