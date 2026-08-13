@@ -70,7 +70,12 @@ func isCacheHeaderPath(path string) bool {
 
 func responseETag(body []byte) string {
 	sum := sha256.Sum256(body)
-	return `"` + hex.EncodeToString(sum[:]) + `"`
+	// ⚡ Bolt: Zero-allocation hex encoding & string assembly to reduce heap allocations in hot path.
+	var dst [66]byte
+	dst[0] = '"'
+	hex.Encode(dst[1:65], sum[:])
+	dst[65] = '"'
+	return string(dst[:])
 }
 
 func etagMatches(ifNoneMatch, etag string) bool {
