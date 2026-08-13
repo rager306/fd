@@ -60,7 +60,7 @@ func makeItem(id string, texts []string) Item {
 
 func TestWorkerProcessesSingleItem(t *testing.T) {
 	store := NewResultStore()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	items := make(chan Item, 1)
 	emb := &fakeEmbedder{}
 
@@ -92,7 +92,7 @@ func TestWorkerProcessesSingleItem(t *testing.T) {
 
 func TestWorkerHandlesEmbedError(t *testing.T) {
 	store := NewResultStore()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	items := make(chan Item, 1)
 	emb := &fakeEmbedder{err: errors.New("boom")}
 
@@ -129,7 +129,7 @@ func TestWorkerHandlesEmbedError(t *testing.T) {
 
 func TestWorkerStopsOnContextCancel(t *testing.T) {
 	store := NewResultStore()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 	items := make(chan Item, 4)
 	emb := &fakeEmbedder{delay: 50 * time.Millisecond}
 
