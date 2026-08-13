@@ -260,7 +260,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: "list", //nolint:goconst // string literal used by openai spec
+		Object: "list",
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{

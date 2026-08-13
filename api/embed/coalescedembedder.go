@@ -138,6 +138,7 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 	cursor := 0
 	for i, j := range batch {
 		n := counts[i]
+		//nolint:gocritic // keep if-else for readability
 		if err != nil {
 			j.result <- coalescedResult{err: err}
 		} else if cursor+n <= len(embs) {
