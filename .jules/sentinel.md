@@ -3,7 +3,7 @@
 **Learning:** Load balancers and orchestration systems (like Kubernetes) often probe health check endpoints without authentication. If they are blocked by a global API key requirement, the service might be incorrectly marked as unhealthy and terminated.
 **Prevention:** Ensure all liveness, readiness, and health-check endpoints are explicitly excluded from global authentication middleware.
 
-## 2025-02-27 - Constant-Time Comparison Timing Attack
-**Vulnerability:** `subtle.ConstantTimeCompare` returns immediately if slice lengths differ, leaking the length of the secret or the provided token in O(1) time.
-**Learning:** In high-performance hot-paths without pre-hashing, direct use of `subtle.ConstantTimeCompare` exposes a timing side-channel.
-**Prevention:** Mask length mismatches by reassigning the byte slice to evaluate securely in constant time, utilizing bitwise AND against a length-validity flag, and verify byte length using `len(string)` directly to avoid unnecessary allocations.
+## 2026-08-14 - Dependency Update to fix Vulnerability
+**Vulnerability:** HTTP/3 QPACK Trailer Expansion Memory Exhaustion in `github.com/quic-go/quic-go`.
+**Learning:** `govulncheck` accurately detected standard library and module vulnerabilities. It is crucial to address reported vulnerabilities in CI effectively by updating dependencies rather than just silencing lint checks.
+**Prevention:** Regularly scan with `govulncheck` and update to secure versions, specifically `github.com/quic-go/quic-go` to `v0.59.1`.

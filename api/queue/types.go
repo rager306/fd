@@ -18,11 +18,8 @@ import (
 type Status string
 
 const (
-// StatusPending pending state
 	StatusPending   Status = "pending"
-// StatusCompleted completed state
 	StatusCompleted Status = "completed"
-// StatusFailed failed state
 	StatusFailed    Status = "failed"
 )
 
