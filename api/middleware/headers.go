@@ -43,6 +43,10 @@ func HeadersMiddleware(info buildinfo.Info, modelID string) gin.HandlerFunc {
 		header.Set("Server", serverValue)
 		header.Set(HeaderRequestID, requestID)
 		header.Set("Connection", "keep-alive")
+		header.Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		header.Set("X-Content-Type-Options", "nosniff")
+		header.Set("X-Frame-Options", "DENY")
+		header.Set("Content-Security-Policy", "default-src 'none'")
 		c.Writer = &headerWriter{ResponseWriter: c.Writer, context: c, modelID: modelID}
 		c.Next()
 	}
