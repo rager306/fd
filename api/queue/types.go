@@ -18,7 +18,7 @@ import (
 type Status string
 
 const (
-	StatusPending   Status = "pending" //nolint:revive // clear self documenting const block
+	StatusPending   Status = "pending"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
 )

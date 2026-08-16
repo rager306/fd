@@ -26,7 +26,7 @@ type TieredCache struct {
 // resolved the read ("l1", "l2", or "miss") and whether it produced a usable
 // hit. Observers must be cheap and non-blocking; fd uses this to feed
 // observability.Metrics counters. Observer may be nil.
-type CacheObserver func(tier string, hit bool) //nolint:revive // stutter is acceptable
+type CacheObserver func(tier string, hit bool)
 
 // NewTieredCache creates a two-tier cache.
 func NewTieredCache(local *LocalCache, redis *RedisCache, localTTL time.Duration) *TieredCache {
@@ -230,7 +230,7 @@ func (tc *TieredCache) ObserveCacheLookup(tier string, hit bool) {
 // callers can preserve duplicate text positions and response order.
 func (tc *TieredCache) GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32 {
 	started := time.Now()
-	defer func() { tc.recordLookupDuration(time.Since(started)) }()
+	defer tc.recordLookupDuration(time.Since(started))
 	hits := make(map[int][]float32, len(keys))
 	missIndexes := make([]int, 0, len(keys))
 	missKeys := make([]string, 0, len(keys))
