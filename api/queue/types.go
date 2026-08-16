@@ -18,6 +18,7 @@ import (
 type Status string
 
 const (
+	//nolint:revive // self-explanatory
 	StatusPending   Status = "pending"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"

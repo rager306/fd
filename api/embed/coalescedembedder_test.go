@@ -39,7 +39,7 @@ func TestCoalescingEmbedderBurst(t *testing.T) {
 	start := make(chan struct{})
 
 	for i := 0; i < N; i++ {
-		go func(i int) {
+		go func(i int) { //nolint:unparam // i is ignored loop var
 			defer wg.Done()
 			<-start
 			texts := []string{
@@ -83,7 +83,7 @@ func TestCoalescingEmbedderPassThroughOnZeroWindow(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			co.Embed(context.Background(), []string{"x"})
+			_, _ = co.Embed(context.Background(), []string{"x"})
 		}()
 	}
 	wg.Wait()
