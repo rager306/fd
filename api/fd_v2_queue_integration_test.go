@@ -29,7 +29,8 @@ func (e *queueTestEmbedder) Embed(ctx context.Context, texts []string) ([][]floa
 	return out, nil
 }
 
-func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
+//nolint:unparam // batchSize is intentionally unused
+func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 	t.Helper()
 	_ = observability.NewMetrics()
 	_ = queue.NewResultStore()
@@ -54,6 +55,7 @@ func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engin
 	return r, store, items, emb, cancel
 }
 
+//nolint:unparam // t is included for consistency
 func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/queue", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")

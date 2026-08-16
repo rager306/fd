@@ -26,6 +26,7 @@ type TieredCache struct {
 // resolved the read ("l1", "l2", or "miss") and whether it produced a usable
 // hit. Observers must be cheap and non-blocking; fd uses this to feed
 // observability.Metrics counters. Observer may be nil.
+//nolint:revive // external facing type
 type CacheObserver func(tier string, hit bool)
 
 // NewTieredCache creates a two-tier cache.
