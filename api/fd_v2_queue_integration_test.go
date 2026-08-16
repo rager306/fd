@@ -54,7 +54,7 @@ func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *
 	return r, store, items, emb, cancel
 }
 
-func postQueue(t *testing.T, r http.Handler, body string) *httptest.ResponseRecorder {
+func postQueue(r http.Handler, body string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, "/v1/queue", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -66,7 +66,7 @@ func TestQueueSubmitAndPollCompleted(t *testing.T) {
 	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
 	defer cancel()
 
-	resp := postQueue(t, r, `{"model":"deepvk/USER-bge-m3","input":["hello","world"]}`)
+	resp := postQueue(r, `{"model":"deepvk/USER-bge-m3","input":["hello","world"]}`)
 	if resp.Code != http.StatusAccepted {
 		t.Fatalf("submit status = %d; body=%s", resp.Code, resp.Body.String())
 	}
@@ -100,7 +100,7 @@ func TestQueueRejectsInvalidInput(t *testing.T) {
 	r, _, _, _, cancel := setupQueueTestServer(t, 8, 32)
 	defer cancel()
 
-	resp := postQueue(t, r, `{"model":"deepvk/USER-bge-m3","input":[]}`)
+	resp := postQueue(r, `{"model":"deepvk/USER-bge-m3","input":[]}`)
 	if resp.Code != http.StatusBadRequest {
 		t.Fatalf("empty input status = %d; want 400; body=%s", resp.Code, resp.Body.String())
 	}
@@ -112,7 +112,7 @@ func TestQueueBackpressureRejectsWhenFull(t *testing.T) {
 	defer cancel()
 
 	// First submission fills the channel.
-	first := postQueue(t, r, `{"model":"deepvk/USER-bge-m3","input":["first"]}`)
+	first := postQueue(r, `{"model":"deepvk/USER-bge-m3","input":["first"]}`)
 	if first.Code != http.StatusAccepted {
 		t.Fatalf("first submit status = %d; body=%s", first.Code, first.Body.String())
 	}
@@ -123,7 +123,7 @@ func TestQueueBackpressureRejectsWhenFull(t *testing.T) {
 	// at least one is rejected.
 	rejected := 0
 	for i := 0; i < 20; i++ {
-		resp := postQueue(t, r, `{"model":"deepvk/USER-bge-m3","input":["burst`+string(rune('A'+i))+`"]}`)
+		resp := postQueue(r, `{"model":"deepvk/USER-bge-m3","input":["burst`+string(rune('A'+i))+`"]}`)
 		if resp.Code == http.StatusServiceUnavailable {
 			rejected++
 		}
