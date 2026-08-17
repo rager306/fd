@@ -1,0 +1,34 @@
+fd_v2_cache_integration_test.go:12:2: could not import sync/atomic (-: could not load export data: internal error in importing "sync/atomic" (unsupported version: 2); please report an issue) (typecheck)
+	"sync/atomic"
+	^
+cache/redis.go:46:13: undefined: redis (typecheck)
+	client    *redis.Client
+	           ^
+cache/redis.go:140:11: undefined: redis (typecheck)
+		client: redis.NewClient(&redis.Options{
+		        ^
+cache/redis.go:252:20: undefined: redis (typecheck)
+	if errors.Is(err, redis.Nil) {
+	                  ^
+embed/coalesce_baseline_test.go:14:2: could not import sync/atomic (-: could not load export data: internal error in importing "sync/atomic" (unsupported version: 2); please report an issue) (typecheck)
+	"sync/atomic"
+	^
+handlers/openapi.go:6:2: could not import fd-api/openapi (-: could not load export data: internal error in importing "fd-api/openapi" (unsupported version: 2); please report an issue) (typecheck)
+	"fd-api/openapi"
+	^
+handlers/warmup.go:6:2: could not import sync/atomic (-: could not load export data: internal error in importing "sync/atomic" (unsupported version: 2); please report an issue) (typecheck)
+	"sync/atomic"
+	^
+lifecycle/state.go:9:2: could not import sync/atomic (-: could not load export data: internal error in importing "sync/atomic" (unsupported version: 2); please report an issue) (typecheck)
+	"sync/atomic"
+	^
+middleware/cache_headers.go:34:22: buffered.Status undefined (type *cacheHeaderWriter has no field or method Status) (typecheck)
+		status := buffered.Status()
+		                   ^
+middleware/headers.go:87:14: w.Header undefined (type *headerWriter has no field or method Header) (typecheck)
+	header := w.Header()
+	            ^
+queue/worker_test.go:8:2: could not import sync/atomic (-: could not load export data: internal error in importing "sync/atomic" (unsupported version: 2); please report an issue) (typecheck)
+	"sync/atomic"
+	^
+exit status 1
