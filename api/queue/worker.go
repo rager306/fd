@@ -237,4 +237,3 @@ func drainRemaining(items <-chan Item, store *ResultStore, err error, logger *sl
 		}
 	}
 }
-
