@@ -61,14 +61,14 @@ func TestHashText_Deterministic(t *testing.T) {
 }
 
 func TestRedisCacheNamespacePatternIsScoped(t *testing.T) {
-	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2:mabc"}
+	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2:mabc", keyPrefix: testRedisPrefix + "v2:mabc:"}
 	if got, want := c.namespacePattern(), testRedisPrefix+"v2:mabc:*"; got != want {
 		t.Fatalf("namespacePattern = %q, want %q", got, want)
 	}
 }
 
 func TestRedisCacheDeleteUsesDimensionedKey(t *testing.T) {
-	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2"}
+	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2", keyPrefix: testRedisPrefix + "v2:"}
 	key := c.key("hello", 512)
 	if !strings.HasPrefix(key, testRedisPrefix+"v2:") || !strings.HasSuffix(key, ":d512") {
 		t.Fatalf("key = %q, want namespace and dimension scoped key", key)
