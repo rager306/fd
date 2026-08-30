@@ -3,9 +3,20 @@ package cache
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"unsafe"
 )
 
+// shortHash calculates a short hex string for a given value.
+// Optimized to avoid heap allocations by using unsafe for zero-allocation
+// string-to-byte conversion and stack-allocating the hex string.
 func shortHash(value string) string {
-	h := sha256.Sum256([]byte(value))
-	return hex.EncodeToString(h[:])[:12]
+	var b []byte
+	if value != "" {
+		//nolint:gosec // Zero-allocation string to byte slice conversion for read-only hash
+		b = unsafe.Slice(unsafe.StringData(value), len(value))
+	}
+	h := sha256.Sum256(b)
+	var dst [12]byte
+	hex.Encode(dst[:], h[:6])
+	return string(dst[:])
 }
