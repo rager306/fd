@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -181,7 +182,14 @@ func (c *RedisCache) expiration() time.Duration {
 	return c.ttl
 }
 
+// ⚡ Bolt Optimization: Fast path for 1024/512 dimensions avoids strconv.Itoa allocation per key lookup
 func (c *RedisCache) key(text string, dim int) string {
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d512"
+	}
 	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
@@ -238,9 +246,16 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // HashText returns the sha256-hex digest of text. Used as the cache key
 // component for the embedding text (the dim and prefix are added by
 // the key() method to form the full Redis key).
+// ⚡ Bolt Optimization: Zero-allocation string-to-byte conversion and stack-allocated hex encoding.
 func (c *RedisCache) HashText(text string) string {
-	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	if text == "" {
+		return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	}
+	//nolint:gosec // Safe because Sum256 does not mutate the input slice
+	h := sha256.Sum256(unsafe.Slice(unsafe.StringData(text), len(text)))
+	var buf [64]byte
+	hex.Encode(buf[:], h[:])
+	return string(buf[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns
