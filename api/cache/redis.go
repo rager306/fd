@@ -181,8 +181,17 @@ func (c *RedisCache) expiration() time.Duration {
 	return c.ttl
 }
 
+// key returns the fully qualified Redis cache key for the text and dimension.
+// Optimized with fast-paths for common dimensions (1024, 512) to avoid strconv allocations.
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	textHash := c.HashText(text)
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + textHash + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + textHash + ":d512"
+	}
+	return c.prefix + c.namespace + ":" + textHash + ":d" + strconv.Itoa(dim)
 }
 
 func (c *RedisCache) namespacePattern() string {
