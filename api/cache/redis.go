@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -48,6 +49,7 @@ type RedisCache struct {
 	ttl       time.Duration
 	noExpire  bool
 	namespace string
+	keyPrefix string
 }
 
 // DefaultRedisCacheOptions returns sane defaults for a production fd
@@ -136,6 +138,7 @@ func NewRedisCacheWithOptions(addr string, opts RedisCacheOptions) (*RedisCache,
 		return nil, fmt.Errorf("redis cache TTL must be positive unless no-expire mode is enabled")
 	}
 
+	namespaceStr := opts.Namespace.String()
 	return &RedisCache{
 		client: redis.NewClient(&redis.Options{
 			Addr:         addr,
@@ -149,7 +152,8 @@ func NewRedisCacheWithOptions(addr string, opts RedisCacheOptions) (*RedisCache,
 		prefix:    opts.Prefix,
 		ttl:       opts.TTL,
 		noExpire:  opts.NoExpire,
-		namespace: opts.Namespace.String(),
+		namespace: namespaceStr,
+		keyPrefix: opts.Prefix + namespaceStr + ":",
 	}, nil
 }
 
@@ -182,7 +186,27 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	var b []byte
+	if text != "" {
+		//nolint:gosec // Read-only conversion for hashing
+		b = unsafe.Slice(unsafe.StringData(text), len(text))
+	}
+	h := sha256.Sum256(b)
+
+	var dst [64]byte
+	hex.Encode(dst[:], h[:])
+
+	// ⚡ Bolt: Fast path for expected dimensions and stack-allocated hex reduces allocations in hot path
+	var dimStr string
+	switch dim {
+	case 512:
+		dimStr = "512"
+	case 1024:
+		dimStr = "1024"
+	default:
+		dimStr = strconv.Itoa(dim)
+	}
+	return c.keyPrefix + string(dst[:]) + ":d" + dimStr
 }
 
 func (c *RedisCache) namespacePattern() string {
@@ -239,8 +263,15 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // component for the embedding text (the dim and prefix are added by
 // the key() method to form the full Redis key).
 func (c *RedisCache) HashText(text string) string {
-	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	var b []byte
+	if text != "" {
+		//nolint:gosec // Read-only conversion for hashing
+		b = unsafe.Slice(unsafe.StringData(text), len(text))
+	}
+	h := sha256.Sum256(b)
+	var dst [64]byte
+	hex.Encode(dst[:], h[:])
+	return string(dst[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns
