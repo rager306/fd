@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -181,8 +182,35 @@ func (c *RedisCache) expiration() time.Duration {
 	return c.ttl
 }
 
+// key constructs the Redis cache key.
+// Optimized to compute the hash and construct the key in a single buffer
+// to minimize allocations in the hot path.
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	var textBytes []byte
+	if text != "" {
+		//nolint:gosec // read-only conversion for hashing
+		textBytes = unsafe.Slice(unsafe.StringData(text), len(text))
+	}
+	h := sha256.Sum256(textBytes)
+
+	dimStr := ":d1024"
+	if dim == 512 {
+		dimStr = ":d512"
+	} else if dim != 1024 {
+		dimStr = ":d" + strconv.Itoa(dim)
+	}
+
+	totalLen := len(c.prefix) + len(c.namespace) + 1 + 64 + len(dimStr)
+	buf := make([]byte, totalLen)
+	n := copy(buf, c.prefix)
+	n += copy(buf[n:], c.namespace)
+	buf[n] = ':'
+	n++
+	hex.Encode(buf[n:n+64], h[:])
+	copy(buf[n+64:], dimStr)
+
+	//nolint:gosec // safely converting locally allocated buffer to string
+	return unsafe.String(unsafe.SliceData(buf), len(buf))
 }
 
 func (c *RedisCache) namespacePattern() string {
@@ -239,8 +267,15 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // component for the embedding text (the dim and prefix are added by
 // the key() method to form the full Redis key).
 func (c *RedisCache) HashText(text string) string {
-	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	var textBytes []byte
+	if text != "" {
+		//nolint:gosec // read-only conversion for hashing
+		textBytes = unsafe.Slice(unsafe.StringData(text), len(text))
+	}
+	h := sha256.Sum256(textBytes)
+	var dst [64]byte
+	hex.Encode(dst[:], h[:])
+	return string(dst[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns

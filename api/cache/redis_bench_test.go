@@ -23,3 +23,15 @@ func BenchmarkHashText_Short(b *testing.B) {
 		c.HashText(text)
 	}
 }
+
+func BenchmarkRedisKey(b *testing.B) {
+	c := &RedisCache{
+		prefix:    "embed:cache:",
+		namespace: "v2",
+	}
+	text := "This is a sample text for hashing and generating a key."
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = c.key(text, 1024)
+	}
+}
