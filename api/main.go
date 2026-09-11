@@ -16,16 +16,15 @@ import (
 
 	"fd-api/buildinfo"
 	"fd-api/cache"
+	"fd-api/queue"
 	"fd-api/embed"
 	"fd-api/handlers"
 	"fd-api/internal/envutil"
 	"fd-api/lifecycle"
 	"fd-api/middleware"
 	"fd-api/observability"
-	"fd-api/queue"
 
-	"github.com/gin-gonic/gin"
-)
+	"github.com/gin-gonic/gin")
 
 // Version is injected by release builds with -ldflags "-X main.Version=...".
 var Version = buildinfo.DefaultVersion
@@ -156,9 +155,8 @@ func defaultWarmupRetryPolicy() warmupRetryPolicy {
 // the TEI load window and looked like a hang in logs.
 //
 // Env knobs (all safe to leave unset):
-//
-//	FD_WARMUP_START_MAX_ATTEMPTS  default 5   (>=1, clamped)
-//	FD_WARMUP_START_BACKOFF_SEC   default 5   (>=0, 0 disables backoff)
+//   FD_WARMUP_START_MAX_ATTEMPTS  default 5   (>=1, clamped)
+//   FD_WARMUP_START_BACKOFF_SEC   default 5   (>=0, 0 disables backoff)
 func warmupRetryPolicyFromEnv() warmupRetryPolicy {
 	maxAttempts := envutil.Int("FD_WARMUP_START_MAX_ATTEMPTS", 5)
 	if maxAttempts < 1 {
@@ -168,7 +166,7 @@ func warmupRetryPolicyFromEnv() warmupRetryPolicy {
 	backoff := time.Duration(backoffSeconds) * time.Second
 	return warmupRetryPolicy{
 		maxAttempts: maxAttempts,
-		backoff:     func(int) time.Duration { return backoff },
+		backoff: func(int) time.Duration { return backoff },
 	}
 }
 
