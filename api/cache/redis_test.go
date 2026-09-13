@@ -31,7 +31,7 @@ func closeRedisCache(t *testing.T, c *RedisCache) {
 }
 
 func TestHashText(t *testing.T) {
-	c := &RedisCache{prefix: "test:", namespace: "v2"}
+	c := &RedisCache{prefix: "test:", namespace: "v2", keyPrefix: "test:v2:"}
 
 	hash1 := c.HashText("hello")
 	hash2 := c.HashText("hello")
@@ -49,7 +49,7 @@ func TestHashText(t *testing.T) {
 }
 
 func TestHashText_Deterministic(t *testing.T) {
-	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2"}
+	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2", keyPrefix: testRedisPrefix + "v2:"}
 	text := "test text for hashing"
 
 	hash1 := c.HashText(text)
@@ -61,14 +61,14 @@ func TestHashText_Deterministic(t *testing.T) {
 }
 
 func TestRedisCacheNamespacePatternIsScoped(t *testing.T) {
-	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2:mabc"}
+	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2:mabc", keyPrefix: testRedisPrefix + "v2:mabc:"}
 	if got, want := c.namespacePattern(), testRedisPrefix+"v2:mabc:*"; got != want {
 		t.Fatalf("namespacePattern = %q, want %q", got, want)
 	}
 }
 
 func TestRedisCacheDeleteUsesDimensionedKey(t *testing.T) {
-	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2"}
+	c := &RedisCache{prefix: testRedisPrefix, namespace: "v2", keyPrefix: testRedisPrefix + "v2:"}
 	key := c.key("hello", 512)
 	if !strings.HasPrefix(key, testRedisPrefix+"v2:") || !strings.HasSuffix(key, ":d512") {
 		t.Fatalf("key = %q, want namespace and dimension scoped key", key)
@@ -118,7 +118,7 @@ func TestRedisCacheNamespaceIncludesConfiguredFields(t *testing.T) {
 			t.Fatalf("key %q should not contain raw namespace value %q", key, raw)
 		}
 	}
-	if key == (&RedisCache{prefix: "embed:cache:", namespace: "v2"}).key("hello", 1024) {
+	if key == (&RedisCache{prefix: "embed:cache:", namespace: "v2", keyPrefix: "embed:cache:v2:"}).key("hello", 1024) {
 		t.Fatalf("configured namespace should change key")
 	}
 }

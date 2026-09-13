@@ -48,6 +48,7 @@ type RedisCache struct {
 	ttl       time.Duration
 	noExpire  bool
 	namespace string
+	keyPrefix string // Pre-computed prefix (prefix + namespace + ":")
 }
 
 // DefaultRedisCacheOptions returns sane defaults for a production fd
@@ -136,6 +137,7 @@ func NewRedisCacheWithOptions(addr string, opts RedisCacheOptions) (*RedisCache,
 		return nil, fmt.Errorf("redis cache TTL must be positive unless no-expire mode is enabled")
 	}
 
+	ns := opts.Namespace.String()
 	return &RedisCache{
 		client: redis.NewClient(&redis.Options{
 			Addr:         addr,
@@ -149,7 +151,8 @@ func NewRedisCacheWithOptions(addr string, opts RedisCacheOptions) (*RedisCache,
 		prefix:    opts.Prefix,
 		ttl:       opts.TTL,
 		noExpire:  opts.NoExpire,
-		namespace: opts.Namespace.String(),
+		namespace: ns,
+		keyPrefix: opts.Prefix + ns + ":",
 	}, nil
 }
 
@@ -182,11 +185,18 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	// Optimization: use pre-computed keyPrefix and avoid strconv.Itoa for common dimensions
+	if dim == 1024 {
+		return c.keyPrefix + c.HashText(text) + ":d1024"
+	}
+	if dim == 512 {
+		return c.keyPrefix + c.HashText(text) + ":d512"
+	}
+	return c.keyPrefix + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
 func (c *RedisCache) namespacePattern() string {
-	return c.prefix + c.namespace + ":*"
+	return c.keyPrefix + "*"
 }
 
 // marshalEmbedding encodes [dim:uint16][float32*dim] — 2+4*dim bytes.
@@ -239,8 +249,12 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // component for the embedding text (the dim and prefix are added by
 // the key() method to form the full Redis key).
 func (c *RedisCache) HashText(text string) string {
+	// Optimization: encode directly into a stack-allocated byte array
+	// to avoid the dynamic heap allocation of hex.EncodeToString(h[:]).
 	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	var dst [64]byte
+	hex.Encode(dst[:], h[:])
+	return string(dst[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns
