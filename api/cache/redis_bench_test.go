@@ -5,7 +5,7 @@ import (
 )
 
 func BenchmarkHashText(b *testing.B) {
-	c := &RedisCache{prefix: "bench:"}
+	c := &RedisCache{prefix: "bench:", keyPrefix: "bench::"}
 	text := "benchmark test string for hashing performance"
 
 	b.ResetTimer()
@@ -15,7 +15,7 @@ func BenchmarkHashText(b *testing.B) {
 }
 
 func BenchmarkHashText_Short(b *testing.B) {
-	c := &RedisCache{prefix: "bench:"}
+	c := &RedisCache{prefix: "bench:", keyPrefix: "bench::"}
 	text := "hi"
 
 	b.ResetTimer()
