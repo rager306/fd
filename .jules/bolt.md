@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2024-09-16 - UUID Generation String Slicing Allocation Overhead
+**Learning:** Generating UUID strings by combining `hex.EncodeToString` and string concatenation (e.g., `encoded[0:8] + "-" + ...`) dynamically allocates multiple strings on the heap, causing memory bloat and allocation overhead in hot paths (like middleware `newRequestID`). Also, `fmt.Sprintf` in fallback paths causes heavy reflection overhead.
+**Action:** Replace `hex.EncodeToString` and concatenation with a single stack-allocated byte array (e.g., `var buf [36]byte`), encode directly into it using `hex.Encode`, and convert to a string once using `string(buf[:])`. Avoid `fmt.Sprintf` and use simple stack arrays for constructing fallbacks.
