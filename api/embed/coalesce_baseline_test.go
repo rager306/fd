@@ -19,18 +19,18 @@ import (
 // corpusPart reflects the JSON shape of tests/44-FZ-2026-articles.jsonl.
 // Only fields used by the baseline are decoded.
 type corpusPart struct {
-	DocID   string         `json:"doc_id"`
-	Chapter int            `json:"chapter"`
-	Article string         `json:"article"`
-	Title   string         `json:"title"`
+	DocID   string        `json:"doc_id"`
+	Chapter int           `json:"chapter"`
+	Article string        `json:"article"`
+	Title   string        `json:"title"`
 	Parts   []corpusChunk `json:"parts"`
 }
 
 // corpusChunk is one part of an article. Its Text field is what we send
 // to the embedder as input.
 type corpusChunk struct {
-	Number  int    `json:"number"`
-	Text    string `json:"text"`
+	Number int    `json:"number"`
+	Text   string `json:"text"`
 }
 
 func load44FZCorpus(t *testing.T) []string {
