@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2023-10-27 - Zero-Allocation Hash String Conversions
+**Learning:** In Go, string slicing (e.g., `hex.EncodeToString()[:12]`) retains a reference to the dynamically allocated backing array in memory, causing bloat. Additionally, generating a full 64-char string only to discard 52 chars wastes CPU cycles in hot paths.
+**Action:** When a shortened hex string representation of a hash is needed, directly slice the byte array *before* encoding (e.g., `h[:6]`), and encode it directly into a precisely sized stack-allocated byte array (e.g., `var dst [12]byte`), converting that stack array to a string to achieve fewer allocations and faster execution.
