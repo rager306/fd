@@ -3,7 +3,6 @@ package middleware
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -92,10 +91,29 @@ func (w *headerWriter) setEmbeddingHeaders() {
 func newRequestID() string {
 	var bytes [16]byte
 	if _, err := rand.Read(bytes[:]); err != nil {
-		return fmt.Sprintf("00000000-0000-4000-8000-%012x", time.Now().UnixNano())
+		// ⚡ Bolt optimization: manual zero-allocation hex padding avoids fmt.Sprintf and heap allocations.
+		t := time.Now().UnixNano()
+		var buf [36]byte
+		copy(buf[:24], "00000000-0000-4000-8000-")
+		for i := 11; i >= 0; i-- {
+			buf[24+i] = "0123456789abcdef"[t&0xf]
+			t >>= 4
+		}
+		return string(buf[:])
 	}
 	bytes[6] = (bytes[6] & 0x0f) | 0x40
 	bytes[8] = (bytes[8] & 0x3f) | 0x80
-	encoded := hex.EncodeToString(bytes[:])
-	return encoded[0:8] + "-" + encoded[8:12] + "-" + encoded[12:16] + "-" + encoded[16:20] + "-" + encoded[20:32]
+
+	// ⚡ Bolt optimization: single 36-byte stack allocation avoids multiple hex.EncodeToString calls and string concatenations.
+	var buf [36]byte
+	hex.Encode(buf[0:8], bytes[0:4])
+	buf[8] = '-'
+	hex.Encode(buf[9:13], bytes[4:6])
+	buf[13] = '-'
+	hex.Encode(buf[14:18], bytes[6:8])
+	buf[18] = '-'
+	hex.Encode(buf[19:23], bytes[8:10])
+	buf[23] = '-'
+	hex.Encode(buf[24:36], bytes[10:16])
+	return string(buf[:])
 }
