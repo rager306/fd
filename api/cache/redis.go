@@ -182,7 +182,15 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	// Fast path: reduce allocations by combining prefix and avoiding strconv for common dims
+	base := c.prefix + c.namespace + ":"
+	if dim == 1024 {
+		return base + c.HashText(text) + ":d1024"
+	}
+	if dim == 512 {
+		return base + c.HashText(text) + ":d512"
+	}
+	return base + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
 func (c *RedisCache) namespacePattern() string {
@@ -240,7 +248,10 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // the key() method to form the full Redis key).
 func (c *RedisCache) HashText(text string) string {
 	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	// Fast path: encode directly to a stack-allocated array to avoid hex.EncodeToString heap allocation
+	var dst [64]byte
+	hex.Encode(dst[:], h[:])
+	return string(dst[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns
