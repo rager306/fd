@@ -16,6 +16,8 @@ import (
 // submissions. Picked conservative so clients back off predictably.
 const queueRetryAfterSeconds = "5"
 
+
+
 // QueueHandler serves POST /v1/queue (submit) and GET /v1/queue/:id (poll).
 // The handler is constructed only when FD_QUEUE_ENABLED=true; otherwise
 // callers see 404 not_found from the standard NoRoute handler.
@@ -124,7 +126,7 @@ func (h *QueueHandler) Poll(c *gin.Context) {
 			data[i] = obj
 		}
 		c.JSON(http.StatusOK, embed.EmbeddingsResponse{
-			Object: "list",
+			Object: objectList,
 			Data:   data,
 			Model:  h.modelID,
 			Usage: embed.Usage{
