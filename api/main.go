@@ -16,15 +16,16 @@ import (
 
 	"fd-api/buildinfo"
 	"fd-api/cache"
-	"fd-api/queue"
 	"fd-api/embed"
 	"fd-api/handlers"
 	"fd-api/internal/envutil"
 	"fd-api/lifecycle"
 	"fd-api/middleware"
 	"fd-api/observability"
+	"fd-api/queue"
 
-	"github.com/gin-gonic/gin")
+	"github.com/gin-gonic/gin"
+)
 
 // Version is injected by release builds with -ldflags "-X main.Version=...".
 var Version = buildinfo.DefaultVersion
@@ -155,8 +156,9 @@ func defaultWarmupRetryPolicy() warmupRetryPolicy {
 // the TEI load window and looked like a hang in logs.
 //
 // Env knobs (all safe to leave unset):
-//   FD_WARMUP_START_MAX_ATTEMPTS  default 5   (>=1, clamped)
-//   FD_WARMUP_START_BACKOFF_SEC   default 5   (>=0, 0 disables backoff)
+//
+//	FD_WARMUP_START_MAX_ATTEMPTS  default 5   (>=1, clamped)
+//	FD_WARMUP_START_BACKOFF_SEC   default 5   (>=0, 0 disables backoff)
 func warmupRetryPolicyFromEnv() warmupRetryPolicy {
 	maxAttempts := envutil.Int("FD_WARMUP_START_MAX_ATTEMPTS", 5)
 	if maxAttempts < 1 {
@@ -166,7 +168,7 @@ func warmupRetryPolicyFromEnv() warmupRetryPolicy {
 	backoff := time.Duration(backoffSeconds) * time.Second
 	return warmupRetryPolicy{
 		maxAttempts: maxAttempts,
-		backoff: func(int) time.Duration { return backoff },
+		backoff:     func(int) time.Duration { return backoff },
 	}
 }
 
@@ -228,7 +230,9 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
+//nolint:gocyclo // Setup function is naturally complex
 func main() {
+	recoveryCtx, recoveryCancel := context.WithCancel(context.Background())
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
 	})
@@ -245,7 +249,8 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
-		os.Exit(1)
+		recoveryCancel()
+		os.Exit(1) //nolint:gocritic
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
 
@@ -263,13 +268,15 @@ func main() {
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
-		os.Exit(1)
+		recoveryCancel()
+		os.Exit(1) //nolint:gocritic
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		recoveryCancel()
+		os.Exit(1) //nolint:gocritic
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := redisCache.Ping(ctx); err != nil {
@@ -279,7 +286,8 @@ func main() {
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		recoveryCancel()
+		os.Exit(1) //nolint:gocritic
 	}
 	cancel()
 	logger.Info("redis connected", "addr", redisHost, "cache_namespace", redisOptions.Namespace.String())
@@ -372,7 +380,7 @@ func main() {
 	// M052-mmf99p Phase 0: wire cache tier observer and L2 size gauge.
 	// Captures per-tier hit-rate and rough L2 namespace occupancy for
 	// the throughput optimization backplane (Issue #9).
-	tiered.SetCacheObserver(func(tier string, hit bool) {
+	tiered.SetObserver(func(tier string, hit bool) {
 		result := "miss"
 		if hit {
 			result = "hit"
@@ -456,7 +464,7 @@ func main() {
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer resultStore.Close()
+		defer func() { _ = resultStore.Close() }()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}
@@ -499,8 +507,6 @@ func main() {
 	// startup-time race when fd_api starts before TEI finishes BERT load
 	// (~15-20s on CPU) by retrying PreWarm periodically until IsWarmupDone.
 	// Cancelled on signal so the goroutine exits deterministically.
-	recoveryCtx, recoveryCancel := context.WithCancel(context.Background())
-	defer recoveryCancel()
 	recoveryInterval := time.Duration(envutil.Int("FD_WARMUP_RECOVERY_INTERVAL_SEC", 30)) * time.Second
 	recoveryEnabled := envutil.BoolOrDefault("FD_WARMUP_RECOVERY_ENABLED", true)
 	logger.Info("warmup recovery config",
@@ -520,7 +526,8 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		recoveryCancel()
+		os.Exit(1) //nolint:gocritic
 	}
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)

@@ -20,6 +20,7 @@ const (
 	requestStatusSuccess = "success"
 	requestStatusError   = "error"
 	requestStatusTimeout = "timeout"
+cacheTierLabel       = "tier"
 )
 
 // Metrics owns fd's Prometheus collectors and registry.
@@ -53,7 +54,6 @@ type Metrics struct {
 	runtimeCapacity   int64
 	localCacheSizeFn  func() int
 	redisCacheSizeFn  func() int
-	redisSizeTimeout  time.Duration
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.
@@ -101,11 +101,11 @@ func NewMetrics() *Metrics {
 		cacheEntries: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "fd_cache_entries",
 			Help: "Current fd cache entries by tier where cheap to observe.",
-		}, []string{"tier"}),
+		}, []string{cacheTierLabel}),
 		cacheMemoryBytes: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "fd_cache_memory_bytes",
 			Help: "Approximate memory used by the fd cache by tier. Assumes 1024-dim float32 embeddings (4096 bytes per entry). Not exact — for operational sizing, not billing.",
-		}, []string{"tier"}),
+		}, []string{cacheTierLabel}),
 
 		teiRequestDuration: prometheus.NewHistogram(prometheus.HistogramOpts{
 			Name:    "fd_tei_request_duration_seconds",
@@ -220,6 +220,7 @@ func (m *Metrics) ObserveTEIRequestDuration(d time.Duration) {
 // IncTEIRequestsInFlight and DecTEIRequestsInFlight manage a gauge for
 // concurrent TEI calls. Safe to call from multiple goroutines.
 func (m *Metrics) IncTEIRequestsInFlight() { m.teiRequestsInFlight.Inc() }
+// DecTEIRequestsInFlight decrements the in-flight TEI request gauge.
 func (m *Metrics) DecTEIRequestsInFlight() { m.teiRequestsInFlight.Dec() }
 
 // IncTEIError records a TEI error with a canonical reason label.

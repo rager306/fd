@@ -61,6 +61,9 @@ func (r *EmbeddingsRequest) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// ObjectList is the object type for list responses.
+const ObjectList = "list"
+
 // EmbeddingsResponse is the OpenAI-compatible /v1/embeddings response body.
 type EmbeddingsResponse struct {
 	Object string         `json:"object"`
