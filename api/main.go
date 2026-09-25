@@ -520,6 +520,7 @@ func main() {
 		lifecycle.DefaultShutdownTimeout,
 	); err != nil {
 		logger.Error("shutdown failed", "error", err)
+		recoveryCancel()
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
 		os.Exit(1)

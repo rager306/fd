@@ -18,6 +18,8 @@ const (
 	HeaderCache = "X-Cache"
 	cacheHit    = "HIT"
 	cacheMiss   = "MISS"
+
+	objectList = "list"
 )
 
 // EmbeddingCache is the cache surface used by the embeddings handler.
@@ -260,7 +262,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: "list",
+		Object: objectList,
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{

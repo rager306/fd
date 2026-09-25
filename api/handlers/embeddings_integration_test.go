@@ -176,8 +176,8 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 				if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 					t.Fatalf("unmarshal response: %v", err)
 				}
-				if resp.Object != "list" {
-					t.Errorf("expected object=list, got %s", resp.Object)
+				if resp.Object != objectList {
+					t.Errorf("expected object=%s, got %s", objectList, resp.Object)
 				}
 				if len(resp.Data) != 1 {
 					t.Fatalf("expected 1 embedding, got %d", len(resp.Data))
