@@ -32,11 +32,11 @@ type TEIClient struct {
 
 	// Observability hooks — filled by WithObservers, may be nil.
 	metrics struct {
-		observeDuration    func(time.Duration)
-		observeError       func(reason string)
-		incInFlight        func()
-		decInFlight        func()
-		observeBatchFill   func(inputs int)
+		observeDuration  func(time.Duration)
+		observeError     func(reason string)
+		incInFlight      func()
+		decInFlight      func()
+		observeBatchFill func(inputs int)
 	}
 }
 
@@ -306,3 +306,7 @@ func sleepWithContext(ctx context.Context, d time.Duration) error {
 		return ctx.Err()
 	}
 }
+
+const (
+	ObjectList = "list"
+)
