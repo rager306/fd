@@ -522,6 +522,7 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
+		recoveryCancel()
 		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)

@@ -306,3 +306,7 @@ func sleepWithContext(ctx context.Context, d time.Duration) error {
 		return ctx.Err()
 	}
 }
+
+const (
+	ObjectList = "list"
+)
