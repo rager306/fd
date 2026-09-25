@@ -184,11 +184,12 @@ func (c *RedisCache) expiration() time.Duration {
 func (c *RedisCache) key(text string, dim int) string {
 	// Optimization: avoids heap allocation for dim string conversion on common sizes
 	var dimStr string
-	if dim == 1024 {
+	switch dim {
+	case 1024:
 		dimStr = ":d1024"
-	} else if dim == 512 {
+	case 512:
 		dimStr = ":d512"
-	} else {
+	default:
 		dimStr = ":d" + strconv.Itoa(dim)
 	}
 	return c.prefix + c.namespace + ":" + c.HashText(text) + dimStr
