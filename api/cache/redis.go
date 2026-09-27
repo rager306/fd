@@ -182,7 +182,16 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	// ⚡ Bolt: Fast-path string concatenation for standard embedding dimensions
+	// avoids the allocation overhead of strconv.Itoa in high-throughput hot paths.
+	hash := c.HashText(text)
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + hash + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + hash + ":d512"
+	}
+	return c.prefix + c.namespace + ":" + hash + ":d" + strconv.Itoa(dim)
 }
 
 func (c *RedisCache) namespacePattern() string {
