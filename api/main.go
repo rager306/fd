@@ -228,8 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
-//nolint:gocyclo
-//nolint:gocyclo // main is a setup function
+//nolint:gocyclo // main is a complex setup function
 func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -502,7 +501,6 @@ func main() {
 	// (~15-20s on CPU) by retrying PreWarm periodically until IsWarmupDone.
 	// Cancelled on signal so the goroutine exits deterministically.
 	recoveryCtx, recoveryCancel := context.WithCancel(context.Background())
-	defer recoveryCancel()
 	recoveryInterval := time.Duration(envutil.Int("FD_WARMUP_RECOVERY_INTERVAL_SEC", 30)) * time.Second
 	recoveryEnabled := envutil.BoolOrDefault("FD_WARMUP_RECOVERY_ENABLED", true)
 	logger.Info("warmup recovery config",
@@ -519,11 +517,14 @@ func main() {
 		logger,
 		lifecycle.DefaultShutdownTimeout,
 	); err != nil {
+		recoveryCancel()
+		recoveryCancel()
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
 		os.Exit(1)
 	}
+	recoveryCancel()
 	closeResource("redis", redisCache, logger)
 	closeResource("local cache", localCache, logger)
 }

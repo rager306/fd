@@ -23,6 +23,7 @@ const (
 	StatusPending   Status = "pending"
 	// StatusCompleted is an exported constant.
 	StatusCompleted Status = "completed"
+	// StatusFailed means the item processing failed.
 	StatusFailed    Status = "failed"
 )
 

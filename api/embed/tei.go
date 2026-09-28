@@ -246,7 +246,7 @@ func (c *TEIClient) observeBatchFill(inputs int) {
 	}
 }
 
-// ObserveBatchFill is a public helper used by handlers/embeddings to push
+// RecordBatchFill is a public helper used by handlers/embeddings to push
 // per-call batch fill ratio into the metrics hook installed via WithObservers.
 // RecordBatchFill passes through to the underlying observer.
 func (c *TEIClient) RecordBatchFill(inputs int) {

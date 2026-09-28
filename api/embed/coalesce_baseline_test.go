@@ -69,7 +69,7 @@ func load44FZCorpus(t *testing.T) []string {
 }
 
 //nolint:unparam // result calls might be used in other tests
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls int, totalTexts int, durations []time.Duration) {
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
 	t.Helper()
 
 	durations = nil

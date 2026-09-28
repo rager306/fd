@@ -30,7 +30,7 @@ func (e *queueTestEmbedder) Embed(ctx context.Context, texts []string) ([][]floa
 }
 
 //nolint:unparam // batchSize might be used in other tests
-func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
+func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 	t.Helper()
 	_ = observability.NewMetrics()
 	_ = queue.NewResultStore()
