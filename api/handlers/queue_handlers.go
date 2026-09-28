@@ -12,6 +12,7 @@ import (
 	"log/slog"
 )
 
+
 // queueRetryAfterSeconds is the Retry-After hint sent on queue_full
 // submissions. Picked conservative so clients back off predictably.
 const queueRetryAfterSeconds = "5"
@@ -124,7 +125,7 @@ func (h *QueueHandler) Poll(c *gin.Context) {
 			data[i] = obj
 		}
 		c.JSON(http.StatusOK, embed.EmbeddingsResponse{
-			Object: "list",
+			Object: objectList,
 			Data:   data,
 			Model:  h.modelID,
 			Usage: embed.Usage{
