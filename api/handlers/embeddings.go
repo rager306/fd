@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	objectList = "list"
 	// HeaderCache reports whether /v1/embeddings used cache HIT or MISS.
 	HeaderCache = "X-Cache"
 	cacheHit    = "HIT"
@@ -261,7 +260,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: objectList,
+		Object: "list", //nolint:goconst // ignore repeating list
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{

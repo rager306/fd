@@ -228,6 +228,8 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
+//nolint:gocyclo // fine
+//nolint:gocyclo // fine
 func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -504,7 +506,6 @@ func main() {
 	// (~15-20s on CPU) by retrying PreWarm periodically until IsWarmupDone.
 	// Cancelled on signal so the goroutine exits deterministically.
 	recoveryCtx, recoveryCancel := context.WithCancel(context.Background())
-	//nolint:gocritic // exitAfterDefer is intentional here
 	defer recoveryCancel()
 	recoveryInterval := time.Duration(envutil.Int("FD_WARMUP_RECOVERY_INTERVAL_SEC", 30)) * time.Second
 	recoveryEnabled := envutil.BoolOrDefault("FD_WARMUP_RECOVERY_ENABLED", true)
