@@ -21,6 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+
 const (
 	helloInputJSON = `{"model":"test","input":"hello"}`
 	helloText      = "hello"
@@ -176,7 +177,7 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 				if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 					t.Fatalf("unmarshal response: %v", err)
 				}
-				if resp.Object != "list" {
+				if resp.Object != objectList {
 					t.Errorf("expected object=list, got %s", resp.Object)
 				}
 				if len(resp.Data) != 1 {
