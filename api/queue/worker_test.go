@@ -60,7 +60,7 @@ func makeItem(id string, texts []string) Item {
 
 func TestWorkerProcessesSingleItem(t *testing.T) {
 	store := NewResultStore()
-	defer func() { _ = store.Close() }()
+	defer store.Close()
 	items := make(chan Item, 1)
 	emb := &fakeEmbedder{}
 
@@ -92,7 +92,7 @@ func TestWorkerProcessesSingleItem(t *testing.T) {
 
 func TestWorkerHandlesEmbedError(t *testing.T) {
 	store := NewResultStore()
-	defer func() { _ = store.Close() }()
+	defer store.Close()
 	items := make(chan Item, 1)
 	emb := &fakeEmbedder{err: errors.New("boom")}
 
@@ -129,7 +129,7 @@ func TestWorkerHandlesEmbedError(t *testing.T) {
 
 func TestWorkerStopsOnContextCancel(t *testing.T) {
 	store := NewResultStore()
-	defer func() { _ = store.Close() }()
+	defer store.Close()
 	items := make(chan Item, 4)
 	emb := &fakeEmbedder{delay: 50 * time.Millisecond}
 
@@ -162,7 +162,7 @@ func TestWorkerStopsOnContextCancel(t *testing.T) {
 // submit 3 items quickly, expect 1 TEI call with 3 texts combined.
 func TestWorkerBatchesMultipleItems(t *testing.T) {
 	store := NewResultStore()
-	defer func() { _ = store.Close() }()
+	defer store.Close()
 	items := make(chan Item, 8)
 	emb := &fakeEmbedder{}
 
@@ -205,7 +205,7 @@ func TestWorkerBatchesMultipleItems(t *testing.T) {
 // when many items arrive in the same window.
 func TestWorkerRespectsMaxBatchSize(t *testing.T) {
 	store := NewResultStore()
-	defer func() { _ = store.Close() }()
+	defer store.Close()
 	items := make(chan Item, 20)
 	emb := &fakeEmbedder{}
 

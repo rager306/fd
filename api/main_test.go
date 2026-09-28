@@ -274,7 +274,7 @@ func TestCacheConfigDefaultsWithoutEnv(t *testing.T) {
 
 func TestLocalCacheWithSmallSize(t *testing.T) {
 	c := cache.NewLocalCache(5, 30*time.Second)
-	defer func() { _ = c.Close() }()
+	defer c.Close()
 	ctx := context.Background()
 	for i := 0; i < 10; i++ {
 		c.Set(ctx, fmt.Sprintf("k%d", i), []byte{byte(i)}, 30*time.Second)
@@ -286,7 +286,7 @@ func TestLocalCacheWithSmallSize(t *testing.T) {
 
 func TestLocalCacheWithZeroSize(t *testing.T) {
 	c := cache.NewLocalCache(0, 30*time.Second)
-	defer func() { _ = c.Close() }()
+	defer c.Close()
 	ctx := context.Background()
 	for i := 0; i < 20; i++ {
 		c.Set(ctx, fmt.Sprintf("k%d", i), []byte{byte(i)}, 30*time.Second)
