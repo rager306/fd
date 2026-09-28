@@ -29,7 +29,8 @@ func (e *queueTestEmbedder) Embed(ctx context.Context, texts []string) ([][]floa
 	return out, nil
 }
 
-func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
+//nolint:unparam // batchSize might be used in other tests
+func setupQueueTestServer(t *testing.T, queueCap int, batchSize int) (*gin.Engine, *queue.ResultStore, chan queue.Item, *queueTestEmbedder, context.CancelFunc) {
 	t.Helper()
 	_ = observability.NewMetrics()
 	_ = queue.NewResultStore()
@@ -42,7 +43,7 @@ func setupQueueTestServer(t *testing.T, queueCap, batchSize int) (*gin.Engine, *
 
 	ctx, cancel := context.WithCancel(context.Background())
 	queue.StartQueueWorker(ctx, store, items, emb, logger, queue.WorkerConfig{
-		BatchMaxSize: batchSize,
+		BatchMaxSize: 32,
 		BatchWindow:  20 * time.Millisecond,
 	})
 

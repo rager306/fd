@@ -21,6 +21,7 @@ const (
 	// StatusPending means the item is queued.
 	// StatusPending means the item is queued.
 	StatusPending   Status = "pending"
+	// StatusCompleted is an exported constant.
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
 )
