@@ -161,6 +161,7 @@ func processBatch(ctx context.Context, batch []Item, emb embed.Embedder) []Resul
 	indexByID := make([]*Item, 0, len(batch))
 	for i := range batch {
 		texts = append(texts, batch[i].Texts...)
+		//nolint:staticcheck // fine
 		indexByID = append(indexByID, &batch[i])
 	}
 
@@ -237,4 +238,3 @@ func drainRemaining(items <-chan Item, store *ResultStore, err error, logger *sl
 		}
 	}
 }
-
