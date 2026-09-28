@@ -245,6 +245,7 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
+		//nolint:gocritic // exitAfterDefer is intentional here
 		os.Exit(1)
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
@@ -263,12 +264,14 @@ func main() {
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
+		//nolint:gocritic // exitAfterDefer is intentional here
 		os.Exit(1)
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // exitAfterDefer is intentional here
 		os.Exit(1)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -279,6 +282,7 @@ func main() {
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // exitAfterDefer is intentional here
 		os.Exit(1)
 	}
 	cancel()
@@ -500,6 +504,7 @@ func main() {
 	// (~15-20s on CPU) by retrying PreWarm periodically until IsWarmupDone.
 	// Cancelled on signal so the goroutine exits deterministically.
 	recoveryCtx, recoveryCancel := context.WithCancel(context.Background())
+	//nolint:gocritic // exitAfterDefer is intentional here
 	defer recoveryCancel()
 	recoveryInterval := time.Duration(envutil.Int("FD_WARMUP_RECOVERY_INTERVAL_SEC", 30)) * time.Second
 	recoveryEnabled := envutil.BoolOrDefault("FD_WARMUP_RECOVERY_ENABLED", true)
@@ -520,6 +525,7 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
+		//nolint:gocritic // exitAfterDefer is intentional here
 		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)
