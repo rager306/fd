@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -69,9 +69,9 @@ func load44FZCorpus(t *testing.T) []string {
 
 func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
 	t.Helper()
-	calls = 0
+
 	durations = nil
-	totalTexts = 0
+
 	var mu sync.Mutex
 	var callsCounter atomic.Int64
 
@@ -83,7 +83,7 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	wrapped := &atomicCounterEmbedder{inner: e, counter: &callsCounter}
 
 	// Shuffle inputs so goroutines don't all hit the same first article.
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewPCG(42, 42))
 	jobs := append([]string(nil), texts...)
 	rng.Shuffle(len(jobs), func(i, j int) { jobs[i], jobs[j] = jobs[j], jobs[i] })
 
