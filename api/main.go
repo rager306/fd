@@ -509,14 +509,15 @@ func main() {
 	)
 	lifecycle.StartWarmupRecovery(recoveryCtx, logger, lifecycleState, embeddingClient, defaultWarmupTimeout, recoveryInterval, recoveryEnabled)
 
-	if err := lifecycle.AwaitSignalAndShutdown(
+	err = lifecycle.AwaitSignalAndShutdown(
 		context.Background(),
 		sigCh,
 		srv,
 		lifecycleState,
 		logger,
 		lifecycle.DefaultShutdownTimeout,
-	); err != nil {
+	)
+	if err != nil {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
