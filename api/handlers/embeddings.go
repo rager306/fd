@@ -20,6 +20,8 @@ const (
 	cacheMiss   = "MISS"
 )
 
+const objectList = "list"
+
 // EmbeddingCache is the cache surface used by the embeddings handler.
 // GetIfPresent is used to peek without triggering a model load, so a
 // fully-cached batch can skip the TEI call entirely. Set backfills the
@@ -260,7 +262,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: "list",
+		Object: objectList,
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{
