@@ -83,7 +83,7 @@ func TestCoalescingEmbedderPassThroughOnZeroWindow(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			co.Embed(context.Background(), []string{"x"})
+			_, _ = co.Embed(context.Background(), []string{"x"})
 		}()
 	}
 	wg.Wait()
