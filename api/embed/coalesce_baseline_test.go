@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -83,7 +83,7 @@ func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (
 	wrapped := &atomicCounterEmbedder{inner: e, counter: &callsCounter}
 
 	// Shuffle inputs so goroutines don't all hit the same first article.
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewPCG(42, 42))
 	jobs := append([]string(nil), texts...)
 	rng.Shuffle(len(jobs), func(i, j int) { jobs[i], jobs[j] = jobs[j], jobs[i] })
 
