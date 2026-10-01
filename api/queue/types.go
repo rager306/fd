@@ -19,9 +19,11 @@ type Status string
 
 const (
 	// StatusPending is a queue item status.
-	StatusPending   Status = "pending"
+	StatusPending Status = "pending"
+	// StatusCompleted indicates success.
 	StatusCompleted Status = "completed"
-	StatusFailed    Status = "failed"
+	// StatusFailed indicates failure.
+	StatusFailed Status = "failed"
 )
 
 // Result holds the outcome of a worker-processed queue item. Embeddings
