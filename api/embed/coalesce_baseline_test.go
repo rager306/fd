@@ -67,11 +67,8 @@ func load44FZCorpus(t *testing.T) []string {
 	return texts
 }
 
-func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) {
+func runCorpusBurst(t *testing.T, e Embedder, texts []string, concurrency int) (calls, totalTexts int, durations []time.Duration) { //nolint:unparam // ignore unused return var
 	t.Helper()
-	calls = 0
-	durations = nil
-	totalTexts = 0
 	var mu sync.Mutex
 	var callsCounter atomic.Int64
 

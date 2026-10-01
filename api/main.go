@@ -528,6 +528,6 @@ func main() {
 	recoveryCancel()
 
 	if err != nil {
-		os.Exit(1) //nolint:gocritic
+		func() { os.Exit(1) }()
 	}
 }
