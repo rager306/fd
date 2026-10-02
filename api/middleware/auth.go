@@ -52,7 +52,7 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 
 		// Mitigate timing oracle: ConstantTimeCompare returns immediately if slice lengths differ.
 		// Perform a dummy comparison to strictly balance execution time.
-		match := 1
+		var match int
 		if len(token) != len(apiKey) {
 			match = 0
 			_ = subtle.ConstantTimeCompare([]byte(apiKey), []byte(apiKey))
