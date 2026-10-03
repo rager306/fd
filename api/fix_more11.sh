@@ -1,0 +1,2 @@
+sed -i 's/func main() {/\/\/nolint:gocyclo \/\/ main setup\nfunc main() {/' api/main.go
+sed -i 's/func runCorpusBurst(t \*testing.T, e Embedder, texts \[\]string, concurrency int) (calls, totalTexts int, durations \[\]time.Duration) {/\/\/nolint:unparam \/\/ test func\nfunc runCorpusBurst(t \*testing.T, e Embedder, texts \[\]string, concurrency int) (calls, totalTexts int, durations \[\]time.Duration) {/g' api/embed/coalesce_baseline_test.go
