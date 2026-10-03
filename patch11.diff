@@ -1,0 +1,10 @@
+--- api/main.go
++++ api/main.go
+@@ -522,6 +522,6 @@
+		closeResource("redis", redisCache, logger)
+		closeResource("local cache", localCache, logger)
+		recoveryCancel()
+-		os.Exit(1)
++		return
+	}
+	closeResource("redis", redisCache, logger)

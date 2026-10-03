@@ -1,0 +1,11 @@
+--- api/handlers/queue_handlers.go
++++ api/handlers/queue_handlers.go
+@@ -15,6 +15,8 @@
+ // queueRetryAfterSeconds is the Retry-After hint sent on queue_full
+ // submissions. Picked conservative so clients back off predictably.
+ const queueRetryAfterSeconds = "5"
++
++const objectList = "list"
+
+ // QueueHandler serves POST /v1/queue (submit) and GET /v1/queue/:id (poll).
+ // The handler is constructed only when FD_QUEUE_ENABLED=true; otherwise

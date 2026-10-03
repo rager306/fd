@@ -1,0 +1,13 @@
+--- api/main.go
++++ api/main.go
+@@ -522,7 +522,9 @@
+		logger.Error("shutdown failed", "error", err)
+		closeResource("redis", redisCache, logger)
+		closeResource("local cache", localCache, logger)
+-		os.Exit(1)
++		// os.Exit was here, which skips defers. Call recoveryCancel directly if needed.
++		recoveryCancel()
++		os.Exit(1) // Still exit, but explicitly call the cancel function first.
+	}
+	closeResource("redis", redisCache, logger)
+	closeResource("local cache", localCache, logger)

@@ -1,0 +1,11 @@
+--- queue_handlers.go
++++ queue_handlers.go
+@@ -34,6 +34,8 @@
+	GetResult(ctx context.Context, jobID string) (*queue.Result, error)
+ }
+
++const objectList = "list"
++
+ // QueueHandlers serves the /v1/queue endpoints.
+ type QueueHandlers struct {
+	q         Queue

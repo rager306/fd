@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	labelTier            = "tier"
 	requestStatusSuccess = "success"
 	requestStatusError   = "error"
 	requestStatusTimeout = "timeout"
@@ -54,6 +53,7 @@ type Metrics struct {
 	runtimeCapacity  int64
 	localCacheSizeFn func() int
 	redisCacheSizeFn func() int
+
 }
 
 // NewMetrics creates an isolated Prometheus registry with fd collectors.

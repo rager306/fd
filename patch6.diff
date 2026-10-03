@@ -1,0 +1,11 @@
+--- api/handlers/embeddings.go
++++ api/handlers/embeddings.go
+@@ -34,6 +34,8 @@
+	GetOrLoad(ctx context.Context, key string, dim int, loader func(context.Context) ([]float32, error)) ([]float32, error)
+ }
+
++const objectList = "list"
++
+ // EmbeddingsHandler serves the OpenAI-compatible /v1/embeddings endpoint.
+ type EmbeddingsHandler struct {
+	teiClient embed.Embedder
