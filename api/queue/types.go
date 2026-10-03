@@ -18,9 +18,12 @@ import (
 type Status string
 
 const (
-	StatusPending   Status = "pending"
+	// StatusPending indicates the item is waiting to be processed.
+	StatusPending Status = "pending"
+	// StatusCompleted indicates the item is done.
 	StatusCompleted Status = "completed"
-	StatusFailed    Status = "failed"
+	// StatusFailed is when error occurs
+	StatusFailed Status = "failed"
 )
 
 // Result holds the outcome of a worker-processed queue item. Embeddings
