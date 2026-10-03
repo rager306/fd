@@ -1,0 +1,16 @@
+--- api/embed/coalescedembedder.go
++++ api/embed/coalescedembedder.go
+@@ -138,10 +138,10 @@
+
+	for len(q.pending) > 0 {
+		n, err := q.processBatch(ctx)
+-		if err != nil {
++		switch {
++		case err != nil:
+			return
+-		}
+-		if n == 0 {
++		case n == 0:
+			// Nothing was ready. Wait for either a new item,
+			// or for the timer to tick down.
+			select {

@@ -1,0 +1,12 @@
+--- api/main.go
++++ api/main.go
+@@ -520,7 +520,8 @@
+		logger.Error("shutdown failed", "error", err)
+		closeResource("redis", redisCache, logger)
+		closeResource("local cache", localCache, logger)
+-		os.Exit(1)
++		recoveryCancel()
++		os.Exit(1) // explicitly invoke cancel before exit
+	}
+	closeResource("redis", redisCache, logger)
+	closeResource("local cache", localCache, logger)
