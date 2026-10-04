@@ -176,6 +176,7 @@ func TestCreateEmbedding_ProductionHandler(t *testing.T) {
 				if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
 					t.Fatalf("unmarshal response: %v", err)
 				}
+				//nolint:goconst // acceptable
 				if resp.Object != "list" {
 					t.Errorf("expected object=list, got %s", resp.Object)
 				}
