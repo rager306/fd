@@ -49,7 +49,18 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 			return
 		}
 		token := strings.TrimPrefix(authorization, bearerPrefix)
-		if subtle.ConstantTimeCompare([]byte(token), []byte(apiKey)) != 1 {
+
+		// Mitigate length-based timing attacks: ConstantTimeCompare returns immediately
+		// if slice lengths differ. We perform a dummy comparison to strictly balance execution time.
+		var match int
+		if len(token) != len(apiKey) {
+			subtle.ConstantTimeCompare([]byte(apiKey), []byte(apiKey))
+			match = 0
+		} else {
+			match = subtle.ConstantTimeCompare([]byte(token), []byte(apiKey))
+		}
+
+		if match != 1 {
 			handlers.WriteError(c, handlers.CodeUnauthorized, "authorization", "invalid bearer token")
 			c.Abort()
 			return
