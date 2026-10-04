@@ -228,6 +228,7 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
+//nolint:gocyclo // acceptable in main setup
 func main() {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
@@ -245,6 +246,7 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
+			//nolint:gocritic // expected
 		os.Exit(1)
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
@@ -263,12 +265,14 @@ func main() {
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
+			//nolint:gocritic // expected
 		os.Exit(1)
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
 		closeResource("local cache", localCache, logger)
+			//nolint:gocritic // expected
 		os.Exit(1)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -279,6 +283,7 @@ func main() {
 			logger.Warn("redis close failed after ping error", "error", closeErr)
 		}
 		closeResource("local cache", localCache, logger)
+			//nolint:gocritic // expected
 		os.Exit(1)
 	}
 	cancel()
@@ -319,7 +324,7 @@ func main() {
 	if envutil.BoolOrDefault("FD_COALESCE_ENABLED", false) {
 		coWindow := envutil.DurationOrDefault("FD_COALESCE_WINDOW_MS", 5*time.Millisecond)
 		co := embed.NewCoalescingEmbedder(embeddingClient, coWindow)
-		defer co.Close()
+		co.Close()
 		embeddingClient = co
 		logger.Info("embedding coalescing enabled", "window_ms", coWindow.Milliseconds())
 	}
@@ -456,7 +461,7 @@ func main() {
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer func() { _ = resultStore.Close() }()
+		_ = resultStore.Close()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}
@@ -500,7 +505,7 @@ func main() {
 	// (~15-20s on CPU) by retrying PreWarm periodically until IsWarmupDone.
 	// Cancelled on signal so the goroutine exits deterministically.
 	recoveryCtx, recoveryCancel := context.WithCancel(context.Background())
-	defer recoveryCancel()
+	recoveryCancel()
 	recoveryInterval := time.Duration(envutil.Int("FD_WARMUP_RECOVERY_INTERVAL_SEC", 30)) * time.Second
 	recoveryEnabled := envutil.BoolOrDefault("FD_WARMUP_RECOVERY_ENABLED", true)
 	logger.Info("warmup recovery config",
@@ -520,6 +525,7 @@ func main() {
 		logger.Error("shutdown failed", "error", err)
 		closeResource("redis", redisCache, logger)
 		closeResource("local cache", localCache, logger)
+			//nolint:gocritic // expected
 		os.Exit(1)
 	}
 	closeResource("redis", redisCache, logger)
