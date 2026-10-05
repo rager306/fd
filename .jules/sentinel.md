@@ -6,3 +6,7 @@
 **Vulnerability:** API key verification was vulnerable to a length-based timing attack because `subtle.ConstantTimeCompare` returns immediately if lengths differ.
 **Learning:** Returning immediately allows an attacker to brute force the length of the secret API key.
 **Prevention:** If the provided string and the correct API key length mismatches, perform a dummy comparison `subtle.ConstantTimeCompare(apiKey, apiKey)` to balance execution time.
+## 2025-10-05 - Errcheck violations on Close
+**Vulnerability:** Not checking errors from `Close()` calls.
+**Learning:** We should explicitly ignore errors for deferred calls `defer func() { _ = store.Close() }()`.
+**Prevention:** Follow memory guidelines for errcheck on `Close()`.
