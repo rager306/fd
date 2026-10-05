@@ -49,6 +49,13 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 			return
 		}
 		token := strings.TrimPrefix(authorization, bearerPrefix)
+		// Mitigate length-based timing oracle by executing dummy comparison
+		if len(token) != len(apiKey) {
+			subtle.ConstantTimeCompare([]byte(apiKey), []byte(apiKey))
+			handlers.WriteError(c, handlers.CodeUnauthorized, "authorization", "invalid bearer token")
+			c.Abort()
+			return
+		}
 		if subtle.ConstantTimeCompare([]byte(token), []byte(apiKey)) != 1 {
 			handlers.WriteError(c, handlers.CodeUnauthorized, "authorization", "invalid bearer token")
 			c.Abort()
