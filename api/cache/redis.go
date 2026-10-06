@@ -186,12 +186,14 @@ func (c *RedisCache) key(text string, dim int) string {
 	// We use HashText (which returns a single allocation string) and rely on Go's compiler
 	// optimizing the entire string concatenation into a single heap allocation.
 	hashHex := c.HashText(text)
-	if dim == 1024 {
+	switch dim {
+	case 1024:
 		return c.prefix + c.namespace + ":" + hashHex + ":d1024"
-	} else if dim == 512 {
+	case 512:
 		return c.prefix + c.namespace + ":" + hashHex + ":d512"
+	default:
+		return c.prefix + c.namespace + ":" + hashHex + ":d" + strconv.Itoa(dim)
 	}
-	return c.prefix + c.namespace + ":" + hashHex + ":d" + strconv.Itoa(dim)
 }
 
 func (c *RedisCache) namespacePattern() string {
