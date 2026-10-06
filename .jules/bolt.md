@@ -1,3 +1,6 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2025-02-12 - Performance Improvement in Cache Hashing
+**Learning:** In Go 1.20+, while `hex.EncodeToString()` avoids multiple allocations for the string itself by using `unsafe.String`, passing the full 32-byte hash `h[:]` to `EncodeToString` and then slicing the result (`[:12]`) forces the entire 64-byte underlying hex array to remain pinned in memory for the lifetime of that string slice. For millions of keys, this memory bloat can be significant.
+**Action:** Always slice the underlying input *before* string creation. By slicing the hash first (`h[:6]`), `EncodeToString` generates only the required 12 bytes and completely avoids the lingering 64-byte backing array.
