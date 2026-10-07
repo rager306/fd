@@ -5,8 +5,9 @@ package embed
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
-	"unsafe"
+	"math"
 )
 
 // Encoding format constants. Used by /v1/embeddings and /embeddings/batch
@@ -33,13 +34,11 @@ func EncodeEmbedding(emb []float32, format string) string {
 // Float32SliceToBytes converts a float32 slice to a little-endian byte
 // slice suitable for base64 encoding. Length must equal len(slice)*4.
 func Float32SliceToBytes(slice []float32) []byte {
-	if len(slice) == 0 {
-		return nil
+	b := make([]byte, len(slice)*4)
+	for i, v := range slice {
+		binary.LittleEndian.PutUint32(b[i*4:], math.Float32bits(v))
 	}
-	// Note: this uses unsafe.Slice to directly map the float32 memory to bytes,
-	// eliminating a large heap allocation. This assumes the deployment architecture
-	// is little-endian (like x86 and ARM64).
-	return unsafe.Slice((*byte)(unsafe.Pointer(&slice[0])), len(slice)*4)
+	return b
 }
 
 // BytesToFloat32Slice is the inverse of Float32SliceToBytes, used by tests
@@ -48,9 +47,10 @@ func BytesToFloat32Slice(b []byte) []float32 {
 	if len(b)%4 != 0 {
 		return nil
 	}
-	if len(b) == 0 {
-		return nil
+	out := make([]float32, len(b)/4)
+	for i := range out {
+		bits := binary.LittleEndian.Uint32(b[i*4:])
+		out[i] = math.Float32frombits(bits)
 	}
-	// Note: directly maps bytes to float32 assuming little-endian architecture.
-	return unsafe.Slice((*float32)(unsafe.Pointer(&b[0])), len(b)/4)
+	return out
 }
