@@ -182,6 +182,14 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
+	// Optimization: fast paths for common dimensions using full string concatenation
+	// allows the Go compiler to perform a single memory allocation.
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d512"
+	}
 	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 

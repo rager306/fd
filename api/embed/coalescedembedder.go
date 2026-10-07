@@ -150,5 +150,3 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 		cursor += n
 	}
 }
-
-
