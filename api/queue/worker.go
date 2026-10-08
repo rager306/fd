@@ -13,7 +13,7 @@ import (
 // different values via the WorkerConfig struct.
 const (
 	defaultBatchMaxSize = 32
-	defaultBatchWindow = 10 * time.Millisecond
+	defaultBatchWindow  = 10 * time.Millisecond
 )
 
 // WorkerConfig holds tunable parameters for the queue worker. Zero
@@ -158,10 +158,8 @@ func processBatch(ctx context.Context, batch []Item, emb embed.Embedder) []Resul
 
 	// Concat all texts preserving per-item boundaries.
 	var texts []string
-	indexByID := make([]*Item, 0, len(batch))
 	for i := range batch {
 		texts = append(texts, batch[i].Texts...)
-		indexByID = append(indexByID, &batch[i])
 	}
 
 	if ctx.Err() != nil {
@@ -219,9 +217,9 @@ func drainRemaining(items <-chan Item, store *ResultStore, err error, logger *sl
 				return count
 			}
 			result := Result{
-				ID:        item.ID,
-				Status:    StatusFailed,
-				Err:       err,
+				ID:          item.ID,
+				Status:      StatusFailed,
+				Err:         err,
 				CompletedAt: time.Now().UnixNano(),
 			}
 			store.Save(item.ID, &result)
@@ -237,4 +235,3 @@ func drainRemaining(items <-chan Item, store *ResultStore, err error, logger *sl
 		}
 	}
 }
-
