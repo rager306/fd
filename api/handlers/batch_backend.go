@@ -30,13 +30,14 @@ func loadBatchEmbeddingChunk(ctx context.Context, cache EmbeddingCache, embedder
 	missIdx := make([]int, 0, chunkEnd-chunkStart)
 	missTexts := make([]string, 0, chunkEnd-chunkStart)
 
-	for i := chunkStart; i < chunkEnd; i++ {
-		text := texts[i]
-		if emb, ok := cache.GetIfPresent(ctx, text, dims); ok {
-			vectors[i] = truncateEmbedding(emb, dims)
+	chunk := texts[chunkStart:chunkEnd]
+	hits := cache.GetManyIfPresent(ctx, chunk, dims)
+	for j, text := range chunk {
+		if emb, ok := hits[j]; ok {
+			vectors[chunkStart+j] = truncateEmbedding(emb, dims)
 			continue
 		}
-		missIdx = append(missIdx, i)
+		missIdx = append(missIdx, chunkStart+j)
 		missTexts = append(missTexts, text)
 	}
 	if len(missTexts) == 0 {
