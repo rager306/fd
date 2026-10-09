@@ -55,6 +55,9 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 
 		match := 0
 		if len(tokenBytes) != len(keyBytes) {
+			// SECURITY: subtle.ConstantTimeCompare returns immediately if slice lengths differ,
+			// creating a length-based timing oracle. To mitigate this without hashing (which
+			// introduces DoS vectors), we perform a dummy comparison to balance the execution time.
 			subtle.ConstantTimeCompare(keyBytes, keyBytes)
 		} else {
 			match = subtle.ConstantTimeCompare(tokenBytes, keyBytes)
