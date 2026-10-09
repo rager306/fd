@@ -56,8 +56,7 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 		if len(tokenBytes) == len(apiKeyBytes) {
 			match = subtle.ConstantTimeCompare(tokenBytes, apiKeyBytes)
 		} else {
-			match = subtle.ConstantTimeCompare(apiKeyBytes, apiKeyBytes)
-			match = 0
+			_ = subtle.ConstantTimeCompare(apiKeyBytes, apiKeyBytes)
 		}
 
 		if match != 1 {
