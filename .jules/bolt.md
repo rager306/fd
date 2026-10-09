@@ -1,3 +1,7 @@
 ## 2023-10-27 - Cache Key Generation Overhead
 **Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
 **Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+
+## 2024-03-22 - Go String Slice Memory Optimization and strconv Fast Paths
+**Learning:** Slicing a large dynamically allocated string retains a reference to the entire backing array. For hex encoding, `hex.EncodeToString(h[:])[:12]` keeps the full 64-byte array in memory, while `hex.EncodeToString(h[:6])` creates only the required 12 bytes. Furthermore, `strconv.Itoa` causes heap allocations for values > 99, but Go's compiler efficiently optimizes single-statement string concatenations. Adding fast paths with string literals for known constants (e.g. 512, 1024) prevents allocations.
+**Action:** Always slice byte arrays *before* converting to string to avoid retaining excess backing memory. Use string literals in single-statement string concatenations for known integers in high-throughput hot paths to achieve zero-allocation fast paths.
