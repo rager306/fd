@@ -182,7 +182,16 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
-	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
+	hash := c.HashText(text)
+	// Fast paths for standard dimensions to avoid strconv.Itoa heap allocation
+	// and allow the Go compiler to optimize the string concatenation into a single allocation.
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + hash + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + hash + ":d512"
+	}
+	return c.prefix + c.namespace + ":" + hash + ":d" + strconv.Itoa(dim)
 }
 
 func (c *RedisCache) namespacePattern() string {
