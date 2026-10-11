@@ -7,5 +7,6 @@ import (
 
 func shortHash(value string) string {
 	h := sha256.Sum256([]byte(value))
-	return hex.EncodeToString(h[:])[:12]
+	// Encode only the needed bytes to avoid memory bloat from slicing a large string.
+	return hex.EncodeToString(h[:6])
 }
