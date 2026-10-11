@@ -181,7 +181,15 @@ func (c *RedisCache) expiration() time.Duration {
 	return c.ttl
 }
 
+// ⚡ Bolt: Optimize cache key generation with fast paths for common dimensions (1024, 512).
+// Bypasses strconv.Itoa heap allocation and allows single-allocation concat optimization.
 func (c *RedisCache) key(text string, dim int) string {
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d512"
+	}
 	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
