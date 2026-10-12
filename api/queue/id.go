@@ -10,6 +10,9 @@ import (
 // are negligible in any fd deployment window.
 func NewRequestID() string {
 	var buf [8]byte
-	_, _ = rand.Read(buf[:])
+	_, err := rand.Read(buf[:])
+	if err != nil {
+		panic("crypto/rand failed to generate secure id: " + err.Error())
+	}
 	return hex.EncodeToString(buf[:])
 }
