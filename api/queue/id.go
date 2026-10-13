@@ -10,6 +10,8 @@ import (
 // are negligible in any fd deployment window.
 func NewRequestID() string {
 	var buf [8]byte
-	_, _ = rand.Read(buf[:])
+	if _, err := rand.Read(buf[:]); err != nil {
+		panic("crypto/rand failed to provide entropy: " + err.Error())
+	}
 	return hex.EncodeToString(buf[:])
 }
