@@ -17,16 +17,16 @@ type TieredCache struct {
 	logger   *slog.Logger
 	sf       singleflight.Group
 
-	observer CacheObserver
+	observer Observer
 
 	lookupDurationFn func(time.Duration)
 }
 
-// CacheObserver is invoked on every cache look-up outcome with the tier that
+// Observer is invoked on every cache look-up outcome with the tier that
 // resolved the read ("l1", "l2", or "miss") and whether it produced a usable
 // hit. Observers must be cheap and non-blocking; fd uses this to feed
 // observability.Metrics counters. Observer may be nil.
-type CacheObserver func(tier string, hit bool)
+type Observer func(tier string, hit bool)
 
 // NewTieredCache creates a two-tier cache.
 func NewTieredCache(local *LocalCache, redis *RedisCache, localTTL time.Duration) *TieredCache {
@@ -50,7 +50,7 @@ func NewTieredCacheWithLogger(local *LocalCache, redis *RedisCache, localTTL tim
 // outcome (tier name + hit boolean). Safe to call before or after the cache
 // starts handling traffic. Pass nil to detach. Observers are invoked
 // synchronously on the read path; they must be non-blocking.
-func (tc *TieredCache) SetCacheObserver(observer CacheObserver) {
+func (tc *TieredCache) SetCacheObserver(observer Observer) {
 	tc.observer = observer
 }
 
@@ -230,7 +230,7 @@ func (tc *TieredCache) ObserveCacheLookup(tier string, hit bool) {
 // callers can preserve duplicate text positions and response order.
 func (tc *TieredCache) GetManyIfPresent(ctx context.Context, keys []string, dim int) map[int][]float32 {
 	started := time.Now()
-	defer tc.recordLookupDuration(time.Since(started))
+	defer func() { tc.recordLookupDuration(time.Since(started)) }()
 	hits := make(map[int][]float32, len(keys))
 	missIndexes := make([]int, 0, len(keys))
 	missKeys := make([]string, 0, len(keys))

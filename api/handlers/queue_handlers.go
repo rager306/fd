@@ -116,7 +116,7 @@ func (h *QueueHandler) Poll(c *gin.Context) {
 		data := make([]embed.EmbeddingObj, len(res.Embeddings))
 		for i, emb := range res.Embeddings {
 			obj := embed.EmbeddingObj{
-				Object:    "embedding",
+				Object:    embed.ObjectEmbedding,
 				Index:     i,
 				Dimensions: 1024,
 			}
@@ -124,7 +124,7 @@ func (h *QueueHandler) Poll(c *gin.Context) {
 			data[i] = obj
 		}
 		c.JSON(http.StatusOK, embed.EmbeddingsResponse{
-			Object: "list",
+			Object: embed.ObjectList,
 			Data:   data,
 			Model:  h.modelID,
 			Usage: embed.Usage{

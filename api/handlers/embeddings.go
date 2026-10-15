@@ -247,7 +247,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	data := make([]embed.EmbeddingObj, len(embeddings))
 	for i, emb := range embeddings {
 		obj := embed.EmbeddingObj{
-			Object:     "embedding",
+			Object:     embed.ObjectEmbedding,
 			Index:      i,
 			Dimensions: dims,
 		}
@@ -260,7 +260,7 @@ func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, m
 	}
 
 	return embed.EmbeddingsResponse{
-		Object: "list",
+		Object: embed.ObjectList,
 		Data:   data,
 		Model:  modelID,
 		Usage: embed.Usage{

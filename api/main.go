@@ -228,7 +228,72 @@ func sleepWarmupBackoff(ctx context.Context, d time.Duration) error {
 	}
 }
 
-func main() {
+// healthParams groups the inputs needed to build the deep /health handler.
+type healthParams struct {
+	runtimeConfig       *embeddingRuntimeConfig
+	lifecycleState      *lifecycle.State
+	modelID             string
+	teiURL              string
+	redisNamespace      string
+	httpClient          *http.Client
+	tiered              *cache.TieredCache
+	maxInFlightCapacity int64
+	logger              *slog.Logger
+}
+
+// newHealthHandler builds the /health handler and its runtime metadata block.
+// Dependency probes are cheap reachability checks: they never run inference.
+func newHealthHandler(p healthParams) (*handlers.RuntimeHealth, gin.HandlerFunc) {
+	runtimeHealth := p.runtimeConfig.Health(p.modelID, p.redisNamespace)
+	teiHealthURL := strings.TrimRight(p.teiURL, "/") + "/health"
+	handler := handlers.NewHealthHandlerWithOptions(runtimeHealth, p.lifecycleState, handlers.HealthOptions{
+		InFlightCapacity: &p.maxInFlightCapacity,
+		Dependencies: &handlers.DependencyChecks{
+			TEI: handlers.DependencyProbeFunc(func(ctx context.Context) handlers.DependencyStatus {
+				started := time.Now()
+				req, err := http.NewRequestWithContext(ctx, http.MethodGet, teiHealthURL, http.NoBody)
+				if err != nil {
+					return handlers.DependencyStatus{Reachable: false, LatencyMS: elapsedMS(started), Error: err.Error()}
+				}
+				resp, err := p.httpClient.Do(req)
+				latencyMS := elapsedMS(started)
+				if err != nil {
+					return handlers.DependencyStatus{Reachable: false, LatencyMS: latencyMS, Error: err.Error()}
+				}
+				defer func() {
+					if closeErr := resp.Body.Close(); closeErr != nil {
+						p.logger.Debug("tei health response close failed", "error", closeErr)
+					}
+				}()
+				reachable := resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusInternalServerError
+				status := handlers.DependencyStatus{Reachable: reachable, LatencyMS: latencyMS}
+				if !reachable {
+					status.Error = fmt.Sprintf("status %d", resp.StatusCode)
+				}
+				return status
+			}),
+			Redis: handlers.DependencyProbeFunc(func(ctx context.Context) handlers.DependencyStatus {
+				started := time.Now()
+				err := p.tiered.Ping(ctx)
+				status := handlers.DependencyStatus{Reachable: err == nil, LatencyMS: elapsedMS(started), Namespace: p.redisNamespace}
+				if err != nil {
+					status.Error = err.Error()
+				}
+				return status
+			}),
+		},
+		DependencyTimeout: 750 * time.Millisecond,
+	})
+	return runtimeHealth, handler
+}
+
+// elapsedMS reports the time since started in milliseconds with microsecond
+// precision, used for dependency probe latency.
+func elapsedMS(started time.Time) float64 {
+	return float64(time.Since(started).Microseconds()) / 1000
+}
+
+func run() error {
 	logHandler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: getLogLevel(getEnv("LOG_LEVEL", "info")),
 	})
@@ -245,7 +310,7 @@ func main() {
 	runtimeConfig, err := loadEmbeddingRuntimeConfig()
 	if err != nil {
 		logger.Error("embedding runtime config invalid", "error", err)
-		os.Exit(1)
+		return err
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
 
@@ -258,28 +323,25 @@ func main() {
 	l1MaxEntries := envutil.PositiveInt("FD_CACHE_MAX_SIZE", 10000)
 	l1TTL := envutil.DurationOrDefault("FD_CACHE_LOCAL_TTL", 30*time.Second)
 	localCache := cache.NewLocalCache(l1MaxEntries, l1TTL)
+	defer closeResource("local cache", localCache, logger)
 
 	// L2: Redis binary cache with pool timeouts
 	redisOptions, err := cache.RedisCacheOptionsFromEnv("embed:cache:", redisPoolSize)
 	if err != nil {
 		logger.Error("redis cache config invalid", "error", err)
-		os.Exit(1)
+		return err
 	}
 	redisCache, err := cache.NewRedisCacheWithOptions(redisHost, redisOptions)
 	if err != nil {
 		logger.Error("redis cache init failed", "error", err)
-		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		return err
 	}
+	defer closeResource("redis", redisCache, logger)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	if err := redisCache.Ping(ctx); err != nil {
 		cancel()
 		logger.Error("redis connect failed", "error", err)
-		if closeErr := redisCache.Close(); closeErr != nil {
-			logger.Warn("redis close failed after ping error", "error", closeErr)
-		}
-		closeResource("local cache", localCache, logger)
-		os.Exit(1)
+		return err
 	}
 	cancel()
 	logger.Info("redis connected", "addr", redisHost, "cache_namespace", redisOptions.Namespace.String())
@@ -384,45 +446,16 @@ func main() {
 	})
 	tiered.SetLookupDurationObserver(metrics.ObserveCacheLookupDuration)
 
-	runtimeHealth := runtimeConfig.Health(modelID, redisOptions.Namespace.String())
-	teiHealthURL := strings.TrimRight(teiURL, "/") + "/health"
-	healthHandler := handlers.NewHealthHandlerWithOptions(runtimeHealth, lifecycleState, handlers.HealthOptions{
-		InFlightCapacity: &maxInFlightCapacity,
-		Dependencies: &handlers.DependencyChecks{
-			TEI: handlers.DependencyProbeFunc(func(ctx context.Context) handlers.DependencyStatus {
-				started := time.Now()
-				req, err := http.NewRequestWithContext(ctx, http.MethodGet, teiHealthURL, http.NoBody)
-				if err != nil {
-					return handlers.DependencyStatus{Reachable: false, LatencyMS: float64(time.Since(started).Microseconds()) / 1000, Error: err.Error()}
-				}
-				resp, err := httpClient.Do(req)
-				latencyMS := float64(time.Since(started).Microseconds()) / 1000
-				if err != nil {
-					return handlers.DependencyStatus{Reachable: false, LatencyMS: latencyMS, Error: err.Error()}
-				}
-				defer func() {
-					if closeErr := resp.Body.Close(); closeErr != nil {
-						logger.Debug("tei health response close failed", "error", closeErr)
-					}
-				}()
-				reachable := resp.StatusCode >= http.StatusOK && resp.StatusCode < http.StatusInternalServerError
-				status := handlers.DependencyStatus{Reachable: reachable, LatencyMS: latencyMS}
-				if !reachable {
-					status.Error = fmt.Sprintf("status %d", resp.StatusCode)
-				}
-				return status
-			}),
-			Redis: handlers.DependencyProbeFunc(func(ctx context.Context) handlers.DependencyStatus {
-				started := time.Now()
-				err := tiered.Ping(ctx)
-				status := handlers.DependencyStatus{Reachable: err == nil, LatencyMS: float64(time.Since(started).Microseconds()) / 1000, Namespace: redisOptions.Namespace.String()}
-				if err != nil {
-					status.Error = err.Error()
-				}
-				return status
-			}),
-		},
-		DependencyTimeout: 750 * time.Millisecond,
+	runtimeHealth, healthHandler := newHealthHandler(healthParams{
+		runtimeConfig:       runtimeConfig,
+		lifecycleState:      lifecycleState,
+		modelID:             modelID,
+		teiURL:              teiURL,
+		redisNamespace:      redisOptions.Namespace.String(),
+		httpClient:          httpClient,
+		tiered:              tiered,
+		maxInFlightCapacity: maxInFlightCapacity,
+		logger:              logger,
 	})
 	r.GET("/live", handlers.NewLiveHandler())
 	r.GET("/ready", handlers.NewReadyHandler(lifecycleState))
@@ -456,7 +489,7 @@ func main() {
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer resultStore.Close()
+		defer func() { closeResource("queue result store", resultStore, logger) }()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}
@@ -518,10 +551,15 @@ func main() {
 		lifecycle.DefaultShutdownTimeout,
 	); err != nil {
 		logger.Error("shutdown failed", "error", err)
-		closeResource("redis", redisCache, logger)
-		closeResource("local cache", localCache, logger)
+		return err
+	}
+	return nil
+}
+
+// main runs the service and exits non-zero on any fatal startup or shutdown
+// error. Cleanup lives in run's defers, which run on the normal return path.
+func main() {
+	if err := run(); err != nil {
 		os.Exit(1)
 	}
-	closeResource("redis", redisCache, logger)
-	closeResource("local cache", localCache, logger)
 }

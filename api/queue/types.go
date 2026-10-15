@@ -17,6 +17,9 @@ import (
 // Status is the lifecycle of a submitted queue item.
 type Status string
 
+// Queue item statuses. StatusPending means accepted and awaiting the worker;
+// StatusCompleted means embeddings are available; StatusFailed means the
+// worker could not produce embeddings for the item.
 const (
 	StatusPending   Status = "pending"
 	StatusCompleted Status = "completed"

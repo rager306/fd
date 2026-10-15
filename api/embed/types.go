@@ -5,6 +5,14 @@ import (
 	"encoding/json"
 )
 
+// ObjectList is the OpenAI-compatible value for the top-level response
+// "object" field. Shared so handlers do not repeat the literal.
+const ObjectList = "list"
+
+// ObjectEmbedding is the OpenAI-compatible value for one response data item's
+// "object" field.
+const ObjectEmbedding = "embedding"
+
 // Embedder is the minimal inference interface shared by handlers and lifecycle warmup.
 type Embedder interface {
 	Embed(ctx context.Context, texts []string) ([][]float32, error)

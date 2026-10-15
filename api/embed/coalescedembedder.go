@@ -8,8 +8,10 @@ import (
 )
 
 // coalesceBatchFull is the hard cap per TEI batch sent to the downstream
-// embedder. Aligned with the TEI max_client_batch_size of 32.
-const coalesceBatchFull = 32
+// embedder. Aligned with the TEI max_client_batch_size of 32, this limit
+// counts individual texts rather than jobs so a few large requests cannot
+// overflow TEI's input capacity.
+const coalesceBatchMaxTexts = 32
 
 // coalescedJob represents one caller waiting for an embedding result.
 type coalescedJob struct {
@@ -98,9 +100,12 @@ func (c *CoalescingEmbedder) run() {
 			return
 		}
 		batch = append(batch, job)
-		// Try to fill batch up to coalesceBatchFull without blocking.
+		// Try to fill batch up to coalesceBatchMaxTexts texts without
+		// blocking. Cap is on individual texts to respect TEI's
+		// max_client_batch_size=32; large jobs may exhaust the budget alone.
 		timer := time.NewTimer(c.window)
-		for len(batch) < coalesceBatchFull {
+		textsInBatch := totalTexts(batch)
+		for textsInBatch < coalesceBatchMaxTexts {
 			select {
 			case next, open := <-c.jobs:
 				if !open {
@@ -108,6 +113,7 @@ func (c *CoalescingEmbedder) run() {
 					return
 				}
 				batch = append(batch, next)
+				textsInBatch = totalTexts(batch)
 			case <-timer.C:
 				// Window expired — flush what we have.
 				c.flushBatch(batch)
@@ -120,6 +126,16 @@ func (c *CoalescingEmbedder) run() {
 		batch = batch[:0]
 	outer:
 	}
+}
+
+// totalTexts returns the count of individual inputs across all jobs in
+// the batch. Used to cap a coalesced batch at TEI's max input capacity.
+func totalTexts(batch []coalescedJob) int {
+	sum := 0
+	for _, j := range batch {
+		sum += len(j.texts)
+	}
+	return sum
 }
 
 func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
@@ -138,13 +154,14 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 	cursor := 0
 	for i, j := range batch {
 		n := counts[i]
-		if err != nil {
+		switch {
+		case err != nil:
 			j.result <- coalescedResult{err: err}
-		} else if cursor+n <= len(embs) {
+		case cursor+n <= len(embs):
 			slice := make([][]float32, n)
 			copy(slice, embs[cursor:cursor+n])
 			j.result <- coalescedResult{embeddings: slice}
-		} else {
+		default:
 			j.result <- coalescedResult{err: fmt.Errorf("coalesce split: cursor %d+%d > len(embs) %d", cursor, n, len(embs))}
 		}
 		cursor += n
