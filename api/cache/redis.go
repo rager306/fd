@@ -182,6 +182,15 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
+	// Optimization: strconv.Itoa allocates for integers > 99. Using fast-path
+	// string literals allows the compiler to optimize the entire concatenation
+	// into a single heap allocation for common dimensions.
+	if dim == 1024 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d1024"
+	}
+	if dim == 512 {
+		return c.prefix + c.namespace + ":" + c.HashText(text) + ":d512"
+	}
 	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 
