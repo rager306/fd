@@ -1,3 +1,3 @@
-## 2023-10-27 - Cache Key Generation Overhead
-**Learning:** In Go, using `fmt.Sprintf` for constructing strings in highly-frequent hot paths (like cache lookups per embedding input) causes measurable overhead due to reflection and interface boxing, adding unnecessary allocations compared to standard string concatenation.
-**Action:** Replace `fmt.Sprintf` with `strconv.Itoa` and simple string concatenation `+` in hot paths, and consider adding fast-path hardcoded values for frequently used parameters (e.g. dimensions 512, 1024) to avoid string conversion entirely.
+## 2023-10-15 - strconv.Itoa heap allocations in hot paths
+**Learning:** In Go, `strconv.Itoa` only caches string representations for integers 0-99. For larger numbers (like common tensor dimension sizes 512 or 1024), calling `strconv.Itoa` dynamically allocates a new string on the heap on every call. In a hot path like cache key generation, this causes unnecessary garbage collection pressure.
+**Action:** When appending well-known large constants to strings, add simple fast-paths checking for those constants and return the concatenated string literal directly. The Go compiler can optimize single-statement string concatenations into a single allocation, saving the `strconv.Itoa` overhead.
