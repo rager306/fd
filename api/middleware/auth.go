@@ -32,12 +32,17 @@ func APIKeyAuthFromEnv() gin.HandlerFunc {
 // APIKeyAuth requires Authorization: Bearer <apiKey> on protected endpoints.
 // Public endpoints are limited to cheap liveness/metadata/docs surfaces.
 func APIKeyAuth(apiKey string) gin.HandlerFunc {
+	// ⚡ Bolt: Precompute API key validity and hash at startup to save allocations
+	// and SHA-256 overhead on every request.
+	isKeyEmpty := strings.TrimSpace(apiKey) == ""
+	apiKeyHash := sha256.Sum256([]byte(apiKey))
+
 	return func(c *gin.Context) {
 		if isAuthPublicPath(c.Request.URL.Path) || c.Request.Method == "OPTIONS" {
 			c.Next()
 			return
 		}
-		if strings.TrimSpace(apiKey) == "" {
+		if isKeyEmpty {
 			handlers.WriteError(c, handlers.CodeUnauthorized, "authorization", "api key is not configured")
 			c.Abort()
 			return
@@ -54,7 +59,6 @@ func APIKeyAuth(apiKey string) gin.HandlerFunc {
 		// inputs. ConstantTimeCompare returns 0 immediately when lengths differ,
 		// which would leak the configured key's length through response timing.
 		tokenHash := sha256.Sum256([]byte(token))
-		apiKeyHash := sha256.Sum256([]byte(apiKey))
 		if subtle.ConstantTimeCompare(tokenHash[:], apiKeyHash[:]) != 1 {
 			handlers.WriteError(c, handlers.CodeUnauthorized, "authorization", "invalid bearer token")
 			c.Abort()
