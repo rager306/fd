@@ -13,6 +13,7 @@ func clearRedisCacheEnv(t *testing.T) {
 	for _, key := range []string{
 		"REDIS_CACHE_TTL",
 		"REDIS_CACHE_NO_EXPIRE",
+		"REDIS_CACHE_KEY_FASTPATH",
 		"EMBEDDING_CACHE_VERSION",
 		"EMBEDDING_MODEL_ID",
 		"EMBEDDING_MODEL_REVISION",
@@ -196,6 +197,62 @@ func TestRedisCacheOptionsFromEnvRejectsInvalidTTL(t *testing.T) {
 	_, err := RedisCacheOptionsFromEnv("embed:cache:", 50)
 	if err == nil {
 		t.Fatal("expected invalid TTL error")
+	}
+}
+
+func TestRedisCacheKeyFastPathDefaultsOn(t *testing.T) {
+	clearRedisCacheEnv(t)
+
+	opts, err := RedisCacheOptionsFromEnv("embed:cache:", 50)
+	if err != nil {
+		t.Fatalf("options: %v", err)
+	}
+	if !opts.KeyFastPath {
+		t.Fatal("KeyFastPath should default true")
+	}
+}
+
+func TestRedisCacheOptionsFromEnvKeyFastPathOff(t *testing.T) {
+	clearRedisCacheEnv(t)
+	t.Setenv("REDIS_CACHE_KEY_FASTPATH", "false")
+
+	opts, err := RedisCacheOptionsFromEnv("embed:cache:", 50)
+	if err != nil {
+		t.Fatalf("options: %v", err)
+	}
+	if opts.KeyFastPath {
+		t.Fatal("KeyFastPath should be false when REDIS_CACHE_KEY_FASTPATH=false")
+	}
+}
+
+func TestRedisCacheOptionsFromEnvKeyFastPathInvalid(t *testing.T) {
+	clearRedisCacheEnv(t)
+	t.Setenv("REDIS_CACHE_KEY_FASTPATH", "not-a-bool")
+
+	_, err := RedisCacheOptionsFromEnv("embed:cache:", 50)
+	if err == nil {
+		t.Fatal("expected invalid key fastpath error")
+	}
+}
+
+func TestRedisCacheKeyFastPathMatchesGeneric(t *testing.T) {
+	// The fast path must produce byte-identical keys to the generic
+	// strconv.Itoa branch: toggling the flag must never invalidate
+	// or split the cache population.
+	texts := []string{"hello", "", "long text with spaces and punctuation — тест"}
+	dims := []int{1024, 512, 256, 0, -1}
+	for _, prefix := range []string{testRedisPrefix, "other:"} {
+		for _, namespace := range []string{"v2", "v2:mabc123def"} {
+			fast := &RedisCache{prefix: prefix, namespace: namespace, keyFastPath: true}
+			generic := &RedisCache{prefix: prefix, namespace: namespace, keyFastPath: false}
+			for _, text := range texts {
+				for _, dim := range dims {
+					if got, want := fast.key(text, dim), generic.key(text, dim); got != want {
+						t.Fatalf("key mismatch for text=%q dim=%d: fast=%q generic=%q", text, dim, got, want)
+					}
+				}
+			}
+		}
 	}
 }
 

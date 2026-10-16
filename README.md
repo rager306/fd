@@ -206,6 +206,7 @@ The Docker stack sets safe local defaults. Override values through `docker-compo
 | `REDIS_POOL_SIZE` | `50` | Redis client pool size. |
 | `REDIS_CACHE_TTL` | `24h` | Redis cache TTL. Must be a Go duration, for example `30m`, `24h`, `168h`. |
 | `REDIS_CACHE_NO_EXPIRE` | `false` | If `true`, cached embeddings do not expire. Mutually exclusive with `REDIS_CACHE_TTL`. |
+| `REDIS_CACHE_KEY_FASTPATH` | `true` | L2 key fast path: string literals for dims 1024/512 instead of `strconv.Itoa` (−1 heap allocation per key). Key format unchanged; `false` forces the generic branch. |
 | `EMBEDDING_CACHE_VERSION` | `v2` | Cache namespace version. Change this to isolate incompatible cache populations. |
 | `EMBEDDING_MODEL_ID` | empty | Optional model namespace component for cache keys. |
 | `EMBEDDING_MODEL_REVISION` | empty | Optional model revision namespace component for cache keys. |

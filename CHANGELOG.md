@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Added
+
+- **L2 Redis key fast path (`REDIS_CACHE_KEY_FASTPATH`, default `true`)**:
+  `RedisCache.key()` uses string literals for the closed dimensions set
+  (1024/512) instead of `strconv.Itoa`, saving one heap allocation per key
+  (~4 B). Key format is identical to the generic branch — verified by
+  `TestRedisCacheKeyFastPathMatchesGeneric` — so toggling never splits or
+  invalidates the cache population. `false` forces the generic branch.
+  Wired through `.env`/`.env.example` and `docker-compose.override.yaml`,
+  documented in README and the same-host contract.
+
 ## [1.0.0] - 2026-07-03
 
 First tagged release. fd is a same-host Go embedding API service for

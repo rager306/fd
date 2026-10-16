@@ -36,6 +36,11 @@ type RedisCacheOptions struct {
 	TTL       time.Duration
 	NoExpire  bool
 	Namespace RedisCacheNamespace
+	// KeyFastPath bypasses strconv.Itoa for the closed dimensions set
+	// (1024/512, enforced by validation) using string literals. The key
+	// format is unchanged; only one heap allocation per key is saved.
+	// Enabled by default, REDIS_CACHE_KEY_FASTPATH=false disables it.
+	KeyFastPath bool
 }
 
 // RedisCache is the L2 cache backed by a Redis cluster. It speaks the
@@ -43,11 +48,12 @@ type RedisCacheOptions struct {
 // with a dim prefix) so that L1 (LocalCache) and L2 (Redis) can
 // exchange values.
 type RedisCache struct {
-	client    *redis.Client
-	prefix    string
-	ttl       time.Duration
-	noExpire  bool
-	namespace string
+	client      *redis.Client
+	prefix      string
+	ttl         time.Duration
+	noExpire    bool
+	namespace   string
+	keyFastPath bool
 }
 
 // DefaultRedisCacheOptions returns sane defaults for a production fd
@@ -55,9 +61,10 @@ type RedisCache struct {
 // Caller can override individual fields before passing to NewRedisCacheWithOptions.
 func DefaultRedisCacheOptions(prefix string, poolSize int) RedisCacheOptions {
 	return RedisCacheOptions{
-		Prefix:   prefix,
-		PoolSize: poolSize,
-		TTL:      defaultRedisCacheTTL,
+		Prefix:      prefix,
+		PoolSize:    poolSize,
+		TTL:         defaultRedisCacheTTL,
+		KeyFastPath: true,
 		Namespace: RedisCacheNamespace{
 			CacheVersion: "v2",
 		},
@@ -66,9 +73,10 @@ func DefaultRedisCacheOptions(prefix string, poolSize int) RedisCacheOptions {
 
 // RedisCacheOptionsFromEnv reads EMBEDDING_CACHE_VERSION, EMBEDDING_MODEL_ID,
 // EMBEDDING_MODEL_REVISION, EMBEDDING_TOKENIZER_VERSION, EMBEDDING_CHUNKING_VERSION,
-// REDIS_CACHE_NO_EXPIRE, REDIS_CACHE_TTL from the process environment and
-// overlays them onto DefaultRedisCacheOptions. Returns an error if
-// REDIS_CACHE_NO_EXPIRE or REDIS_CACHE_TTL are set but unparseable.
+// REDIS_CACHE_NO_EXPIRE, REDIS_CACHE_TTL, REDIS_CACHE_KEY_FASTPATH from the
+// process environment and overlays them onto DefaultRedisCacheOptions.
+// Returns an error if REDIS_CACHE_NO_EXPIRE, REDIS_CACHE_TTL or
+// REDIS_CACHE_KEY_FASTPATH are set but unparseable.
 //
 // The namespace fields are critical for isolating TEI vs ONNX cache keys
 // (per M040/M041 gotcha: cross-backend cache pollution silently produces
@@ -90,6 +98,14 @@ func RedisCacheOptionsFromEnv(prefix string, poolSize int) (RedisCacheOptions, e
 			return RedisCacheOptions{}, fmt.Errorf("invalid REDIS_CACHE_NO_EXPIRE %q: %w", v, err)
 		}
 		opts.NoExpire = parsed
+	}
+
+	if v := strings.TrimSpace(os.Getenv("REDIS_CACHE_KEY_FASTPATH")); v != "" {
+		parsed, err := strconv.ParseBool(v)
+		if err != nil {
+			return RedisCacheOptions{}, fmt.Errorf("invalid REDIS_CACHE_KEY_FASTPATH %q: %w", v, err)
+		}
+		opts.KeyFastPath = parsed
 	}
 
 	if v := strings.TrimSpace(os.Getenv("REDIS_CACHE_TTL")); v != "" {
@@ -146,10 +162,11 @@ func NewRedisCacheWithOptions(addr string, opts RedisCacheOptions) (*RedisCache,
 			PoolTimeout:  4 * time.Second,
 			MinIdleConns: 10,
 		}),
-		prefix:    opts.Prefix,
-		ttl:       opts.TTL,
-		noExpire:  opts.NoExpire,
-		namespace: opts.Namespace.String(),
+		prefix:      opts.Prefix,
+		ttl:         opts.TTL,
+		noExpire:    opts.NoExpire,
+		namespace:   opts.Namespace.String(),
+		keyFastPath: opts.KeyFastPath,
 	}, nil
 }
 
@@ -182,6 +199,19 @@ func (c *RedisCache) expiration() time.Duration {
 }
 
 func (c *RedisCache) key(text string, dim int) string {
+	// Fast path for the closed dimensions set (1024/512, enforced by
+	// validation): string literals let the compiler fold the whole
+	// concatenation into a single allocation, saving the strconv.Itoa
+	// heap allocation for integers above its 0-99 cache. The key format
+	// is identical to the generic branch, so on/off produces equal keys.
+	if c.keyFastPath {
+		if dim == 1024 {
+			return c.prefix + c.namespace + ":" + c.HashText(text) + ":d1024"
+		}
+		if dim == 512 {
+			return c.prefix + c.namespace + ":" + c.HashText(text) + ":d512"
+		}
+	}
 	return c.prefix + c.namespace + ":" + c.HashText(text) + ":d" + strconv.Itoa(dim)
 }
 

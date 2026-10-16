@@ -141,6 +141,7 @@ The effective namespace string appears in `/health` as `runtime.cache_namespace`
 |---------|---------|
 | `REDIS_CACHE_TTL` | Expiry for L2 cache entries (Go duration, e.g. `24h`). Default: `24h`. |
 | `REDIS_CACHE_NO_EXPIRE` | `true` disables expiry on L2 entries. Use for long-lived research caches. Do not set both `REDIS_CACHE_TTL` and `REDIS_CACHE_NO_EXPIRE`; the API rejects this at startup. |
+| `REDIS_CACHE_KEY_FASTPATH` | L2 key fast path for dims 1024/512 (string literals instead of `strconv.Itoa`, one less heap allocation per key). Key format is unchanged, so toggling never splits the cache population. Default: `true`. |
 
 ### Cache contamination risk
 
