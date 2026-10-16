@@ -3,9 +3,7 @@ package middleware
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"strconv"
-	"time"
 
 	"fd-api/buildinfo"
 	"fd-api/embed"
@@ -92,7 +90,7 @@ func (w *headerWriter) setEmbeddingHeaders() {
 func newRequestID() string {
 	var bytes [16]byte
 	if _, err := rand.Read(bytes[:]); err != nil {
-		return fmt.Sprintf("00000000-0000-4000-8000-%012x", time.Now().UnixNano())
+		panic("headers: crypto/rand unavailable: " + err.Error())
 	}
 	bytes[6] = (bytes[6] & 0x0f) | 0x40
 	bytes[8] = (bytes[8] & 0x3f) | 0x80
