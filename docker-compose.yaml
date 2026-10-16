@@ -1,6 +1,6 @@
 services:
   tei:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.4
     container_name: fd_tei
     restart: unless-stopped
     ports:
