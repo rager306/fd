@@ -84,7 +84,17 @@ func (w *headerWriter) setEmbeddingHeaders() {
 	}
 	header := w.Header()
 	header.Set(HeaderModelID, w.modelID)
-	header.Set(HeaderDimensions, strconv.Itoa(dimensions))
+
+	// Fast path: bypassing strconv.Itoa for common dimension sizes
+	// saves heap allocations for values outside the 0-99 cache.
+	switch dimensions {
+	case 1024:
+		header.Set(HeaderDimensions, "1024")
+	case 512:
+		header.Set(HeaderDimensions, "512")
+	default:
+		header.Set(HeaderDimensions, strconv.Itoa(dimensions))
+	}
 }
 
 func newRequestID() string {
