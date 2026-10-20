@@ -24,6 +24,9 @@ func TestHeadersMiddlewareSetsServerAndConnection(t *testing.T) {
 	if got := w.Header().Get("Connection"); got != "keep-alive" {
 		t.Fatalf("Connection = %q, want keep-alive", got)
 	}
+	if got := w.Header().Get("X-Content-Type-Options"); got != "nosniff" {
+		t.Fatalf("X-Content-Type-Options = %q, want nosniff", got)
+	}
 }
 
 func TestHeadersMiddlewareEchoesRequestID(t *testing.T) {

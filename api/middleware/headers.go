@@ -41,6 +41,7 @@ func HeadersMiddleware(info buildinfo.Info, modelID string) gin.HandlerFunc {
 		header.Set("Server", serverValue)
 		header.Set(HeaderRequestID, requestID)
 		header.Set("Connection", "keep-alive")
+		header.Set("X-Content-Type-Options", "nosniff")
 		c.Writer = &headerWriter{ResponseWriter: c.Writer, context: c, modelID: modelID}
 		c.Next()
 	}
