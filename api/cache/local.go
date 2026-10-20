@@ -20,6 +20,8 @@ type LocalCache struct {
 	maxSize  int
 	evictTTL time.Duration
 
+	evictionObserver func(int)
+
 	stopCh    chan struct{}
 	doneCh    chan struct{}
 	closeOnce sync.Once
@@ -74,17 +76,32 @@ func (c *LocalCache) Get(_ context.Context, key string) ([]byte, bool) {
 	return e.value, true
 }
 
+// SetEvictionObserver registers a callback that receives the number of entries
+// dropped by one capacity sweep. Pass nil to detach. The observer runs outside
+// the cache lock, after the write completes; it must be non-blocking.
+func (c *LocalCache) SetEvictionObserver(observer func(int)) {
+	c.mu.Lock()
+	c.evictionObserver = observer
+	c.mu.Unlock()
+}
+
 // Set stores value under key with a per-entry TTL. If key already exists
-// the value and TTL are refreshed in place; the entry is not duplicated.
+// the value and TTL are refreshed in place; the entry is not duplicated. When
+// the write pushes the cache past maxSize, the entries dropped to make room are
+// reported to the eviction observer.
 func (c *LocalCache) Set(_ context.Context, key string, value []byte, ttl time.Duration) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-
 	c.data[key] = l1Entry{
 		value:     value,
 		expiresAt: time.Now().Add(ttl),
 	}
-	c.enforceMaxSizeLocked(key)
+	evicted := c.enforceMaxSizeLocked(key)
+	observer := c.evictionObserver
+	c.mu.Unlock()
+
+	if evicted > 0 && observer != nil {
+		observer(evicted)
+	}
 }
 
 // Delete removes the entry under key. No-op if the key is absent.
@@ -106,10 +123,14 @@ func (c *LocalCache) Size() int {
 	return c.currentSize()
 }
 
-func (c *LocalCache) enforceMaxSizeLocked(protectedKey string) {
+// enforceMaxSizeLocked drops entries until the cache is back within maxSize and
+// returns how many it dropped. protectedKey — the entry just written — is never
+// dropped. Callers must hold c.mu.
+func (c *LocalCache) enforceMaxSizeLocked(protectedKey string) int {
 	if c.maxSize <= 0 {
-		return
+		return 0
 	}
+	evicted := 0
 	for len(c.data) > c.maxSize {
 		deleted := false
 		for key := range c.data {
@@ -117,13 +138,15 @@ func (c *LocalCache) enforceMaxSizeLocked(protectedKey string) {
 				continue
 			}
 			delete(c.data, key)
+			evicted++
 			deleted = true
 			break
 		}
 		if !deleted {
-			return
+			return evicted
 		}
 	}
+	return evicted
 }
 
 func (c *LocalCache) currentSize() int {

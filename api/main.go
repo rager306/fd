@@ -445,6 +445,9 @@ func run() error {
 		return tiered.RedisSize(context.Background())
 	})
 	tiered.SetLookupDurationObserver(metrics.ObserveCacheLookupDuration)
+	// L1 capacity evictions (FD_CACHE_MAX_SIZE overflow) feed
+	// fd_cache_evictions_total; expired-entry cleanup is a separate event.
+	localCache.SetEvictionObserver(metrics.ObserveCacheEvictions)
 
 	runtimeHealth, healthHandler := newHealthHandler(healthParams{
 		runtimeConfig:       runtimeConfig,

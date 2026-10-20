@@ -91,7 +91,7 @@ func NewMetrics() *Metrics {
 		}, []string{metricLabelResult, metricLabelTier}),
 		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "fd_cache_evictions_total",
-			Help: "Total fd in-memory cache evictions.",
+			Help: "Total L1 cache entries dropped to stay within FD_CACHE_MAX_SIZE.",
 		}),
 		inFlightRequests: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "fd_in_flight_requests",
@@ -347,9 +347,10 @@ func (m *Metrics) ObserveCacheResultWithTier(result, tier string) {
 	m.cacheHitsTotal.WithLabelValues(result, tier).Inc()
 }
 
-// ObserveCacheEviction increments fd_cache_evictions_total.
-func (m *Metrics) ObserveCacheEviction() {
-	m.cacheEvictionsTotal.Inc()
+// ObserveCacheEvictions adds the entries dropped by one L1 capacity sweep to
+// fd_cache_evictions_total.
+func (m *Metrics) ObserveCacheEvictions(count int) {
+	m.cacheEvictionsTotal.Add(float64(count))
 }
 
 func (m *Metrics) observeBatchSize(c *gin.Context) {

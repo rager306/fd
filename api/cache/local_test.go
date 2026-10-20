@@ -169,3 +169,52 @@ func TestLocalCache_NotFound(t *testing.T) {
 		t.Error("expected cache miss for nonexistent key")
 	}
 }
+
+func TestLocalCacheReportsCapacityEvictions(t *testing.T) {
+	const maxSize = 2
+	c := NewLocalCache(maxSize, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+
+	var sweeps []int
+	c.SetEvictionObserver(func(n int) { sweeps = append(sweeps, n) })
+
+	ctx := context.Background()
+	for _, key := range []string{"k1", "k2", "k3", "k4", "k5"} {
+		c.Set(ctx, key, []byte("value"), time.Minute)
+	}
+
+	evicted := 0
+	for _, n := range sweeps {
+		evicted += n
+	}
+	if evicted != 3 {
+		t.Fatalf("evicted %d entries across %d sweeps, want 3", evicted, len(sweeps))
+	}
+	if got := c.Size(); got != maxSize {
+		t.Fatalf("Size() = %d, want %d", got, maxSize)
+	}
+}
+
+func TestLocalCacheWithoutObserverStillEvicts(t *testing.T) {
+	c := NewLocalCache(1, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+
+	ctx := context.Background()
+	c.Set(ctx, "k1", []byte("value"), time.Minute)
+	c.Set(ctx, "k2", []byte("value"), time.Minute)
+
+	if got := c.Size(); got != 1 {
+		t.Fatalf("Size() = %d, want 1", got)
+	}
+	if _, ok := c.Get(ctx, "k2"); !ok {
+		t.Fatal("most recently written entry was dropped")
+	}
+}

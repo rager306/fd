@@ -121,7 +121,7 @@ func TestMetricsModelLoadedAndCacheResult(t *testing.T) {
 	metrics.SetModelLoaded(true)
 	metrics.ObserveCacheResult("hit")
 	metrics.ObserveCacheResult("miss")
-	metrics.ObserveCacheEviction()
+	metrics.ObserveCacheEvictions(1)
 	r := gin.New()
 	r.GET("/metrics", metrics.Handler())
 
