@@ -6,29 +6,15 @@ CLAUDE.md
 # The tracked .gitnexusignore records what must stay indexed (see api/cache).
 .gitnexus/
 
-# GSD local runtime artifacts
-.bg-shell/
-.gsd/STATE.md
-.gsd/CODEBASE.md
-.gsd/audit/
-.gsd/event-log.jsonl
-.gsd/exec/
-.gsd/graphs/
-.gsd/journal/
-.gsd/last-snapshot.md
-.gsd/notifications.jsonl
-.gsd/runtime/
-.gsd/state-manifest.json
-.gsd/gsd.db
-.gsd/gsd.db-shm
-.gsd/gsd.db-wal
+# GSD local runtime/state artifacts (maintainer workspace, not product code)
+/.gsd/
+/.gsd-backups/
 
 # Build artifacts
 fd-api
 *.exe
 
 # Go
-go.sum
 *.test
 *.out
 

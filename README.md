@@ -151,10 +151,11 @@ tools/               contract and performance verification scripts
 docs/                the same-host contract and longer design notes
 documents/           milestone closeout reports referenced from the changelog
 benchmark-results/   committed local benchmark and validation snapshots
-.gsd/ .gsd-backups/  maintainer milestone trail (planning records, not product code)
 ```
 
 Only `api/` is compiled into the service. Everything else is supporting evidence, tooling, or documentation.
+
+The maintainer's planning trail lives in `.gsd/` and `.gsd-backups/` in the working copy. Both directories are gitignored: they are workspace records, not part of the shipped repository.
 
 ## API
 
