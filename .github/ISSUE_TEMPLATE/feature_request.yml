@@ -1,0 +1,39 @@
+name: Feature request
+description: Propose a change to fd behavior or its configuration surface
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that fd makes hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: What should fd do instead? Include the request/response or environment variable shape if you have one in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Including "do nothing" and any workaround you use today.
+  - type: textarea
+    id: contract
+    attributes:
+      label: Contract and cache impact
+      description: |
+        Does this change a consumer-facing behavior, an environment variable, the error envelope, or cache-key identity?
+        If cache-key identity changes, say how existing cached vectors should be handled.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This is about fd itself, not about TEI, Redis, or the Go toolchain (report those upstream).
+          required: true
+        - label: This is not a security issue (those go through SECURITY.md).
+          required: true

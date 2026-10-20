@@ -1,7 +1,10 @@
 # Local AI agent/generated context
-AGENTS.md
 CLAUDE.md
 .claude/
+
+# GitNexus index, rebuilt locally with `gitnexus analyze --index-only`.
+# The tracked .gitnexusignore records what must stay indexed (see api/cache).
+.gitnexus/
 
 # GSD local runtime artifacts
 .bg-shell/

@@ -1,0 +1,62 @@
+name: Bug report
+description: Something in fd behaves incorrectly
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security issues go through [SECURITY.md](../blob/master/SECURITY.md), not this form.
+        Please remove API keys, customer text, and embeddings from anything you paste.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The observed behavior, including the exact request or command and the full response or log line.
+      placeholder: |
+        curl -s localhost:8000/v1/embeddings -H 'Authorization: Bearer ...' -d '{...}'
+        -> 200 with 512 dimensions (expected 1024)
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Minimal, deterministic steps. Say whether TEI was warm and whether the result was a cache hit or miss.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Release tag, or the output of `git rev-parse --short HEAD`.
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: How it runs
+      options:
+        - docker compose (default stack)
+        - docker compose with an override
+        - Go binary outside Docker
+        - integration test suite
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration that matters
+      description: Environment variables that differ from the defaults, with secret values replaced by `<redacted>`.
+      render: shell
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: "`docker compose logs --tail=100 api tei`, redacted."
+      render: text

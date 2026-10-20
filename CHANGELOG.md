@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Added
 
+- **Repository contributor surface**: `CONTRIBUTING.md` (setup, required gates, PR
+  expectations), `SECURITY.md` (supported versions, private vulnerability reporting,
+  scope), `CODE_OF_CONDUCT.md` (Contributor Covenant 3.0), issue forms and a pull
+  request template under `.github/`, `CODEOWNERS`, `.editorconfig`, `.gitattributes`
+  and a weekly `dependabot.yml` for Go modules, workflow actions and container images.
+- **Tracked `AGENTS.md`**: the rules for AI coding agents in this repository are now
+  versioned instead of local-only. `.gitnexusignore` and the `.gitnexus/` ignore entry
+  keep the code-intelligence index consistent for anyone who builds it.
+
+### Changed
+
+- **CI hardening**: GitHub Actions are pinned by commit SHA with the version in a
+  trailing comment (`actions/checkout` v7.0.1, `actions/setup-go` v7.0.0), and a
+  `go vet` step runs alongside tests, lint and `govulncheck`.
+- **README**: documents cross-request coalescing (`FD_COALESCE_ENABLED`,
+  `FD_COALESCE_WINDOW_MS`), the rate-limit knobs (`FD_RATE_LIMIT_IP_RPM`,
+  `FD_RATE_LIMIT_USER_RPM`), the cache-control and queue endpoints, the repository
+  layout, and the current verified test, lint and vulnerability counts.
+
 - **L2 Redis key fast path (`REDIS_CACHE_KEY_FASTPATH`, default `true`)**:
   `RedisCache.key()` uses string literals for the closed dimensions set
   (1024/512) instead of `strconv.Itoa`, saving one heap allocation per key

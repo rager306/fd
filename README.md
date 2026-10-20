@@ -1,12 +1,16 @@
 # FD Embedding Service
 
+[![Go Quality](https://github.com/rager306/fd/actions/workflows/go-quality.yml/badge.svg?branch=master)](https://github.com/rager306/fd/actions/workflows/go-quality.yml)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)](./CHANGELOG.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-3.0-4baaaa.svg)](./CODE_OF_CONDUCT.md)
 
 FD is a same-host text embedding service for legal-domain workloads. It exposes an OpenAI-compatible embeddings API, uses HuggingFace Text Embeddings Inference (TEI) for inference, and keeps hot results in a two-tier cache: in-process L1 plus Redis L2.
 
 The current production runtime is **TEI-only** with `deepvk/USER-bge-m3` at **1024 dimensions**. ONNX runtime work is intentionally inactive/future research; do not treat ONNX as part of the current deployment path.
+
+New here? [CONTRIBUTING.md](./CONTRIBUTING.md) has the development setup and the gates a change must pass, and [SECURITY.md](./SECURITY.md) explains private vulnerability reporting.
 
 ## Table of Contents
 
@@ -14,6 +18,7 @@ The current production runtime is **TEI-only** with `deepvk/USER-bge-m3` at **10
 - [Quick Start](#quick-start)
 - [What This Service Provides](#what-this-service-provides)
 - [Architecture](#architecture)
+- [Repository Layout](#repository-layout)
 - [API](#api)
 - [Configuration](#configuration)
 - [Operations](#operations)
@@ -22,6 +27,8 @@ The current production runtime is **TEI-only** with `deepvk/USER-bge-m3` at **10
 - [Performance](#performance)
 - [Documentation Map](#documentation-map)
 - [Limitations and Non-Goals](#limitations-and-non-goals)
+- [Contributing](#contributing)
+- [Security](#security)
 - [License](#license)
 
 ## Status
@@ -34,6 +41,8 @@ The current production runtime is **TEI-only** with `deepvk/USER-bge-m3` at **10
 | Cache | L1 local cache + L2 Redis binary cache |
 | TEI startup mode | Cached local model snapshot path |
 | Public API style | OpenAI-compatible `/v1/embeddings` |
+| Cross-request coalescing | Opt-in, `FD_COALESCE_ENABLED` (default `false`) |
+| Async bulk queue | Opt-in, `FD_QUEUE_ENABLED` (default `false`) |
 | ONNX runtime | Not active; future research only |
 
 The TEI container is configured to start from the cached local snapshot path:
@@ -97,6 +106,9 @@ A valid response contains one 1024-dimensional embedding vector in `data[0].embe
 - Two-tier embedding cache:
   - L1: in-process local cache for very hot requests.
   - L2: Redis binary cache for persistence across API restarts.
+- Optional cross-request miss coalescing: concurrent identical inputs inside a short window become one TEI call.
+- Optional async bulk ingestion queue (`/v1/queue`) with backpressure and polling.
+- Cache control endpoints to flush or delete cached entries for the active namespace.
 - OpenAI-style error envelopes for validation, capacity, and internal failures.
 - Optional API-key auth, CORS, rate limiting, metrics, and trace endpoints.
 
@@ -110,6 +122,7 @@ fd API (Go/Gin)
   ├─ validation / auth / rate-limit / lifecycle middleware
   ├─ L1 local cache
   ├─ L2 Redis cache
+  ├─ optional miss coalescer (FD_COALESCE_ENABLED)
   └─ TEI client
         │
         ▼
@@ -124,6 +137,24 @@ Runtime identity is intentionally separated from TEI's internal startup path:
 - Cache namespace metadata is exposed so operators can detect cache identity drift.
 
 The canonical same-host contract is maintained in [`docs/same-host-embedding-service-contract.md`](docs/same-host-embedding-service-contract.md). Keep new consumer-facing behavior aligned with that document instead of duplicating the full contract here.
+
+## Repository Layout
+
+```text
+api/                 Go service: handlers, middleware, cache, embed, lifecycle, queue, observability
+  cache/             L1 local cache, L2 Redis cache, tiered wrapper
+  embed/             TEI client and the cross-request coalescer
+  queue/             batched bulk-ingestion worker and result store
+  openapi/           OpenAPI 3.1 spec served at /openapi.json
+tests/integration/   standalone black-box Go module, needs a running stack
+tools/               contract and performance verification scripts
+docs/                the same-host contract and longer design notes
+documents/           milestone closeout reports referenced from the changelog
+benchmark-results/   committed local benchmark and validation snapshots
+.gsd/ .gsd-backups/  maintainer milestone trail (planning records, not product code)
+```
+
+Only `api/` is compiled into the service. Everything else is supporting evidence, tooling, or documentation.
 
 ## API
 
@@ -140,6 +171,10 @@ The canonical same-host contract is maintained in [`docs/same-host-embedding-ser
 | `GET` | `/metrics` | Prometheus-style metrics. |
 | `GET` | `/v1/traces` | Recent in-process trace events when enabled. |
 | `GET` / `POST` | `/warmup` | Inspect or trigger model warmup. |
+| `POST` | `/v1/cache/flush` | Drop cached embeddings for the active cache namespace; returns the deleted count. |
+| `POST` | `/v1/cache/delete` | Delete specific cached entries; accepts one key or an array, dimensions default to 1024. |
+| `POST` | `/v1/queue` | Submit a bulk-ingestion batch. Requires `FD_QUEUE_ENABLED=true`; returns `202` with `X-Request-Id`, or `503` with `Retry-After` when saturated. |
+| `GET` | `/v1/queue/:id` | Poll an async queue result: `202` pending, `200` with embeddings, `500` failed, `404` expired. |
 | `GET` | `/openapi.json` | OpenAPI specification. |
 | `GET` | `/docs` | API documentation surface. |
 
@@ -229,6 +264,8 @@ Cache namespace isolation matters. When comparing runtime backends or changing m
 | `FD_API_KEY` | unset | Required for protected endpoints. If unset, protected endpoints fail closed with `401 unauthorized`; `/live`, `/ready`, `/health`, `/v1/healthcheck`, docs, and OpenAPI stay public. Do not log or commit secret values. |
 | `FD_CORS_ORIGINS` | unset | Optional allowed CORS origins. |
 | `FD_RATE_LIMIT_ENABLED` | unset / false | Enables IP/user rate limiting when configured. |
+| `FD_RATE_LIMIT_IP_RPM` | `100` | Per-IP requests per minute when rate limiting is enabled. |
+| `FD_RATE_LIMIT_USER_RPM` | `1000` | Per-user requests per minute when rate limiting is enabled. |
 | `FD_TRACES_ENABLED` | unset / false | Enables `/v1/traces` diagnostic events. |
 
 ### Lifecycle warmup recovery knobs
@@ -316,6 +353,19 @@ docker compose logs --tail=100 tei
 ```
 
 Do not log request bodies or secret values in operational diagnostics.
+
+### Cross-request miss coalescing (Phase 1b, Issue #9)
+
+When `FD_COALESCE_ENABLED=true`, the TEI client is wrapped in `CoalescingEmbedder` (`api/embed/coalescedembedder.go`). Concurrent `Embed` calls that arrive inside a short window are merged into a single TEI call, so a burst of identical or near-identical work does not multiply TEI load. The sync path and the response contract are unchanged; callers simply wait for the batched call.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `FD_COALESCE_ENABLED` | `false` | Feature gate for cross-request coalescing. |
+| `FD_COALESCE_WINDOW_MS` | `5ms` | Time window within which concurrent calls are merged. |
+
+Batching is capped at 32 texts per TEI call, aligned with TEI's `max_client_batch_size`, counting texts rather than requests so a few large inputs cannot overflow TEI capacity. The window is deliberately short (5 ms) so the added latency stays invisible to same-host consumers.
+
+`api/embed/coalesce_baseline_test.go` is the measured baseline for this feature; it reports TEI call counts and p95 latency with and without coalescing, using the local 44-FZ corpus.
 
 ### Async queue (Phase 2, Issue #9)
 
@@ -465,7 +515,9 @@ go run github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest \
 
 This mutation command is an informational local/manual gate, not a mandatory CI hard gate. It currently requires the Go 1.25.11 toolchain via automatic toolchain switching and takes roughly a minute on the bounded scope.
 
-The current M050 closeout evidence includes 295 passing Go tests, 0 lint issues, 0 reachable vulnerabilities, an authenticated Docker e2e suite with 9 passing checks, and a bounded mutation score of 1.0 on 143 mutants in scope.
+Latest local verification run (2026-10-20, commit `83cf4cd`): `go test ./... -v` reports **274 test functions (365 including subtests) across 11 packages, 0 failures**; `go vet` clean; `golangci-lint` v2.12.2 **0 issues**; `govulncheck` reports **0 reachable vulnerabilities** (1 vulnerability exists in a required module that the code does not call). The M050 closeout additionally recorded an authenticated Docker e2e suite with 9 passing checks and a bounded mutation score of 1.0 on 143 mutants in scope.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full command list and what belongs in a pull request.
 
 ## Performance
 
@@ -493,6 +545,11 @@ Run benchmark tooling from the host against a local Docker stack. Some older ben
 | [`benchmark-results/m045-tei-local-path-startup-proof.md`](benchmark-results/m045-tei-local-path-startup-proof.md) | Controlled proof for the local snapshot startup mode. |
 | [`benchmark-results/`](benchmark-results/) | Local benchmark and validation artifacts. |
 | [`api/openapi/spec.go`](api/openapi/spec.go) | Source for generated OpenAPI response. |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Development setup, required gates, PR expectations. |
+| [`SECURITY.md`](SECURITY.md) | Supported versions and private vulnerability reporting. |
+| [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | Contributor Covenant 3.0 and how to report a violation. |
+| [`CHANGELOG.md`](CHANGELOG.md) | Release history and the `[Unreleased]` section. |
+| [`AGENTS.md`](AGENTS.md) | Rules for AI coding agents working in this repository. |
 
 ## Limitations and Non-Goals
 
@@ -501,6 +558,16 @@ Run benchmark tooling from the host against a local Docker stack. Some older ben
 - The TEI local snapshot path is pinned. If the cached model revision changes, update compose/docs together and rerun the startup proof.
 - The service is designed for same-host/local consumers, not public internet exposure by default.
 - Benchmark numbers are environment-specific local snapshots.
+
+## Contributing
+
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request. In short: one logical change per PR, `go test ./... -short`, `go vet`, `golangci-lint` v2.12.2 with `../.golangci.yml`, and `govulncheck` must all be clean, user-visible changes need a `CHANGELOG.md` entry under `[Unreleased]`, and new configuration must be documented here and in `.env.example`.
+
+Issue templates ask for the version, the configuration that matters, and the exact reproduction; see the [issue chooser](https://github.com/rager306/fd/issues/new/choose).
+
+## Security
+
+Report vulnerabilities privately through [GitHub security advisories](https://github.com/rager306/fd/security/advisories/new) or by email as described in [SECURITY.md](./SECURITY.md). Do not open a public issue for a security problem, and do not include real API keys or customer text in a report.
 
 ## License
 

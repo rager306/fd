@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/rager306/fd/security/advisories/new
+    about: Private vulnerability reporting. Please do not open a public issue for security problems.
+  - name: Same-host service contract
+    url: https://github.com/rager306/fd/blob/master/docs/same-host-embedding-service-contract.md
+    about: The canonical HTTP and runtime contract for local consumers — read this before proposing API changes.
+  - name: Configuration reference
+    url: https://github.com/rager306/fd/blob/master/README.md#configuration
+    about: Environment variables, defaults, and cache namespace knobs.

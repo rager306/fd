@@ -1,0 +1,20 @@
+# Normalize line endings in the working tree and in the repository.
+* text=auto eol=lf
+
+# Generated and archived material: keep it out of language statistics and
+# diff noise, but do not hide it from git.
+.gsd/**              linguist-generated=true
+.gsd-backups/**      linguist-generated=true
+benchmark-results/** linguist-documentation=true
+documents/**         linguist-documentation=true
+docs/**              linguist-documentation=true
+
+# Binary-ish artifacts that must never be diffed as text.
+*.png  binary
+*.jpg  binary
+*.pdf  binary
+*.onnx binary
+*.jsonl -diff linguist-generated=true
+
+# Go module files: keep the lockfile visible in diffs.
+go.sum -diff
