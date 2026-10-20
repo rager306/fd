@@ -1,0 +1,4 @@
+# GitNexus hardcodes a bare-name ignore for directories called `cache`
+# (dist/config/ignore-service.js, DEFAULT_IGNORE_LIST), which hides api/cache/.
+# The negation below re-includes it; explicit negations win over the defaults.
+!cache/
