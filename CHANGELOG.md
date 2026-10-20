@@ -18,6 +18,15 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   versioned instead of local-only. `.gitnexusignore` and the `.gitnexus/` ignore entry
   keep the code-intelligence index consistent for anyone who builds it.
 
+### Fixed
+
+- **`fd_cache_evictions_total` counted nothing.** The counter was registered but
+  `ObserveCacheEviction` had no production caller, so it stayed at 0 while the L1
+  cache dropped entries on every `FD_CACHE_MAX_SIZE` overflow. `LocalCache` now
+  reports each capacity sweep to an eviction observer, `Metrics.ObserveCacheEvictions`
+  adds the dropped-entry count, and the metric help states that it counts capacity
+  evictions rather than TTL expiry.
+
 ### Changed
 
 - **CI hardening**: GitHub Actions are pinned by commit SHA with the version in a
