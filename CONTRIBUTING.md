@@ -77,6 +77,15 @@ Configuration is the public surface of this service. When you add or rename an e
 - Expect the maintainer to ask for the verification command you ran — "tests pass" without the command is not enough.
 - Large mechanical changes (renames, formatting) should be their own pull request.
 
+## Cutting a release
+
+1. Move the `[Unreleased]` entries in `CHANGELOG.md` under a new version heading with today's date, and update the badge/version references in `README.md` if the release changes them.
+2. Tag the commit on `master` and push the tag: `git tag v1.2.3 && git push origin v1.2.3`.
+3. The `Release notes` workflow reacts to the tag: it walks the Conventional Commit range with `git-cliff` (configuration in `cliff.toml`) and creates the GitHub release, or updates it if one already exists.
+4. Check the generated notes against `CHANGELOG.md` before announcing. `CHANGELOG.md` is authoritative for release history; the workflow only fills the release page.
+
+To preview the notes for the newest tag without publishing anything, run the workflow manually (`gh workflow run release.yml`) — the dispatch path prints the generated notes and stops.
+
 ## Working with coding agents
 
 If you use an AI coding agent in this repository, follow `AGENTS.md` at the repository root. It defines the required pre-change caller analysis, the commit gate, and where to file defects in the agent tooling itself.

@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use fd in academic or internal work, please cite it as below."
+title: "fd — same-host text embedding API for Russian and legal-domain workloads"
+abstract: >-
+  A Go service that exposes OpenAI-compatible text embeddings for same-host
+  consumers over HuggingFace Text Embeddings Inference (TEI) with the
+  deepvk/USER-bge-m3 model, backed by a two-tier cache (in-process L1 plus Redis L2)
+  and Prometheus instrumentation.
+authors:
+  - alias: rager306
+    name: rager306
+version: 1.0.0
+date-released: "2026-07-03"
+license: MIT
+repository-code: "https://github.com/rager306/fd"
+url: "https://github.com/rager306/fd"
+keywords:
+  - embeddings
+  - text-embeddings
+  - openai-compatible
+  - tei
+  - russian-nlp
+  - legal-nlp
+  - go

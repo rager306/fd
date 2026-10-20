@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   versioned instead of local-only. `.gitnexusignore` and the `.gitnexus/` ignore entry
   keep the code-intelligence index consistent for anyone who builds it.
 
+- **Release notes automation**: `cliff.toml` plus a `Release notes` workflow that
+  turns the Conventional Commit range of a pushed `v*` tag into the GitHub release
+  notes with git-cliff. `CHANGELOG.md` remains the authoritative release history and
+  is still written by hand; `CITATION.cff` was added for citation metadata.
+
 ### Fixed
 
 - **`fd_cache_evictions_total` counted nothing.** The counter was registered but

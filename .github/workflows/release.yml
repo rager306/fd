@@ -1,0 +1,56 @@
+name: Release notes
+
+# Runs when a version tag is pushed: generates the GitHub release notes from the
+# Conventional Commit range with git-cliff and creates or updates the release.
+# CHANGELOG.md stays hand-written; this workflow only fills the release page.
+# workflow_dispatch renders the notes without publishing, for a dry run.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+# Least privilege: only the release step needs to write.
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  notes:
+    name: Generate and publish release notes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # git-cliff needs the full history to walk the commit range.
+          fetch-depth: 0
+
+      - name: Generate release notes
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: RELEASE_NOTES.md
+
+      - name: Show generated notes (dry run)
+        if: github.event_name == 'workflow_dispatch'
+        run: cat RELEASE_NOTES.md
+
+      - name: Create or update the GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --notes-file RELEASE_NOTES.md
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file RELEASE_NOTES.md
+          fi
