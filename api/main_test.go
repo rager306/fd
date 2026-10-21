@@ -160,6 +160,81 @@ func TestReportHTTPServerErrorSignalsFatalError(t *testing.T) {
 	}
 }
 
+func TestNewHTTPServerDefaults(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "")
+	t.Setenv("FD_HTTP_WRITE_TIMEOUT", "")
+	t.Setenv("FD_HTTP_IDLE_TIMEOUT", "")
+
+	handler := http.NewServeMux()
+	srv := newHTTPServer("127.0.0.1:8000", handler)
+	if srv.Addr != "127.0.0.1:8000" {
+		t.Fatalf("Addr = %q, want 127.0.0.1:8000", srv.Addr)
+	}
+	if srv.Handler != handler {
+		t.Fatal("Handler was not attached")
+	}
+	if srv.ReadHeaderTimeout != defaultHTTPReadHeaderTimeout {
+		t.Fatalf("ReadHeaderTimeout = %s, want %s", srv.ReadHeaderTimeout, defaultHTTPReadHeaderTimeout)
+	}
+	if srv.ReadTimeout != defaultHTTPReadTimeout {
+		t.Fatalf("ReadTimeout = %s, want %s", srv.ReadTimeout, defaultHTTPReadTimeout)
+	}
+	if srv.WriteTimeout != defaultHTTPWriteTimeout {
+		t.Fatalf("WriteTimeout = %s, want %s", srv.WriteTimeout, defaultHTTPWriteTimeout)
+	}
+	if srv.IdleTimeout != defaultHTTPIdleTimeout {
+		t.Fatalf("IdleTimeout = %s, want %s", srv.IdleTimeout, defaultHTTPIdleTimeout)
+	}
+}
+
+func TestNewHTTPServerTimeoutsExceedHandlerBudget(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "")
+	t.Setenv("FD_HTTP_WRITE_TIMEOUT", "")
+
+	const handlerBudget = 30 * time.Second
+	srv := newHTTPServer("127.0.0.1:8000", http.NewServeMux())
+	if srv.ReadTimeout <= handlerBudget {
+		t.Fatalf("ReadTimeout = %s, want > handler budget %s", srv.ReadTimeout, handlerBudget)
+	}
+	if srv.WriteTimeout <= handlerBudget {
+		t.Fatalf("WriteTimeout = %s, want > handler budget %s", srv.WriteTimeout, handlerBudget)
+	}
+}
+
+func TestNewHTTPServerEnvOverrides(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "45s")
+	t.Setenv("FD_HTTP_WRITE_TIMEOUT", "50s")
+	t.Setenv("FD_HTTP_IDLE_TIMEOUT", "90s")
+
+	srv := newHTTPServer("127.0.0.1:8000", http.NewServeMux())
+	if srv.ReadTimeout != 45*time.Second {
+		t.Fatalf("ReadTimeout = %s, want 45s", srv.ReadTimeout)
+	}
+	if srv.WriteTimeout != 50*time.Second {
+		t.Fatalf("WriteTimeout = %s, want 50s", srv.WriteTimeout)
+	}
+	if srv.IdleTimeout != 90*time.Second {
+		t.Fatalf("IdleTimeout = %s, want 90s", srv.IdleTimeout)
+	}
+}
+
+func TestNewHTTPServerNonPositiveEnvFallsBack(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "0s")
+	t.Setenv("FD_HTTP_WRITE_TIMEOUT", "-5s")
+	t.Setenv("FD_HTTP_IDLE_TIMEOUT", "bogus")
+
+	srv := newHTTPServer("127.0.0.1:8000", http.NewServeMux())
+	if srv.ReadTimeout != defaultHTTPReadTimeout {
+		t.Fatalf("ReadTimeout = %s, want default %s", srv.ReadTimeout, defaultHTTPReadTimeout)
+	}
+	if srv.WriteTimeout != defaultHTTPWriteTimeout {
+		t.Fatalf("WriteTimeout = %s, want default %s", srv.WriteTimeout, defaultHTTPWriteTimeout)
+	}
+	if srv.IdleTimeout != defaultHTTPIdleTimeout {
+		t.Fatalf("IdleTimeout = %s, want default %s", srv.IdleTimeout, defaultHTTPIdleTimeout)
+	}
+}
+
 func waitForCondition(t *testing.T, condition func() bool) {
 	t.Helper()
 	deadline := time.Now().Add(time.Second)

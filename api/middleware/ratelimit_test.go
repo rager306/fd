@@ -45,8 +45,43 @@ func TestIPRateLimitRejectsRequestAfterLimit(t *testing.T) {
 	if last.Code != http.StatusTooManyRequests {
 		t.Fatalf("101st status = %d, want 429; body=%s", last.Code, last.Body.String())
 	}
-	assertRateLimitHeaders(t, last, "100", "0", "60")
+	assertRateLimitHeaders(t, last, "100", "0", "60", "1")
 	assertRateLimitEnvelope(t, last)
+}
+
+func TestRateLimiterRetryAfterCountsDownToNextToken(t *testing.T) {
+	limiter := NewRateLimiter(1)
+	now := time.Unix(1_700_000_000, 0)
+	limiter.now = func() time.Time { return now }
+
+	if allowed, _, _, _ := limiter.take("ip:a"); !allowed {
+		t.Fatal("first request should be allowed")
+	}
+	allowed, remaining, reset, retryAfter := limiter.take("ip:a")
+	if allowed {
+		t.Fatal("second immediate request should be rejected")
+	}
+	if remaining != 0 {
+		t.Fatalf("remaining = %d, want 0", remaining)
+	}
+	if reset != 60 {
+		t.Fatalf("reset = %d, want 60", reset)
+	}
+	if retryAfter != 60 {
+		t.Fatalf("retryAfter = %d, want 60", retryAfter)
+	}
+
+	now = now.Add(30 * time.Second)
+	allowed, _, reset, retryAfter = limiter.take("ip:a")
+	if allowed {
+		t.Fatal("request before the token refills should be rejected")
+	}
+	if reset != 30 {
+		t.Fatalf("reset after 30s = %d, want 30", reset)
+	}
+	if retryAfter != 30 {
+		t.Fatalf("retryAfter after 30s = %d, want 30", retryAfter)
+	}
 }
 
 func TestIPRateLimitSeparatesClientIPs(t *testing.T) {
@@ -126,7 +161,7 @@ func performRateLimitRequest(r http.Handler, user, remoteAddr string) *httptest.
 	return w
 }
 
-func assertRateLimitHeaders(t *testing.T, w *httptest.ResponseRecorder, wantLimit, wantRemaining, wantReset string) {
+func assertRateLimitHeaders(t *testing.T, w *httptest.ResponseRecorder, wantLimit, wantRemaining, wantReset, wantRetryAfter string) {
 	t.Helper()
 	if got := w.Header().Get(headerRateLimitLimit); got != wantLimit {
 		t.Fatalf("%s = %q, want %q", headerRateLimitLimit, got, wantLimit)
@@ -137,8 +172,8 @@ func assertRateLimitHeaders(t *testing.T, w *httptest.ResponseRecorder, wantLimi
 	if got := w.Header().Get(headerRateLimitReset); got != wantReset {
 		t.Fatalf("%s = %q, want %q", headerRateLimitReset, got, wantReset)
 	}
-	if got := w.Header().Get("Retry-After"); got != "60" {
-		t.Fatalf("Retry-After = %q, want 60", got)
+	if got := w.Header().Get("Retry-After"); got != wantRetryAfter {
+		t.Fatalf("Retry-After = %q, want %q", got, wantRetryAfter)
 	}
 }
 

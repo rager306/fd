@@ -233,6 +233,11 @@ The Docker stack sets safe local defaults. Override values through `docker-compo
 | `BIND_HOST` | `0.0.0.0` | fd API bind host. |
 | `LOG_LEVEL` | `info` | Structured log level. |
 | `GIN_MODE` | unset / compose uses `release` | Gin runtime mode. |
+| `FD_HTTP_READ_TIMEOUT` | `35s` | Server read deadline: 30s handler budget + 5s body margin. Zero, negative, or invalid values fall back to the default. |
+| `FD_HTTP_WRITE_TIMEOUT` | `40s` | Server write deadline: 30s handler budget + 10s response margin. |
+| `FD_HTTP_IDLE_TIMEOUT` | `75s` | Keep-alive idle timeout. |
+
+The server keeps `ReadHeaderTimeout` at `10s` (`gosec` G112). fd does not override `GOMAXPROCS`: the Go runtime sizes itself from the container CPU limit, and the resolved value is logged as `gomaxprocs` at startup.
 
 ### Redis and cache
 
@@ -253,7 +258,7 @@ The Docker stack sets safe local defaults. Override values through `docker-compo
 | `REDIS_RDB_SAVE` | `300 1` | Redis RDB save policy. |
 | `REDIS_AOF_ENABLED` | `no` | Redis append-only file setting. |
 | `FD_CACHE_MAX_SIZE` | `10000` | L1 (in-memory) cache capacity in entries. Each entry is ~4 KB for 1024-dim float32 embeddings, so 10000 ≈ 40 MB. Set to `0` to disable size-based eviction (cache grows unbounded). Phase 1a (Issue #9). |
-| `FD_CACHE_LOCAL_TTL` | `30s` | L1 entry TTL. Go duration syntax (`30s`, `5m`, `1h`). Phase 1a (Issue #9). |
+| `FD_CACHE_LOCAL_TTL` | `30s` | L1 entry TTL. Go duration syntax (`30s`, `5m`, `1h`). Each write gets ±10% jitter so entries written together do not expire in the same tick. Phase 1a (Issue #9). |
 
 Cache namespace isolation matters. When comparing runtime backends or changing model/tokenizer/chunking behavior, set a new namespace value or deliberately flush Redis. Otherwise cached vectors can make incompatible backends appear equivalent.
 
@@ -268,6 +273,8 @@ Cache namespace isolation matters. When comparing runtime backends or changing m
 | `FD_RATE_LIMIT_IP_RPM` | `100` | Per-IP requests per minute when rate limiting is enabled. |
 | `FD_RATE_LIMIT_USER_RPM` | `1000` | Per-user requests per minute when rate limiting is enabled. |
 | `FD_TRACES_ENABLED` | unset / false | Enables `/v1/traces` diagnostic events. |
+
+Rate-limited `429` responses carry `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (seconds until the bucket is full), and a `Retry-After` value equal to the seconds until the next token refills.
 
 ### Lifecycle warmup recovery knobs
 

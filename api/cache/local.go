@@ -3,6 +3,7 @@ package cache
 
 import (
 	"context"
+	"math/rand/v2"
 	"sync"
 	"time"
 )
@@ -93,7 +94,7 @@ func (c *LocalCache) Set(_ context.Context, key string, value []byte, ttl time.D
 	c.mu.Lock()
 	c.data[key] = l1Entry{
 		value:     value,
-		expiresAt: time.Now().Add(ttl),
+		expiresAt: time.Now().Add(jitteredTTL(ttl)),
 	}
 	evicted := c.enforceMaxSizeLocked(key)
 	observer := c.evictionObserver
@@ -102,6 +103,21 @@ func (c *LocalCache) Set(_ context.Context, key string, value []byte, ttl time.D
 	if evicted > 0 && observer != nil {
 		observer(evicted)
 	}
+}
+
+// ttlJitterFraction is the relative spread applied to positive TTLs, so entries
+// written together do not expire in the same tick.
+const ttlJitterFraction = 0.1
+
+// jitteredTTL spreads a positive TTL uniformly over ±10%. Non-positive TTLs are
+// returned unchanged: they mean "no expiry" or "expire immediately", and
+// jittering either would change the caller's intent.
+func jitteredTTL(ttl time.Duration) time.Duration {
+	if ttl <= 0 {
+		return ttl
+	}
+	factor := 1 + (rand.Float64()*2-1)*ttlJitterFraction //nolint:gosec // G404: TTL jitter only; unpredictability is not a security requirement
+	return time.Duration(float64(ttl) * factor)
 }
 
 // Delete removes the entry under key. No-op if the key is absent.

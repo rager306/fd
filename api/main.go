@@ -134,6 +134,47 @@ func reportHTTPServerError(logger *slog.Logger, addr string, listen func() error
 	}
 }
 
+// HTTP server deadlines. A handler gets a 30s budget (validation, lifecycle gate,
+// and the TEI call behind http.Client.Timeout = 30s), so the read and write
+// deadlines leave margin for slow peers without letting one connection outlive
+// the handler:
+//
+//	read  = handler 30s + 5s body margin  = 35s
+//	write = handler 30s + 10s response margin = 40s
+//	idle  = 75s keep-alive reuse
+//
+// ReadHeaderTimeout stays at 10s: request bodies are small (S01 caps at 10MB),
+// and slow header writers must not hold a connection open (gosec G112).
+const (
+	defaultHTTPReadTimeout       = 35 * time.Second
+	defaultHTTPWriteTimeout      = 40 * time.Second
+	defaultHTTPIdleTimeout       = 75 * time.Second
+	defaultHTTPReadHeaderTimeout = 10 * time.Second
+)
+
+// positiveDurationFromEnv returns a positive Go duration from the environment,
+// or fallback when the value is unset, malformed, zero, or negative, so a bad
+// override cannot disable a server deadline.
+func positiveDurationFromEnv(key string, fallback time.Duration) time.Duration {
+	if d := envutil.DurationOrDefault(key, fallback); d > 0 {
+		return d
+	}
+	return fallback
+}
+
+// newHTTPServer builds the public HTTP server with bounded read, write, and
+// idle deadlines.
+func newHTTPServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: defaultHTTPReadHeaderTimeout,
+		ReadTimeout:       positiveDurationFromEnv("FD_HTTP_READ_TIMEOUT", defaultHTTPReadTimeout),
+		WriteTimeout:      positiveDurationFromEnv("FD_HTTP_WRITE_TIMEOUT", defaultHTTPWriteTimeout),
+		IdleTimeout:       positiveDurationFromEnv("FD_HTTP_IDLE_TIMEOUT", defaultHTTPIdleTimeout),
+	}
+}
+
 type warmupRetryPolicy struct {
 	maxAttempts int
 	backoff     func(attempt int) time.Duration
@@ -316,9 +357,7 @@ func run() error {
 	}
 	logger.Info("embedding backend configured", "backend", runtimeConfig.Backend)
 
-	numCPU := runtime.NumCPU()
-	runtime.GOMAXPROCS(numCPU)
-	logger.Info("starting fd-api", "cpus", numCPU)
+	logger.Info("starting fd-api", "gomaxprocs", runtime.GOMAXPROCS(0))
 
 	// L1: Local cache — env-tunable size and TTL (M053 Phase 1a, Issue #9).
 	// Defaults preserve legacy behavior (10000 entries, 30s TTL).
@@ -524,15 +563,7 @@ func run() error {
 	r.POST("/embeddings/batch", middleware.LimitRequestBody(), middleware.UserRateLimitFromEnv(), middleware.LifecycleGateWithCapacity(lifecycleState, int64(maxInFlight)), batchHandler.CreateBatchEmbeddings)
 
 	addr := bindHost + ":" + port
-	srv := &http.Server{
-		Addr:    addr,
-		Handler: r,
-		// ReadHeaderTimeout: bound the time spent reading the request
-		// headers to mitigate Slowloris-style attacks (gosec G112).
-		// 10s is generous for /v1/embeddings callers (request bodies are
-		// small; S01 caps at 10MB) and matches the Redis Ping timeout.
-		ReadHeaderTimeout: 10 * time.Second,
-	}
+	srv := newHTTPServer(addr, r)
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
