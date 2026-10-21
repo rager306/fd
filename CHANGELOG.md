@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-21
+
 ### Added
 
 - **Repository contributor surface**: `CONTRIBUTING.md` (setup, required gates, PR
@@ -22,6 +24,15 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   turns the Conventional Commit range of a pushed `v*` tag into the GitHub release
   notes with git-cliff. `CHANGELOG.md` remains the authoritative release history and
   is still written by hand; `CITATION.cff` was added for citation metadata.
+- **Model A/B and INT8 parity rig**: `tools/model_ab/` provides a reproducible
+  OpenAI-compatible A/B evaluator (`run_ab.py`), a dense ONNX reference-vs-INT8
+  S8S8-QDQ parity check (`check_int8_parity.py`), an opt-in TEI candidate compose
+  override, and synthetic RU/EN example pairs. It does not change the production
+  runtime or the default model.
+- **CodeRabbit review configuration**: `.coderabbit.yaml` sets the repository review
+  profile, stacked-PR base branches, path filters and instructions, and tools. The
+  repository is public with fewer than 10 stars, so reviews are triggered manually
+  with `@coderabbitai review`.
 
 ### Fixed
 
@@ -61,6 +72,15 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
   evictions rather than TTL expiry.
 
 ### Changed
+
+- **`Go Quality` runs on every pull request.** The workflow no longer filters on
+  `api/**`/README paths, so the required `Go tests and lint` check also reports for
+  docs, tools, and repository-configuration changes instead of leaving those pull
+  requests blocked with a missing check.
+- **README restructured** around Quick Start, Architecture, API, Configuration,
+  Operations, Troubleshooting, Development, and Performance. The auth quick start,
+  public/protected route list, CORS default, request limits, response headers,
+  metrics, and performance sources were corrected.
 
 - **HTTP server deadlines**: `ReadTimeout` 35s, `WriteTimeout` 75s, and
   `IdleTimeout` 75s, tunable with `FD_HTTP_READ_TIMEOUT`,
