@@ -234,7 +234,7 @@ The Docker stack sets safe local defaults. Override values through `docker-compo
 | `LOG_LEVEL` | `info` | Structured log level. |
 | `GIN_MODE` | unset / compose uses `release` | Gin runtime mode. |
 | `FD_HTTP_READ_TIMEOUT` | `35s` | Server read deadline: 30s handler budget + 5s body margin. Zero, negative, or invalid values fall back to the default. |
-| `FD_HTTP_WRITE_TIMEOUT` | `40s` | Server write deadline: 30s handler budget + 10s response margin. |
+| `FD_HTTP_WRITE_TIMEOUT` | `75s` | Server write deadline: 35s read (headers and body) + 30s handler budget + 10s response margin. |
 | `FD_HTTP_IDLE_TIMEOUT` | `75s` | Keep-alive idle timeout. |
 
 The server keeps `ReadHeaderTimeout` at `10s` (`gosec` G112). fd does not override `GOMAXPROCS`: the Go runtime sizes itself from the container CPU limit, and the resolved value is logged as `gomaxprocs` at startup.

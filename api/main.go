@@ -135,19 +135,19 @@ func reportHTTPServerError(logger *slog.Logger, addr string, listen func() error
 }
 
 // HTTP server deadlines. A handler gets a 30s budget (validation, lifecycle gate,
-// and the TEI call behind http.Client.Timeout = 30s), so the read and write
-// deadlines leave margin for slow peers without letting one connection outlive
-// the handler:
+// and the TEI call behind http.Client.Timeout = 30s). Go starts the read deadline
+// when the connection is accepted and the write deadline after the request
+// headers are read, so the write deadline must also cover a slow body read:
 //
 //	read  = handler 30s + 5s body margin  = 35s
-//	write = handler 30s + 10s response margin = 40s
+//	write = read 35s (headers+body) + handler 30s + 10s response margin = 75s
 //	idle  = 75s keep-alive reuse
 //
 // ReadHeaderTimeout stays at 10s: request bodies are small (S01 caps at 10MB),
 // and slow header writers must not hold a connection open (gosec G112).
 const (
 	defaultHTTPReadTimeout       = 35 * time.Second
-	defaultHTTPWriteTimeout      = 40 * time.Second
+	defaultHTTPWriteTimeout      = 75 * time.Second
 	defaultHTTPIdleTimeout       = 75 * time.Second
 	defaultHTTPReadHeaderTimeout = 10 * time.Second
 )

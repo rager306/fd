@@ -197,8 +197,11 @@ func TestNewHTTPServerTimeoutsExceedHandlerBudget(t *testing.T) {
 	if srv.ReadTimeout <= handlerBudget {
 		t.Fatalf("ReadTimeout = %s, want > handler budget %s", srv.ReadTimeout, handlerBudget)
 	}
-	if srv.WriteTimeout <= handlerBudget {
-		t.Fatalf("WriteTimeout = %s, want > handler budget %s", srv.WriteTimeout, handlerBudget)
+	// Go starts the write deadline after the headers are read, so it must cover a
+	// full body read on top of the handler budget; otherwise a slow body eats the
+	// handler's time.
+	if srv.WriteTimeout < srv.ReadTimeout+handlerBudget {
+		t.Fatalf("WriteTimeout = %s, want >= ReadTimeout %s + handler budget %s", srv.WriteTimeout, srv.ReadTimeout, handlerBudget)
 	}
 }
 

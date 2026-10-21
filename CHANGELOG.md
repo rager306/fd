@@ -62,10 +62,12 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
-- **HTTP server deadlines**: `ReadTimeout` 35s, `WriteTimeout` 40s, and
+- **HTTP server deadlines**: `ReadTimeout` 35s, `WriteTimeout` 75s, and
   `IdleTimeout` 75s, tunable with `FD_HTTP_READ_TIMEOUT`,
-  `FD_HTTP_WRITE_TIMEOUT`, and `FD_HTTP_IDLE_TIMEOUT`. Read and write leave
-  margin above the 30s handler budget; `ReadHeaderTimeout` stays at 10s.
+  `FD_HTTP_WRITE_TIMEOUT`, and `FD_HTTP_IDLE_TIMEOUT`. Go starts the write
+  deadline after the headers are read, so the write deadline covers the 35s
+  read (headers and body) plus the 30s handler budget and a 10s response
+  margin; `ReadHeaderTimeout` stays at 10s.
 - **`GOMAXPROCS` is no longer overridden** with `runtime.NumCPU()`. The Go
   runtime derives it from the container CPU limit, and startup logs the
   resolved value as `gomaxprocs`.
