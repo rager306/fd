@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+tone_instructions: >-
+  Be direct and specific. Prioritize correctness, concurrency, security,
+  error handling, and missing tests over style.
+inheritance: true
+
+reviews:
+  profile: "chill"                 # quiet | chill | assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true              # keep the skip reason visible while the repo has <10 stars
+  review_details: false
+  changed_files_summary: true
+  sequence_diagrams: false
+  collapse_walkthrough: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
+    base_branches:
+      - ".*"                       # stacked PRs: base may be a feature branch
+    ignore_usernames:
+      - "dependabot[bot]"
+    ignore_title_keywords:
+      - "WIP"
+      - "[skip review]"
+
+  path_filters:
+    - "!benchmark-results/**"
+    - "!tools/model_ab/pairs.example.jsonl"   # the repo marks *.jsonl as -diff
+    - "!.gitnexus/**"
+
+  path_instructions:
+    - path: "api/**/*.go"
+      instructions: |
+        Go 1.26 embedding proxy (Gin, Prometheus, Redis L2 + in-memory L1).
+        Check goroutine/context lifetime and cancellation, data races and lock
+        scope, request/batch size bounds, cache key/namespace and TTL/LRU
+        correctness, HTTP status/error envelope compatibility, and whether new
+        behavior has tests (including -race for concurrent paths). Follow
+        AGENTS.md: callers must be checked before changing a symbol; do not
+        propose style-only edits.
+    - path: "tools/model_ab/**/*.py"
+      instructions: |
+        Python 3 stdlib + requests evaluation rig. Check cosine/Recall@k/MRR/
+        nDCG math, empty-input and division-by-zero handling, deterministic
+        tie-breaking, that reports never contain raw input texts, and that no
+        model artifacts are committed.
+    - path: ".github/workflows/**"
+      instructions: |
+        Check action pinning by commit SHA, least-privilege permissions, and
+        that required checks still report on PRs that do not touch api/**.
+
+  tools:
+    golangci-lint:
+      enabled: true
+      config_file: ".golangci.yml"
+    hadolint:
+      enabled: true
+    actionlint:
+      enabled: true
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    osvScanner:
+      enabled: true
+
+chat:
+  auto_reply: true
