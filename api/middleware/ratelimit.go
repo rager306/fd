@@ -94,19 +94,23 @@ func UserRateLimit(enabled bool, rpm int) gin.HandlerFunc {
 
 func (l *RateLimiter) allow(c *gin.Context, key string) bool {
 	l.mu.Lock()
-	allowed, remaining, reset := l.take(key)
+	allowed, remaining, reset, retryAfter := l.take(key)
 	l.mu.Unlock()
 
 	setRateLimitHeaders(c, l.limit, remaining, reset)
 	if allowed {
 		return true
 	}
-	handlers.WriteErrorWithRetryAfter(c, handlers.CodeRateLimitExceeded, "rate_limit", "rate limit exceeded", strconv.Itoa(rateLimitWindowSeconds))
+	handlers.WriteErrorWithRetryAfter(c, handlers.CodeRateLimitExceeded, "rate_limit", "rate limit exceeded", strconv.Itoa(retryAfter))
 	c.Abort()
 	return false
 }
 
-func (l *RateLimiter) take(key string) (allowed bool, remaining, reset int) {
+// take consumes one token from key's bucket. reset is the number of seconds
+// until the bucket is full again (X-RateLimit-Reset); retryAfter is the number
+// of seconds until the next token is available and is set only for rejected
+// requests.
+func (l *RateLimiter) take(key string) (allowed bool, remaining, reset, retryAfter int) {
 	now := l.now()
 	bucket := l.items[key]
 	if bucket == nil {
@@ -116,16 +120,20 @@ func (l *RateLimiter) take(key string) (allowed bool, remaining, reset int) {
 	}
 	refillRate := float64(l.limit) / rateLimitWindowSeconds
 	elapsed := now.Sub(bucket.last).Seconds()
-	bucket.tokens = math.Min(float64(l.limit), bucket.tokens+elapsed*refillRate)
+	bucket.tokens = min(float64(l.limit), bucket.tokens+elapsed*refillRate)
 	bucket.last = now
 
 	if bucket.tokens < 1 {
-		return false, 0, rateLimitWindowSeconds
+		retryAfter = int(math.Ceil((1 - bucket.tokens) / refillRate))
+		if retryAfter < 1 {
+			retryAfter = 1
+		}
+		return false, 0, int(math.Ceil((float64(l.limit) - bucket.tokens) / refillRate)), retryAfter
 	}
 	bucket.tokens--
 	remaining = int(math.Floor(bucket.tokens))
 	reset = int(math.Ceil((float64(l.limit) - bucket.tokens) / refillRate))
-	return true, remaining, reset
+	return true, remaining, reset, 0
 }
 
 func (l *RateLimiter) makeRoomForNewKey(now time.Time) {

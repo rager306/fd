@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -196,6 +197,64 @@ func TestLocalCacheReportsCapacityEvictions(t *testing.T) {
 	}
 	if got := c.Size(); got != maxSize {
 		t.Fatalf("Size() = %d, want %d", got, maxSize)
+	}
+}
+
+func TestJitteredTTLIsWithinTenPercent(t *testing.T) {
+	const ttl = 30 * time.Second
+	low, high := ttl*9/10, ttl*11/10
+	seen := make(map[time.Duration]struct{})
+	for i := 0; i < 1000; i++ {
+		got := jitteredTTL(ttl)
+		if got < low || got > high {
+			t.Fatalf("jitteredTTL(%s) = %s, want within [%s, %s]", ttl, got, low, high)
+		}
+		seen[got] = struct{}{}
+	}
+	if len(seen) < 2 {
+		t.Fatalf("jitteredTTL produced %d distinct values, want at least 2", len(seen))
+	}
+}
+
+func TestJitteredTTLLeavesNonPositiveTTLAlone(t *testing.T) {
+	for _, ttl := range []time.Duration{0, -time.Second} {
+		if got := jitteredTTL(ttl); got != ttl {
+			t.Fatalf("jitteredTTL(%s) = %s, want unchanged", ttl, got)
+		}
+	}
+}
+
+func TestLocalCacheSetJittersExpiry(t *testing.T) {
+	c := NewLocalCache(1000, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+
+	const (
+		ttl     = time.Minute
+		entries = 100
+	)
+	ctx := context.Background()
+	before := time.Now()
+	for i := 0; i < entries; i++ {
+		c.Set(ctx, fmt.Sprintf("k%d", i), []byte{1}, ttl)
+	}
+	after := time.Now()
+
+	low, high := before.Add(ttl*9/10), after.Add(ttl*11/10)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	expiries := make(map[time.Time]struct{}, entries)
+	for key, e := range c.data {
+		if e.expiresAt.Before(low) || e.expiresAt.After(high) {
+			t.Fatalf("%s expiresAt = %s, want within [%s, %s]", key, e.expiresAt, low, high)
+		}
+		expiries[e.expiresAt] = struct{}{}
+	}
+	if len(expiries) < 2 {
+		t.Fatalf("Set produced %d distinct expiresAt values, want at least 2", len(expiries))
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -157,6 +158,134 @@ func TestReportHTTPServerErrorSignalsFatalError(t *testing.T) {
 		}
 	default:
 		t.Fatal("expected fatal listener error to trigger shutdown signal")
+	}
+}
+
+func TestNewHTTPServerDefaults(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "")
+	t.Setenv("FD_HTTP_WRITE_TIMEOUT", "")
+	t.Setenv("FD_HTTP_IDLE_TIMEOUT", "")
+
+	handler := http.NewServeMux()
+	srv := newHTTPServer("127.0.0.1:8000", handler)
+	if srv.Addr != "127.0.0.1:8000" {
+		t.Fatalf("Addr = %q, want 127.0.0.1:8000", srv.Addr)
+	}
+	if srv.Handler != handler {
+		t.Fatal("Handler was not attached")
+	}
+	if srv.ReadHeaderTimeout != defaultHTTPReadHeaderTimeout {
+		t.Fatalf("ReadHeaderTimeout = %s, want %s", srv.ReadHeaderTimeout, defaultHTTPReadHeaderTimeout)
+	}
+	if srv.ReadTimeout != defaultHTTPReadTimeout {
+		t.Fatalf("ReadTimeout = %s, want %s", srv.ReadTimeout, defaultHTTPReadTimeout)
+	}
+	if srv.WriteTimeout != defaultHTTPWriteTimeout {
+		t.Fatalf("WriteTimeout = %s, want %s", srv.WriteTimeout, defaultHTTPWriteTimeout)
+	}
+	if srv.IdleTimeout != defaultHTTPIdleTimeout {
+		t.Fatalf("IdleTimeout = %s, want %s", srv.IdleTimeout, defaultHTTPIdleTimeout)
+	}
+}
+
+func TestNewHTTPServerTimeoutsExceedHandlerBudget(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "")
+	t.Setenv("FD_HTTP_WRITE_TIMEOUT", "")
+
+	const handlerBudget = 30 * time.Second
+	srv := newHTTPServer("127.0.0.1:8000", http.NewServeMux())
+	if srv.ReadTimeout <= handlerBudget {
+		t.Fatalf("ReadTimeout = %s, want > handler budget %s", srv.ReadTimeout, handlerBudget)
+	}
+	// Go starts the write deadline after the headers are read, so it must cover a
+	// full body read on top of the handler budget; otherwise a slow body eats the
+	// handler's time.
+	if srv.WriteTimeout < srv.ReadTimeout+handlerBudget {
+		t.Fatalf("WriteTimeout = %s, want >= ReadTimeout %s + handler budget %s", srv.WriteTimeout, srv.ReadTimeout, handlerBudget)
+	}
+}
+
+func TestNewHTTPServerEnvOverrides(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "45s")
+	t.Setenv("FD_HTTP_WRITE_TIMEOUT", "50s")
+	t.Setenv("FD_HTTP_IDLE_TIMEOUT", "90s")
+
+	srv := newHTTPServer("127.0.0.1:8000", http.NewServeMux())
+	if srv.ReadTimeout != 45*time.Second {
+		t.Fatalf("ReadTimeout = %s, want 45s", srv.ReadTimeout)
+	}
+	if srv.WriteTimeout != 50*time.Second {
+		t.Fatalf("WriteTimeout = %s, want 50s", srv.WriteTimeout)
+	}
+	if srv.IdleTimeout != 90*time.Second {
+		t.Fatalf("IdleTimeout = %s, want 90s", srv.IdleTimeout)
+	}
+}
+
+func TestNewHTTPServerNonPositiveEnvFallsBack(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "0s")
+	t.Setenv("FD_HTTP_WRITE_TIMEOUT", "-5s")
+	t.Setenv("FD_HTTP_IDLE_TIMEOUT", "bogus")
+
+	srv := newHTTPServer("127.0.0.1:8000", http.NewServeMux())
+	if srv.ReadTimeout != defaultHTTPReadTimeout {
+		t.Fatalf("ReadTimeout = %s, want default %s", srv.ReadTimeout, defaultHTTPReadTimeout)
+	}
+	if srv.WriteTimeout != defaultHTTPWriteTimeout {
+		t.Fatalf("WriteTimeout = %s, want default %s", srv.WriteTimeout, defaultHTTPWriteTimeout)
+	}
+	if srv.IdleTimeout != defaultHTTPIdleTimeout {
+		t.Fatalf("IdleTimeout = %s, want default %s", srv.IdleTimeout, defaultHTTPIdleTimeout)
+	}
+}
+
+func TestHTTPServerReadTimeoutCutsSlowClient(t *testing.T) {
+	t.Setenv("FD_HTTP_READ_TIMEOUT", "150ms")
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.ReadAll(r.Body)
+		w.WriteHeader(http.StatusOK)
+	})
+	srv := newHTTPServer("127.0.0.1:0", handler)
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	serveDone := make(chan struct{})
+	go func() {
+		defer close(serveDone)
+		_ = srv.Serve(listener)
+	}()
+	t.Cleanup(func() {
+		_ = srv.Close()
+		<-serveDone
+	})
+
+	conn, err := net.Dial("tcp", listener.Addr().String())
+	if err != nil {
+		t.Fatalf("dial: %v", err)
+	}
+	defer func() { _ = conn.Close() }()
+
+	// Announce a 100-byte body, send one byte, and keep the write side open.
+	partial := "POST /v1/embeddings HTTP/1.1\r\nHost: x\r\nContent-Length: 100\r\n\r\nx"
+	if _, err := io.WriteString(conn, partial); err != nil {
+		t.Fatalf("write partial request: %v", err)
+	}
+
+	if err := conn.SetReadDeadline(time.Now().Add(3 * time.Second)); err != nil {
+		t.Fatalf("set read deadline: %v", err)
+	}
+	start := time.Now()
+	if _, err := io.Copy(io.Discard, conn); err != nil {
+		var netErr net.Error
+		if errors.As(err, &netErr) && netErr.Timeout() {
+			t.Fatalf("server did not close the slow connection within 3s (waited %s)", time.Since(start))
+		}
+		// A reset is also an acceptable close.
+	}
+	if elapsed := time.Since(start); elapsed >= 3*time.Second {
+		t.Fatalf("slow connection survived %s, want a close near the 150ms read timeout", elapsed)
 	}
 }
 
