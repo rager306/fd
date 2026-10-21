@@ -28,3 +28,16 @@ func PositiveInt(key string, fallback int) int {
 	}
 	return parsed
 }
+
+// Int64 returns a non-negative 64-bit integer from the environment or fallback.
+func Int64(key string, fallback int64) int64 {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseInt(value, 10, 64)
+	if err != nil || parsed < 0 {
+		return fallback
+	}
+	return parsed
+}

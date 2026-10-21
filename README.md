@@ -257,8 +257,9 @@ The server keeps `ReadHeaderTimeout` at `10s` (`gosec` G112). fd does not overri
 | `REDIS_MAXMEMORY_POLICY` | `allkeys-lru` | Redis eviction policy. |
 | `REDIS_RDB_SAVE` | `300 1` | Redis RDB save policy. |
 | `REDIS_AOF_ENABLED` | `no` | Redis append-only file setting. |
-| `FD_CACHE_MAX_SIZE` | `10000` | L1 (in-memory) cache capacity in entries. Each entry is ~4 KB for 1024-dim float32 embeddings, so 10000 ≈ 40 MB. Set to `0` to disable size-based eviction (cache grows unbounded). Phase 1a (Issue #9). |
-| `FD_CACHE_LOCAL_TTL` | `30s` | L1 entry TTL. Go duration syntax (`30s`, `5m`, `1h`). Each write gets ±10% jitter so entries written together do not expire in the same tick. Phase 1a (Issue #9). |
+| `FD_CACHE_MAX_SIZE` | `200000` | L1 (in-memory) cache capacity in entries. Eviction is least-recently-used. Each entry is ~4 KB for 1024-dim float32 embeddings, so 200000 entries ≈ 800 MB; the `FD_CACHE_MAX_BYTES` budget caps this in practice. Set to `0` to disable entry-count eviction. Issue #480. |
+| `FD_CACHE_MAX_BYTES` | `536870912` | L1 cache payload budget in bytes (512 MiB). Accounted as `len(key)+len(value)` per entry — payload bytes, not Go heap. When either budget overflows, least-recently-used entries are dropped. Set to `0` to disable the byte budget. Issue #480. |
+| `FD_CACHE_LOCAL_TTL` | `30s` | L1 entry TTL. Go duration syntax (`30s`, `5m`, `1h`). Each write gets ±10% jitter so entries written together do not expire in the same tick. Expired entries are removed lazily on read and by the background eviction sweep. Phase 1a (Issue #9). Issue #480. |
 
 Cache namespace isolation matters. When comparing runtime backends or changing model/tokenizer/chunking behavior, set a new namespace value or deliberately flush Redis. Otherwise cached vectors can make incompatible backends appear equivalent.
 

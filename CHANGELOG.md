@@ -71,12 +71,22 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 - **`GOMAXPROCS` is no longer overridden** with `runtime.NumCPU()`. The Go
   runtime derives it from the container CPU limit, and startup logs the
   resolved value as `gomaxprocs`.
+- **L1 cache is now an exact LRU with a byte budget.** `LocalCache` keeps
+  entries in `container/list` recency order, so `Get` promotes a key and
+  capacity eviction drops the least recently used entry instead of an arbitrary
+  one. Two limits bound it: `FD_CACHE_MAX_SIZE` entries (default raised from
+  10000 to 200000) and the new `FD_CACHE_MAX_BYTES` payload budget (default
+  512 MiB, accounted as `len(key)+len(value)` per entry — payload bytes, not Go
+  heap). Setting either to `0` disables that limit. `NewLocalCacheWithBudget`
+  exposes both limits; `NewLocalCache` keeps its signature with the byte budget
+  off. The eviction observer still receives the number of entries dropped by
+  each capacity sweep.
 - **L1 TTL jitter**: `LocalCache.Set` spreads positive TTLs uniformly by ±10%,
   so entries written together do not expire in the same tick. Non-positive TTLs
   are unchanged.
 - **Exact `Retry-After` on rate limiting**: the header reports the seconds
   until the next token instead of the fixed 60s window. `X-RateLimit-Reset`
-  still reports the time until the bucket is full.
+  still reports the time until the bucket is full. Issue #480.
 
 - **Builder images follow the module's toolchain.** `api/Dockerfile` and
   `api/Dockerfile.tests` now use `golang:1.26.10-alpine` instead of the floating

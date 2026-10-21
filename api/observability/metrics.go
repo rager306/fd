@@ -91,7 +91,7 @@ func NewMetrics() *Metrics {
 		}, []string{metricLabelResult, metricLabelTier}),
 		cacheEvictionsTotal: prometheus.NewCounter(prometheus.CounterOpts{
 			Name: "fd_cache_evictions_total",
-			Help: "Total L1 cache entries dropped to stay within FD_CACHE_MAX_SIZE.",
+			Help: "Total L1 cache entries dropped to stay within FD_CACHE_MAX_SIZE or FD_CACHE_MAX_BYTES.",
 		}),
 		inFlightRequests: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "fd_in_flight_requests",

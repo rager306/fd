@@ -2,6 +2,7 @@
 package cache
 
 import (
+	"container/list"
 	"context"
 	"math/rand/v2"
 	"sync"
@@ -9,17 +10,31 @@ import (
 )
 
 type l1Entry struct {
+	key       string
 	value     []byte
 	expiresAt time.Time
+	bytes     int64
 }
 
 // LocalCache is an in-memory TTL-aware cache used as fd's L1 layer
 // (Redis is the L2). It is goroutine-safe.
+//
+// Entries are kept in least-recently-used order: Get and Set move an entry to
+// the front, and capacity eviction drops entries from the back. Two limits
+// bound the cache, an entry count and a byte budget; a limit of 0 disables
+// that dimension. The byte budget counts payload bytes as len(key)+len(value)
+// per entry. That is payload accounting, not Go heap usage: map and list
+// overhead and slice capacity slack are not counted.
 type LocalCache struct {
-	mu       sync.Mutex
-	data     map[string]l1Entry
-	maxSize  int
-	evictTTL time.Duration
+	mu sync.Mutex
+	// data maps each key to its element in lru; lru.Front is the most
+	// recently used entry and lru.Back the least recently used.
+	data       map[string]*list.Element
+	lru        list.List
+	maxEntries int
+	maxBytes   int64
+	bytes      int64
+	evictTTL   time.Duration
 
 	evictionObserver func(int)
 
@@ -29,16 +44,25 @@ type LocalCache struct {
 }
 
 // NewLocalCache returns a LocalCache with capacity maxSize entries and a
-// background eviction loop running every evictTTL. If maxSize is <= 0,
-// size eviction is disabled. If evictTTL is <= 0, background TTL eviction
-// is disabled, but Get still expires entries lazily.
+// background eviction loop running every evictTTL. If maxSize is <= 0, entry
+// count eviction is disabled; the byte budget is disabled. If evictTTL is <= 0,
+// background TTL eviction is disabled, but Get still expires entries lazily.
 func NewLocalCache(maxSize int, evictTTL time.Duration) *LocalCache {
+	return NewLocalCacheWithBudget(maxSize, 0, evictTTL)
+}
+
+// NewLocalCacheWithBudget returns a LocalCache bounded by maxEntries entries
+// and maxBytes payload bytes. A limit of 0 disables it. See LocalCache for what
+// the byte budget counts. Background TTL eviction follows the same rule as
+// NewLocalCache.
+func NewLocalCacheWithBudget(maxEntries int, maxBytes int64, evictTTL time.Duration) *LocalCache {
 	c := &LocalCache{
-		data:     make(map[string]l1Entry),
-		maxSize:  maxSize,
-		evictTTL: evictTTL,
-		stopCh:   make(chan struct{}),
-		doneCh:   make(chan struct{}),
+		data:       make(map[string]*list.Element),
+		maxEntries: maxEntries,
+		maxBytes:   maxBytes,
+		evictTTL:   evictTTL,
+		stopCh:     make(chan struct{}),
+		doneCh:     make(chan struct{}),
 	}
 	if evictTTL > 0 {
 		go c.evictLoop()
@@ -66,14 +90,16 @@ func (c *LocalCache) Get(_ context.Context, key string) ([]byte, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	e, ok := c.data[key]
+	elem, ok := c.data[key]
 	if !ok {
 		return nil, false
 	}
+	e := elem.Value.(*l1Entry)
 	if now.After(e.expiresAt) {
-		delete(c.data, key)
+		c.removeLocked(elem)
 		return nil, false
 	}
+	c.lru.MoveToFront(elem)
 	return e.value, true
 }
 
@@ -86,17 +112,34 @@ func (c *LocalCache) SetEvictionObserver(observer func(int)) {
 	c.mu.Unlock()
 }
 
-// Set stores value under key with a per-entry TTL. If key already exists
-// the value and TTL are refreshed in place; the entry is not duplicated. When
-// the write pushes the cache past maxSize, the entries dropped to make room are
-// reported to the eviction observer.
+// Set stores value under key with a per-entry TTL and marks the key as most
+// recently used. If key already exists the value and TTL are refreshed in
+// place; the entry is not duplicated. When the write pushes the cache past
+// maxEntries or maxBytes, the entries dropped to make room are reported to the
+// eviction observer. The entry just written is kept whenever another entry can
+// be dropped instead.
 func (c *LocalCache) Set(_ context.Context, key string, value []byte, ttl time.Duration) {
+	size := int64(len(key) + len(value))
 	c.mu.Lock()
-	c.data[key] = l1Entry{
-		value:     value,
-		expiresAt: time.Now().Add(jitteredTTL(ttl)),
+	if elem, ok := c.data[key]; ok {
+		e := elem.Value.(*l1Entry)
+		c.bytes -= e.bytes
+		e.value = value
+		e.expiresAt = time.Now().Add(jitteredTTL(ttl))
+		e.bytes = size
+		c.bytes += size
+		c.lru.MoveToFront(elem)
+	} else {
+		e := &l1Entry{
+			key:       key,
+			value:     value,
+			expiresAt: time.Now().Add(jitteredTTL(ttl)),
+			bytes:     size,
+		}
+		c.data[key] = c.lru.PushFront(e)
+		c.bytes += size
 	}
-	evicted := c.enforceMaxSizeLocked(key)
+	evicted := c.enforceLimitsLocked(key)
 	observer := c.evictionObserver
 	c.mu.Unlock()
 
@@ -123,14 +166,18 @@ func jitteredTTL(ttl time.Duration) time.Duration {
 // Delete removes the entry under key. No-op if the key is absent.
 func (c *LocalCache) Delete(_ context.Context, key string) {
 	c.mu.Lock()
-	delete(c.data, key)
+	if elem, ok := c.data[key]; ok {
+		c.removeLocked(elem)
+	}
 	c.mu.Unlock()
 }
 
 // Flush removes all entries from the local cache.
 func (c *LocalCache) Flush(_ context.Context) {
 	c.mu.Lock()
-	c.data = make(map[string]l1Entry)
+	c.data = make(map[string]*list.Element)
+	c.lru.Init()
+	c.bytes = 0
 	c.mu.Unlock()
 }
 
@@ -139,30 +186,39 @@ func (c *LocalCache) Size() int {
 	return c.currentSize()
 }
 
-// enforceMaxSizeLocked drops entries until the cache is back within maxSize and
-// returns how many it dropped. protectedKey — the entry just written — is never
-// dropped. Callers must hold c.mu.
-func (c *LocalCache) enforceMaxSizeLocked(protectedKey string) int {
-	if c.maxSize <= 0 {
-		return 0
-	}
+// enforceLimitsLocked drops least recently used entries until the cache is back
+// within maxEntries and maxBytes, and returns how many it dropped.
+// protectedKey — the entry just written, which sits at the front — is never
+// dropped while another entry remains. Callers must hold c.mu.
+func (c *LocalCache) enforceLimitsLocked(protectedKey string) int {
 	evicted := 0
-	for len(c.data) > c.maxSize {
-		deleted := false
-		for key := range c.data {
-			if key == protectedKey {
-				continue
-			}
-			delete(c.data, key)
-			evicted++
-			deleted = true
+	for c.overLimitLocked() {
+		elem := c.lru.Back()
+		if elem == nil || elem.Value.(*l1Entry).key == protectedKey {
 			break
 		}
-		if !deleted {
-			return evicted
-		}
+		c.removeLocked(elem)
+		evicted++
 	}
 	return evicted
+}
+
+// overLimitLocked reports whether either capacity limit is exceeded. Callers
+// must hold c.mu.
+func (c *LocalCache) overLimitLocked() bool {
+	if c.maxEntries > 0 && len(c.data) > c.maxEntries {
+		return true
+	}
+	return c.maxBytes > 0 && c.bytes > c.maxBytes
+}
+
+// removeLocked unlinks one entry and updates the byte counter. Callers must
+// hold c.mu.
+func (c *LocalCache) removeLocked(elem *list.Element) {
+	e := elem.Value.(*l1Entry)
+	delete(c.data, e.key)
+	c.lru.Remove(elem)
+	c.bytes -= e.bytes
 }
 
 func (c *LocalCache) currentSize() int {
@@ -188,9 +244,9 @@ func (c *LocalCache) evictLoop() {
 func (c *LocalCache) evictExpired(now time.Time) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	for key, value := range c.data {
-		if now.After(value.expiresAt) {
-			delete(c.data, key)
+	for _, elem := range c.data {
+		if now.After(elem.Value.(*l1Entry).expiresAt) {
+			c.removeLocked(elem)
 		}
 	}
 }

@@ -359,11 +359,14 @@ func run() error {
 
 	logger.Info("starting fd-api", "gomaxprocs", runtime.GOMAXPROCS(0))
 
-	// L1: Local cache — env-tunable size and TTL (M053 Phase 1a, Issue #9).
-	// Defaults preserve legacy behavior (10000 entries, 30s TTL).
-	l1MaxEntries := envutil.PositiveInt("FD_CACHE_MAX_SIZE", 10000)
+	// L1: Local cache — env-tunable entry/byte budgets and TTL (Issue #480).
+	// 200000 entries and 512 MiB of payload bound the L1 footprint; 0 disables
+	// either limit and leaves only the per-entry TTL.
+	l1MaxEntries := envutil.Int("FD_CACHE_MAX_SIZE", 200000)
+	l1MaxBytes := envutil.Int64("FD_CACHE_MAX_BYTES", 512<<20)
 	l1TTL := envutil.DurationOrDefault("FD_CACHE_LOCAL_TTL", 30*time.Second)
-	localCache := cache.NewLocalCache(l1MaxEntries, l1TTL)
+	logger.Info("l1 cache configured", "max_entries", l1MaxEntries, "max_bytes", l1MaxBytes, "ttl", l1TTL)
+	localCache := cache.NewLocalCacheWithBudget(l1MaxEntries, l1MaxBytes, l1TTL)
 	defer closeResource("local cache", localCache, logger)
 
 	// L2: Redis binary cache with pool timeouts
@@ -486,8 +489,8 @@ func run() error {
 		return tiered.RedisSize(context.Background())
 	})
 	tiered.SetLookupDurationObserver(metrics.ObserveCacheLookupDuration)
-	// L1 capacity evictions (FD_CACHE_MAX_SIZE overflow) feed
-	// fd_cache_evictions_total; expired-entry cleanup is a separate event.
+	// L1 capacity evictions (FD_CACHE_MAX_SIZE or FD_CACHE_MAX_BYTES overflow)
+	// feed fd_cache_evictions_total; expired-entry cleanup is a separate event.
 	localCache.SetEvictionObserver(metrics.ObserveCacheEvictions)
 
 	runtimeHealth, healthHandler := newHealthHandler(healthParams{
