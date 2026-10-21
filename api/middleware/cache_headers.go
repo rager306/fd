@@ -78,11 +78,29 @@ func responseETag(body []byte) string {
 }
 
 func etagMatches(ifNoneMatch, etag string) bool {
-	for _, candidate := range strings.Split(ifNoneMatch, ",") {
+	// ⚡ Bolt: Zero-allocation fast path for ETag matching by avoiding strings.Split.
+	if ifNoneMatch == "" {
+		return false
+	}
+	start := 0
+	for {
+		idx := strings.IndexByte(ifNoneMatch[start:], ',')
+		var candidate string
+		if idx == -1 {
+			candidate = ifNoneMatch[start:]
+		} else {
+			candidate = ifNoneMatch[start : start+idx]
+		}
+
 		trimmed := strings.TrimSpace(candidate)
 		if trimmed == etag || `"`+strings.Trim(trimmed, `"`)+`"` == etag {
 			return true
 		}
+
+		if idx == -1 {
+			break
+		}
+		start = start + idx + 1
 	}
 	return false
 }
