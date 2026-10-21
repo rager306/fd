@@ -9,8 +9,8 @@ abstract: >-
 authors:
   - alias: rager306
     name: rager306
-version: 1.0.0
-date-released: "2026-07-03"
+version: 1.0.1
+date-released: "2026-10-21"
 license: MIT
 repository-code: "https://github.com/rager306/fd"
 url: "https://github.com/rager306/fd"
