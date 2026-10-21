@@ -517,7 +517,7 @@ go run github.com/avito-tech/go-mutesting/cmd/go-mutesting@latest \
 
 This mutation command is an informational local/manual gate, not a mandatory CI hard gate. It currently requires the Go 1.25.11 toolchain via automatic toolchain switching and takes roughly a minute on the bounded scope.
 
-Latest local verification run (2026-10-20, commit `83cf4cd`): `go test ./... -v` reports **274 test functions (365 including subtests) across 11 packages, 0 failures**; `go vet` clean; `golangci-lint` v2.12.2 **0 issues**; `govulncheck` reports **0 reachable vulnerabilities** (1 vulnerability exists in a required module that the code does not call). The M050 closeout additionally recorded an authenticated Docker e2e suite with 9 passing checks and a bounded mutation score of 1.0 on 143 mutants in scope.
+Latest local verification run (2026-10-21, Go 1.26.10): `go test ./... -v` reports **274 test functions (365 including subtests) across 11 packages, 0 failures**; `go vet` clean; `golangci-lint` v2.12.2 **0 issues**; `govulncheck` reports **0 reachable vulnerabilities** (1 vulnerability remains in a required module that the code does not call). The module declares `go 1.26.10` as its floor — that patch clears GO-2026-6809 in the standard library — and CI reads the version from `api/go.mod`, so it cannot run an older toolchain than the code requires. The M050 closeout additionally recorded an authenticated Docker e2e suite with 9 passing checks and a bounded mutation score of 1.0 on 143 mutants in scope.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the full command list and what belongs in a pull request.
 

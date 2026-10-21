@@ -25,6 +25,15 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Fixed
 
+- **Toolchain floor raised to Go 1.26.10.** GO-2026-6809 (crypto/x509 trusting
+  compromised intermediate certificates) is reachable from this service through
+  `queue.NewRequestID` → `crypto/rand` → `x509.Certificate.Verify`, and is fixed in
+  Go 1.26.10. `api/go.mod` now declares `go 1.26.10`, and the `Go Quality` workflow
+  takes its version from `go-version-file: api/go.mod` instead of resolving `1.26.x`
+  inside the job — the runner toolcache had been serving 1.26.9, so CI enforced the
+  vulnerability gate with a toolchain older than the code requires.
+
+
 - **Async queue (`FD_QUEUE_ENABLED`)**: the batch window is now honored (the worker
   waits for `FD_QUEUE_BATCH_WINDOW_MS` instead of flushing as soon as the channel
   looked empty); a TEI response with fewer vectors than inputs fails the whole batch
