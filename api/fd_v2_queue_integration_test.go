@@ -13,8 +13,8 @@ import (
 	"fd-api/queue"
 
 	"github.com/gin-gonic/gin"
-	"log/slog"
 	"io"
+	"log/slog"
 )
 
 // queueTestEmbedder returns the same count of 1024-dim embeddings as inputs.

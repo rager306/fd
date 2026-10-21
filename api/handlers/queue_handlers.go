@@ -19,10 +19,10 @@ const queueRetryAfterSeconds = "5"
 // The handler is constructed only when FD_QUEUE_ENABLED=true; otherwise
 // callers see 404 not_found from the standard NoRoute handler.
 type QueueHandler struct {
-	store     *queue.ResultStore
-	items     chan<- queue.Item
-	logger    *slog.Logger
-	modelID   string
+	store   *queue.ResultStore
+	items   chan<- queue.Item
+	logger  *slog.Logger
+	modelID string
 }
 
 // NewQueueHandler wires the bounded channel, result store, and model identity.
