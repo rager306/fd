@@ -62,6 +62,13 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
+- **Builder images follow the module's toolchain.** `api/Dockerfile` and
+  `api/Dockerfile.tests` now use `golang:1.26.10-alpine` instead of the floating
+  `golang:1.26-alpine`, and `tests/integration/go.mod` declares `go 1.26.10` like the
+  service module. A floating tag can resolve to a patch below the module floor — the
+  same drift that let CI enforce the vulnerability gate with Go 1.26.9.
+
+
 - **CI hardening**: GitHub Actions are pinned by commit SHA with the version in a
   trailing comment (`actions/checkout` v7.0.1, `actions/setup-go` v7.0.0), and a
   `go vet` step runs alongside tests, lint and `govulncheck`.
