@@ -185,24 +185,45 @@ func processBatch(ctx context.Context, batch []Item, emb embed.Embedder) []Resul
 		return results
 	}
 
+	// A short response would leave the tail items with nil vectors while still
+	// reporting success, so treat a count mismatch as a failed batch.
+	if len(embs) != len(texts) {
+		err := fmt.Errorf("TEI returned %d embeddings for %d inputs", len(embs), len(texts))
+		for i := range batch {
+			results[i] = Result{ID: batch[i].ID, Status: StatusFailed, Err: err}
+		}
+		return results
+	}
+
 	// Walk embeddings, slicing into per-item slices.
 	cursor := 0
 	for i, item := range batch {
-		n := len(item.Texts)
-		itemSlice := make([][]float32, n)
-		if cursor+n <= len(embs) {
-			for j := 0; j < n; j++ {
-				itemSlice[j] = embs[cursor+j]
-			}
+		itemSlice := make([][]float32, len(item.Texts))
+		promptTokens := 0
+		for j, text := range item.Texts {
+			itemSlice[j] = truncateToDims(embs[cursor+j], item.Dims)
+			promptTokens += len(text) / 4
 		}
 		results[i] = Result{
-			ID:         item.ID,
-			Status:     StatusCompleted,
-			Embeddings: itemSlice,
+			ID:             item.ID,
+			Status:         StatusCompleted,
+			Embeddings:     itemSlice,
+			Dims:           item.Dims,
+			EncodingFormat: item.EncodingFormat,
+			PromptTokens:   promptTokens,
 		}
-		cursor += n
+		cursor += len(item.Texts)
 	}
 	return results
+}
+
+// truncateToDims mirrors the sync path: a 512-dimension request returns the
+// leading 512 components of the model output.
+func truncateToDims(emb []float32, dims int) []float32 {
+	if dims == 512 && len(emb) >= 512 {
+		return emb[:512]
+	}
+	return emb
 }
 
 // drainRemaining marks all queued items as failed with the given context

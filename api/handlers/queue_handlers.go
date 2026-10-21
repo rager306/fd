@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	"fd-api/embed"
@@ -35,38 +34,29 @@ func NewQueueHandler(store *queue.ResultStore, items chan<- queue.Item, modelID 
 // enqueues the inputs. On queue saturation returns 503 with a Retry-After
 // hint so producers back off under burst load.
 func (h *QueueHandler) Submit(c *gin.Context) {
-	var req embed.EmbeddingsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		WriteError(c, CodeInvalidJSON, "", "invalid JSON: "+err.Error())
+	req, ok := validatedEmbeddingsRequest(c)
+	if !ok {
 		return
 	}
-	if len(req.Input) == 0 {
-		WriteError(c, CodeInputRequired, "input", "input is required (non-empty array of strings)")
-		return
-	}
-	if len(req.Input) > 128 {
-		WriteError(c, CodeBatchTooLarge, "input", "batch size exceeds max 128; split into smaller batches")
-		return
-	}
-	for _, t := range req.Input {
-		if strings.TrimSpace(t) == "" {
-			WriteError(c, CodeInputRequired, "input", "input contains empty strings")
-			return
-		}
-	}
+
 	dims := 1024
 	if req.Dimensions != nil && *req.Dimensions != 0 {
 		dims = *req.Dimensions
 	}
+	encodingFormat := embed.EncodingFormatFloat
+	if req.EncodingFormat != nil && *req.EncodingFormat != "" {
+		encodingFormat = *req.EncodingFormat
+	}
 
 	id := queue.NewRequestID()
 	item := queue.Item{
-		ID:        id,
-		Texts:     req.Input,
-		Dims:      dims,
-		Response:  make(chan queue.Result, 1),
-		SubmitCtx: c.Request.Context(),
-		CreatedAt: time.Now().UnixNano(),
+		ID:             id,
+		Texts:          req.Input,
+		Dims:           dims,
+		EncodingFormat: encodingFormat,
+		Response:       make(chan queue.Result, 1),
+		SubmitCtx:      c.Request.Context(),
+		CreatedAt:      time.Now().UnixNano(),
 	}
 
 	// Non-blocking send with saturation backpressure.
@@ -91,6 +81,27 @@ func (h *QueueHandler) Submit(c *gin.Context) {
 	}
 }
 
+// validatedEmbeddingsRequest returns the request validated by
+// middleware.ValidateEmbeddingsRequest, falling back to inline binding and
+// validation so the handler stays usable standalone (tests, alt entry points).
+func validatedEmbeddingsRequest(c *gin.Context) (*embed.EmbeddingsRequest, bool) {
+	if v, ok := c.Get(ContextKeyValidatedRequest); ok {
+		if req, ok := v.(*embed.EmbeddingsRequest); ok {
+			return req, true
+		}
+	}
+
+	var inline embed.EmbeddingsRequest
+	if err := c.ShouldBindJSON(&inline); err != nil {
+		WriteError(c, CodeInvalidJSON, "", "invalid JSON: "+err.Error())
+		return nil, false
+	}
+	if !validateInlineEmbeddingRequest(c, &inline) {
+		return nil, false
+	}
+	return &inline, true
+}
+
 // Poll handles GET /v1/queue/:id. Returns pending (202), completed (200
 // with embedding data), failed (500 with error envelope), or 404 when
 // the id is unknown or has expired from the result store.
@@ -113,25 +124,7 @@ func (h *QueueHandler) Poll(c *gin.Context) {
 			"request_id": res.ID,
 		})
 	case queue.StatusCompleted:
-		data := make([]embed.EmbeddingObj, len(res.Embeddings))
-		for i, emb := range res.Embeddings {
-			obj := embed.EmbeddingObj{
-				Object:    embed.ObjectEmbedding,
-				Index:     i,
-				Dimensions: 1024,
-			}
-			obj.SetVector(emb)
-			data[i] = obj
-		}
-		c.JSON(http.StatusOK, embed.EmbeddingsResponse{
-			Object: embed.ObjectList,
-			Data:   data,
-			Model:  h.modelID,
-			Usage: embed.Usage{
-				PromptTokens: res.PromptTokens,
-				TotalTokens:  res.PromptTokens,
-			},
-		})
+		c.JSON(http.StatusOK, buildEmbeddingsResponse(res.Embeddings, res.Dims, res.EncodingFormat, h.modelID, res.PromptTokens))
 	case queue.StatusFailed:
 		WriteError(c, CodeInternalError, "", "queue processing failed: "+safeErr(res.Err))
 	default:

@@ -483,7 +483,10 @@ func run() error {
 		queueItems := make(chan queue.Item, queueCap)
 		resultStore := queue.NewResultStore()
 		queueHandler := handlers.NewQueueHandler(resultStore, queueItems, modelID, logger)
-		r.POST("/v1/queue", middleware.LimitRequestBody(), queueHandler.Submit)
+		// Same validation contract as /v1/embeddings, as the README states:
+		// shape, batch size, dimensions and encoding_format are checked before
+		// the item is enqueued, so a client error cannot surface as a 500 later.
+		r.POST("/v1/queue", middleware.ValidateEmbeddingsRequest(), queueHandler.Submit)
 		r.GET("/v1/queue/:id", queueHandler.Poll)
 		logger.Info("queue enabled", "capacity", queueCap)
 		// Worker goroutine drains the bounded queue: single-pass

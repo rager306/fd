@@ -29,13 +29,21 @@ const (
 // Result holds the outcome of a worker-processed queue item. Embeddings
 // has the same length as the original input. Err is nil on success.
 type Result struct {
-	ID           string
-	Status       Status
-	Embeddings   [][]float32
-	PromptTokens int
-	Err          error
-	CreatedAt    int64 // unix nanos when submitted
-	CompletedAt  int64 // unix nanos when worker finished (0 while pending)
+	ID     string
+	Status Status
+	// Embeddings holds one vector per submitted text, already truncated to
+	// the item's requested dimensions.
+	Embeddings [][]float32
+	// Dims is the dimension count the vectors were truncated to, and the
+	// value the poll response must report.
+	Dims int
+	// EncodingFormat is the caller's requested wire format ("float" or
+	// "base64"), reported back on the poll response.
+	EncodingFormat string
+	PromptTokens   int
+	Err            error
+	CreatedAt      int64 // unix nanos when submitted
+	CompletedAt    int64 // unix nanos when worker finished (0 while pending)
 }
 
 // Item is the in-flight value workers consume from the bounded channel.
@@ -43,12 +51,13 @@ type Result struct {
 // the request without contacting TEI directly. SubmitCtx should be the
 // request's context (cancellation here stops waiting).
 type Item struct {
-	ID         string
-	Texts      []string
-	Dims       int
-	Response   chan Result // buffered 1; worker writes once, submitter reads once
-	SubmitCtx  context.Context
-	CreatedAt  int64
+	ID             string
+	Texts          []string
+	Dims           int
+	EncodingFormat string
+	Response       chan Result // buffered 1; worker writes once, submitter reads once
+	SubmitCtx      context.Context
+	CreatedAt      int64
 }
 
 // ErrQueueDisabled indicates the queue feature was queried while the

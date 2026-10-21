@@ -21,6 +21,9 @@ type fakeEmbedder struct {
 	err     error
 	// Captures the number of texts seen in each Embed call (last value wins).
 	lastBatchSize atomic.Int64
+	// shortBy drops that many embeddings from the response, simulating a
+	// backend that returns fewer vectors than inputs.
+	shortBy int
 }
 
 func (f *fakeEmbedder) Embed(ctx context.Context, texts []string) ([][]float32, error) {
@@ -43,6 +46,9 @@ func (f *fakeEmbedder) Embed(ctx context.Context, texts []string) ([][]float32, 
 		} else {
 			out[i] = []float32{float32(i)}
 		}
+	}
+	if f.shortBy > 0 && f.shortBy < len(out) {
+		out = out[:len(out)-f.shortBy]
 	}
 	return out, nil
 }
@@ -225,5 +231,88 @@ func TestWorkerRespectsMaxBatchSize(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 	if got := emb.calls.Load(); got != 2 {
 		t.Fatalf("embedder calls = %d, want 2", got)
+	}
+}
+
+// A backend that returns fewer vectors than inputs must fail the whole batch;
+// previously the tail items were marked completed with nil vectors.
+func TestWorkerFailsBatchOnResponseCountMismatch(t *testing.T) {
+	store := NewResultStore()
+	defer func() { _ = store.Close() }()
+	items := make(chan Item, 1)
+	emb := &fakeEmbedder{shortBy: 1}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	StartQueueWorker(ctx, store, items, emb, discardLogger(), WorkerConfig{
+		BatchMaxSize: 32,
+		BatchWindow:  10 * time.Millisecond,
+	})
+
+	item := makeItem("short-1", []string{"a", "b"})
+	items <- item
+
+	select {
+	case res := <-item.Response:
+		if res.Status != StatusFailed {
+			t.Fatalf("status = %s, want failed", res.Status)
+		}
+		if res.Err == nil {
+			t.Fatal("failed result carries no error")
+		}
+		if res.Embeddings != nil {
+			t.Fatalf("failed result carries embeddings: %v", res.Embeddings)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("worker did not complete within 2s")
+	}
+}
+
+// The result must report the dimensions and wire format the caller asked for,
+// and account for prompt tokens instead of leaving usage at zero.
+func TestWorkerHonoursRequestedDimensionsAndCountsTokens(t *testing.T) {
+	store := NewResultStore()
+	defer func() { _ = store.Close() }()
+	items := make(chan Item, 1)
+	full := make([]float32, 1024)
+	for i := range full {
+		full[i] = float32(i)
+	}
+	emb := &fakeEmbedder{returns: [][]float32{full}}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	StartQueueWorker(ctx, store, items, emb, discardLogger(), WorkerConfig{
+		BatchMaxSize: 32,
+		BatchWindow:  10 * time.Millisecond,
+	})
+
+	item := makeItem("dims-1", []string{"0123456789abcdefghij"})
+	item.Dims = 512
+	item.EncodingFormat = "base64"
+	items <- item
+
+	select {
+	case res := <-item.Response:
+		if res.Status != StatusCompleted {
+			t.Fatalf("status = %s, want completed", res.Status)
+		}
+		if len(res.Embeddings) != 1 {
+			t.Fatalf("embeddings = %d, want 1", len(res.Embeddings))
+		}
+		if got := len(res.Embeddings[0]); got != 512 {
+			t.Fatalf("vector dims = %d, want 512", got)
+		}
+		if res.Dims != 512 {
+			t.Fatalf("reported dims = %d, want 512", res.Dims)
+		}
+		if res.EncodingFormat != "base64" {
+			t.Fatalf("encoding format = %q, want base64", res.EncodingFormat)
+		}
+		if res.PromptTokens == 0 {
+			t.Fatal("prompt tokens = 0, want a non-zero count")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("worker did not complete within 2s")
 	}
 }
