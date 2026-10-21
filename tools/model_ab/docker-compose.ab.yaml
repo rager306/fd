@@ -1,0 +1,39 @@
+# Reproducible A/B rig for embedding-model candidates (issue #480, item 7).
+#
+# This is an opt-in override. It never changes the production services.
+# Start only the candidate:
+#
+#   export MODEL_AB_MODEL_ID=Qwen/Qwen3-Embedding-0.6B
+#   export MODEL_AB_REVISION=<pinned-commit>
+#   docker compose -f tools/model_ab/docker-compose.ab.yaml up -d tei-candidate
+#
+# The HF cache is an existing external volume so it is shared with the
+# production TEI service and cannot be deleted by `docker compose down -v`.
+services:
+  tei-candidate:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.4
+    container_name: fd_tei_candidate
+    restart: "no"
+    ports:
+      - "30081:80"
+    volumes:
+      - model_ab_hf_cache:/data
+    environment:
+      MODEL_ID: ${MODEL_AB_MODEL_ID:?set MODEL_AB_MODEL_ID to a Hugging Face model id}
+      REVISION: ${MODEL_AB_REVISION:?pin MODEL_AB_REVISION to a commit or tag}
+      HF_TOKEN: ${HF_TOKEN:-}
+      HF_HOME: /data
+      HUGGINGFACE_HUB_CACHE: /data
+    # Match the production batching limit so latency stays comparable.
+    command: --max-batch-tokens 8192
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 300s
+
+volumes:
+  model_ab_hf_cache:
+    external: true
+    name: ${MODEL_AB_HF_CACHE_VOLUME:-fd_tei_data}
