@@ -45,7 +45,7 @@ func parseCORSOrigins(origins string) []string {
 	// ⚡ Bolt: Zero-allocation loop using IndexByte instead of strings.Split
 	var allowed []string
 	s := origins
-	for len(s) > 0 {
+	for s != "" {
 		var part string
 		if idx := strings.IndexByte(s, ','); idx >= 0 {
 			part = s[:idx]

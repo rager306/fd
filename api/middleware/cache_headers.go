@@ -80,7 +80,7 @@ func responseETag(body []byte) string {
 func etagMatches(ifNoneMatch, etag string) bool {
 	// ⚡ Bolt: Zero-allocation loop using IndexByte instead of strings.Split
 	s := ifNoneMatch
-	for len(s) > 0 {
+	for s != "" {
 		var candidate string
 		if idx := strings.IndexByte(s, ','); idx >= 0 {
 			candidate = s[:idx]
