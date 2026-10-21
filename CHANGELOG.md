@@ -25,6 +25,25 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Fixed
 
+- **Async queue (`FD_QUEUE_ENABLED`)**: the batch window is now honored (the worker
+  waits for `FD_QUEUE_BATCH_WINDOW_MS` instead of flushing as soon as the channel
+  looked empty); a TEI response with fewer vectors than inputs fails the whole batch
+  instead of completing the tail with nil vectors; the requested `dimensions` are
+  applied and reported back instead of a hardcoded `1024`; `encoding_format` is
+  honored on the poll response; `usage.prompt_tokens` is populated; the submit route
+  runs the same validation as `/v1/embeddings`, so a client error is a 4xx at submit
+  time instead of a 500 on poll; and the worker is cancelled on shutdown, so queued
+  items are marked failed instead of being killed mid-flight. The README already
+  described this behavior.
+- **Cross-request coalescing**: a job that would push a batch past TEI's 32-input cap
+  now starts the next batch instead of overflowing the current one, and the
+  downstream call runs under the coalescer's lifecycle context, so shutdown cancels
+  an in-flight batch.
+- **Batch cache reads** (`/v1/batch`, `/embeddings/batch`) resolve each chunk with one
+  `GetManyIfPresent` call instead of one `GetIfPresent` per text, which turned a
+  3200-input request into up to 3200 sequential Redis round trips.
+
+
 - **`fd_cache_evictions_total` counted nothing.** The counter was registered but
   `ObserveCacheEviction` had no production caller, so it stayed at 0 while the L1
   cache dropped entries on every `FD_CACHE_MAX_SIZE` overflow. `LocalCache` now

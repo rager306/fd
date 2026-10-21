@@ -489,13 +489,23 @@ func run() error {
 		r.POST("/v1/queue", middleware.ValidateEmbeddingsRequest(), queueHandler.Submit)
 		r.GET("/v1/queue/:id", queueHandler.Poll)
 		logger.Info("queue enabled", "capacity", queueCap)
-		// Worker goroutine drains the bounded queue: single-pass
-		// TEI calls per item (time-windowed batching T03 pending).
-		queue.StartQueueWorker(context.Background(), resultStore, queueItems, embeddingClient, logger, queue.WorkerConfig{
+		// The worker shares the process lifetime: cancelling this context on the
+		// way out lets it mark queued items failed and stop issuing TEI calls,
+		// instead of being killed mid-request.
+		queueCtx, queueCancel := context.WithCancel(context.Background())
+		queueDone := queue.StartQueueWorker(queueCtx, resultStore, queueItems, embeddingClient, logger, queue.WorkerConfig{
 			BatchMaxSize: envutil.PositiveInt("FD_QUEUE_BATCH_MAX_SIZE", 32),
 			BatchWindow:  envutil.DurationOrDefault("FD_QUEUE_BATCH_WINDOW_MS", 10*time.Millisecond),
 		})
-		defer func() { closeResource("queue result store", resultStore, logger) }()
+		defer func() {
+			queueCancel()
+			select {
+			case <-queueDone:
+			case <-time.After(2 * time.Second):
+				logger.Warn("queue worker did not stop within 2s")
+			}
+			closeResource("queue result store", resultStore, logger)
+		}()
 	} else {
 		logger.Info("queue disabled (set FD_QUEUE_ENABLED=true to enable)")
 	}

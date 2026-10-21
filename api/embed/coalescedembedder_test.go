@@ -12,13 +12,21 @@ type fakeInner struct {
 	calls      atomic.Int64
 	gatherLock sync.Mutex // serializes Embed calls so coalescing isn't accidentally racy in tests
 	lastBatch  atomic.Int64
+	maxBatch   atomic.Int64
 }
 
 func (f *fakeInner) Embed(ctx context.Context, texts []string) ([][]float32, error) {
 	f.calls.Add(1)
 	f.gatherLock.Lock()
 	defer f.gatherLock.Unlock()
-	f.lastBatch.Store(int64(len(texts)))
+	n := int64(len(texts))
+	f.lastBatch.Store(n)
+	for {
+		cur := f.maxBatch.Load()
+		if n <= cur || f.maxBatch.CompareAndSwap(cur, n) {
+			break
+		}
+	}
 	// Minimal work — synchronous per-call sleep to simulate real TEI latency.
 	time.Sleep(2 * time.Millisecond)
 	out := make([][]float32, len(texts))
@@ -102,5 +110,46 @@ func TestCoalescingEmbedderContextCancel(t *testing.T) {
 	_, err := co.Embed(ctx, []string{"hi"})
 	if err == nil {
 		t.Fatal("expected error from cancelled context, got nil")
+	}
+}
+
+// TEI rejects a request with more than max_client_batch_size inputs, so a
+// coalesced batch must never exceed the cap even when the next job would push
+// it over the line.
+func TestCoalescingEmbedderKeepsBatchWithinTEICap(t *testing.T) {
+	inner := &fakeInner{}
+	co := NewCoalescingEmbedder(inner, 20*time.Millisecond)
+	defer co.Close()
+
+	const jobs, perJob = 3, 20 // 60 inputs in total, cap is 32
+	var wg sync.WaitGroup
+	wg.Add(jobs)
+	start := make(chan struct{})
+	for i := 0; i < jobs; i++ {
+		go func() {
+			defer wg.Done()
+			<-start
+			texts := make([]string, perJob)
+			for j := range texts {
+				texts[j] = "text"
+			}
+			got, err := co.Embed(context.Background(), texts)
+			if err != nil {
+				t.Errorf("embed err: %v", err)
+				return
+			}
+			if len(got) != perJob {
+				t.Errorf("got %d embeddings, want %d", len(got), perJob)
+			}
+		}()
+	}
+	close(start)
+	wg.Wait()
+
+	if got := inner.maxBatch.Load(); got > coalesceBatchMaxTexts {
+		t.Fatalf("largest downstream batch = %d inputs, want <= %d", got, coalesceBatchMaxTexts)
+	}
+	if got := inner.maxBatch.Load(); got == 0 {
+		t.Fatal("no downstream call was observed")
 	}
 }

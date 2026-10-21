@@ -39,6 +39,8 @@ func (c *WorkerConfig) Normalize() {
 // current batch. Splits TEI's per-batch response back into per-item
 // results stored in the result store. The worker stops when ctx is
 // cancelled or the channel is closed.
+// The returned channel is closed once the worker goroutine has returned,
+// including its shutdown drain, so callers can wait for a clean stop.
 func StartQueueWorker(
 	ctx context.Context,
 	store *ResultStore,
@@ -46,9 +48,14 @@ func StartQueueWorker(
 	emb embed.Embedder,
 	logger *slog.Logger,
 	cfg WorkerConfig,
-) {
+) <-chan struct{} {
 	cfg.Normalize()
-	go runQueueWorker(ctx, store, items, emb, logger, cfg)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		runQueueWorker(ctx, store, items, emb, logger, cfg)
+	}()
+	return done
 }
 
 func runQueueWorker(
@@ -122,10 +129,11 @@ func awaitFirstItem(ctx context.Context, items <-chan Item) (Item, bool) {
 	}
 }
 
-// drainUpToMax collects more items from items into batch up to maxSize
-// or until window has elapsed since windowStart. Returns the final batch.
-// Honors ctx: returns current batch if cancellation is observed between
-// attempts.
+// drainUpToMax collects more items from items into batch up to maxSize, or
+// until the window has elapsed since windowStart — whichever comes first. It
+// waits for the window rather than returning as soon as the channel looks
+// empty, which is what makes time-windowed batching real. Honors ctx: returns
+// the current batch when the worker is cancelled.
 func drainUpToMax(ctx context.Context, items <-chan Item, batch []Item, maxSize int, windowStart time.Time, window time.Duration) []Item {
 	deadline := windowStart.Add(window)
 	timer := time.NewTimer(time.Until(deadline))
@@ -141,10 +149,6 @@ func drainUpToMax(ctx context.Context, items <-chan Item, batch []Item, maxSize 
 				return batch
 			}
 			batch = append(batch, item)
-		default:
-			// No more items immediately available. Return current batch;
-			// worker will await another first item on next iteration.
-			return batch
 		}
 	}
 	return batch

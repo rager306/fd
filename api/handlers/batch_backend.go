@@ -27,16 +27,20 @@ func loadBatchEmbeddings(ctx context.Context, cache EmbeddingCache, embedder emb
 }
 
 func loadBatchEmbeddingChunk(ctx context.Context, cache EmbeddingCache, embedder embed.Embedder, texts []string, vectors [][]float32, chunkStart, chunkEnd, dims int) error {
-	missIdx := make([]int, 0, chunkEnd-chunkStart)
-	missTexts := make([]string, 0, chunkEnd-chunkStart)
+	chunk := texts[chunkStart:chunkEnd]
+	missIdx := make([]int, 0, len(chunk))
+	missTexts := make([]string, 0, len(chunk))
 
-	for i := chunkStart; i < chunkEnd; i++ {
-		text := texts[i]
-		if emb, ok := cache.GetIfPresent(ctx, text, dims); ok {
-			vectors[i] = truncateEmbedding(emb, dims)
+	// One lookup round trip per chunk: GetManyIfPresent resolves the L2 tier
+	// with a single batched read, where GetIfPresent per text issued one Redis
+	// call per text (up to 32 per chunk, 100 chunks for a 3200-input batch).
+	hits := cache.GetManyIfPresent(ctx, chunk, dims)
+	for j, text := range chunk {
+		if emb, ok := hits[j]; ok {
+			vectors[chunkStart+j] = truncateEmbedding(emb, dims)
 			continue
 		}
-		missIdx = append(missIdx, i)
+		missIdx = append(missIdx, chunkStart+j)
 		missTexts = append(missTexts, text)
 	}
 	if len(missTexts) == 0 {

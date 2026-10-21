@@ -364,7 +364,7 @@ When `FD_COALESCE_ENABLED=true`, the TEI client is wrapped in `CoalescingEmbedde
 | `FD_COALESCE_ENABLED` | `false` | Feature gate for cross-request coalescing. |
 | `FD_COALESCE_WINDOW_MS` | `5ms` | Time window within which concurrent calls are merged. |
 
-Batching is capped at 32 texts per TEI call, aligned with TEI's `max_client_batch_size`, counting texts rather than requests so a few large inputs cannot overflow TEI capacity. The window is deliberately short (5 ms) so the added latency stays invisible to same-host consumers.
+Batching is capped at 32 texts per TEI call, aligned with TEI's `max_client_batch_size`, counting texts rather than requests so a few large inputs cannot overflow TEI capacity. A job that would push a batch past the cap starts the next batch instead of overflowing the current one, and shutting down closes the coalescer, which cancels the in-flight batch so the process stops issuing TEI requests. The window is deliberately short (5 ms) so the added latency stays invisible to same-host consumers.
 
 `api/embed/coalesce_baseline_test.go` is the measured baseline for this feature; it reports TEI call counts and p95 latency with and without coalescing, using the local 44-FZ corpus.
 
@@ -374,7 +374,8 @@ When `FD_QUEUE_ENABLED=true`, fd exposes a bulk-ingestion async path through `PO
 
 **Behaviour:**
 - `POST /v1/queue` validates the request body (same rules as `/v1/embeddings`), enqueues the input, and returns **202 Accepted** with an `X-Request-Id` header. When the bounded queue is saturated the handler returns **503** + `Retry-After: 5`.
-- A single **background worker** goroutine drains the queue, collects up to `FD_QUEUE_BATCH_MAX_SIZE` (32) items within a `FD_QUEUE_BATCH_WINDOW_MS` (10 ms) window, and issues **one TEI call per batch**. Results are stored in an in-memory result store with a ~5 min TTL.
+- A single **background worker** goroutine drains the queue, collects up to `FD_QUEUE_BATCH_MAX_SIZE` (32) items within a `FD_QUEUE_BATCH_WINDOW_MS` (10 ms) window, and issues **one TEI call per batch**. Results are stored in an in-memory result store with a ~5 min TTL. The window is honored even when the channel is momentarily empty, and a batch whose TEI response does not hold one vector per input is marked failed as a whole instead of completed with missing vectors.
+- Results carry the requested `dimensions` and `encoding_format`, and the poll response reports the same format the submitter asked for; `usage.prompt_tokens` is populated. A submission that fails validation is rejected with the matching **4xx** at submit time rather than surfacing as a 500 later.
 - `GET /v1/queue/:id` returns **202** (`"pending"`) while processing, **200** with embeddings on completion, **500** on failure, or **404** when the result TTL has expired.
 - Results are **not** persisted across fd-api restarts. On shutdown the worker drains queued items (marking them failed) so pollers don't block forever.
 

@@ -35,6 +35,10 @@ type CoalescingEmbedder struct {
 	jobs   chan coalescedJob
 	window time.Duration
 	wg     sync.WaitGroup
+	// ctx bounds the downstream calls issued by the batcher. It is cancelled by
+	// Close so a shutting-down process does not keep issuing TEI requests.
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // NewCoalescingEmbedder starts a background batcher and returns a wrapper.
@@ -44,10 +48,13 @@ func NewCoalescingEmbedder(inner Embedder, window time.Duration) *CoalescingEmbe
 	if inner == nil {
 		return nil
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 	c := &CoalescingEmbedder{
-		inner: inner,
+		inner:  inner,
 		jobs:   make(chan coalescedJob),
 		window: window,
+		ctx:    ctx,
+		cancel: cancel,
 	}
 	if window > 0 {
 		c.wg.Add(1)
@@ -56,9 +63,12 @@ func NewCoalescingEmbedder(inner Embedder, window time.Duration) *CoalescingEmbe
 	return c
 }
 
-// Close shuts down the background batcher. Pending jobs are drained before
-// calling the downstream embedder; this may block for up to window time.
+// Close shuts down the background batcher: it stops accepting jobs, cancels the
+// in-flight downstream call, and waits for the batcher goroutine to return.
+// Pending jobs fail with context.Canceled rather than being dropped silently, so
+// callers do not wait on a result that will never come.
 func (c *CoalescingEmbedder) Close() {
+	c.cancel()
 	close(c.jobs)
 	c.wg.Wait()
 }
@@ -112,8 +122,17 @@ func (c *CoalescingEmbedder) run() {
 					c.flushBatch(batch)
 					return
 				}
+				if textsInBatch > 0 && textsInBatch+len(next.texts) > coalesceBatchMaxTexts {
+					// This job would push the batch past TEI's input cap, which
+					// rejects the whole request: flush what we have and carry the
+					// job into the next batch instead.
+					c.flushBatch(batch)
+					batch = append(batch[:0], next)
+					textsInBatch = len(next.texts)
+					continue
+				}
 				batch = append(batch, next)
-				textsInBatch = totalTexts(batch)
+				textsInBatch += len(next.texts)
 			case <-timer.C:
 				// Window expired — flush what we have.
 				c.flushBatch(batch)
@@ -149,7 +168,7 @@ func (c *CoalescingEmbedder) flushBatch(batch []coalescedJob) {
 		counts[i] = len(j.texts)
 		allTexts = append(allTexts, j.texts...)
 	}
-	embs, err := c.inner.Embed(context.Background(), allTexts)
+	embs, err := c.inner.Embed(c.ctx, allTexts)
 	// Split by job.
 	cursor := 0
 	for i, j := range batch {

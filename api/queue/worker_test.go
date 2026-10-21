@@ -316,3 +316,64 @@ func TestWorkerHonoursRequestedDimensionsAndCountsTokens(t *testing.T) {
 		t.Fatal("worker did not complete within 2s")
 	}
 }
+
+// The window must hold the batch open: an item that arrives after the first one
+// but inside the window still joins the same TEI call. Before the fix the
+// worker flushed as soon as the channel looked empty, so this was two calls.
+func TestWorkerWaitsForTheBatchWindow(t *testing.T) {
+	store := NewResultStore()
+	defer func() { _ = store.Close() }()
+	items := make(chan Item, 4)
+	emb := &fakeEmbedder{}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	const window = 200 * time.Millisecond
+	StartQueueWorker(ctx, store, items, emb, discardLogger(), WorkerConfig{
+		BatchMaxSize: 32,
+		BatchWindow:  window,
+	})
+
+	first := makeItem("w1", []string{"first"})
+	items <- first
+	time.Sleep(window / 4) // still inside the window
+	second := makeItem("w2", []string{"second"})
+	items <- second
+
+	for _, it := range []*Item{&first, &second} {
+		select {
+		case res := <-it.Response:
+			if res.Status != StatusCompleted {
+				t.Fatalf("%s: status = %s, want completed", it.ID, res.Status)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatalf("timeout waiting for %s", it.ID)
+		}
+	}
+
+	if got := emb.calls.Load(); got != 1 {
+		t.Fatalf("embedder calls = %d, want 1 (the second item joined the window)", got)
+	}
+	if got := emb.lastBatchSize.Load(); got != 2 {
+		t.Fatalf("batch size = %d, want 2", got)
+	}
+}
+
+func TestWorkerDoneChannelClosesAfterCancel(t *testing.T) {
+	store := NewResultStore()
+	defer func() { _ = store.Close() }()
+	items := make(chan Item, 1)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	done := StartQueueWorker(ctx, store, items, &fakeEmbedder{}, discardLogger(), WorkerConfig{
+		BatchMaxSize: 32,
+		BatchWindow:  10 * time.Millisecond,
+	})
+
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("worker did not report completion after cancellation")
+	}
+}
