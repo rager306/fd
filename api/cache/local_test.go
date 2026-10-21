@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -247,7 +248,8 @@ func TestLocalCacheSetJittersExpiry(t *testing.T) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	expiries := make(map[time.Time]struct{}, entries)
-	for key, e := range c.data {
+	for key, elem := range c.data {
+		e := elem.Value.(*l1Entry)
 		if e.expiresAt.Before(low) || e.expiresAt.After(high) {
 			t.Fatalf("%s expiresAt = %s, want within [%s, %s]", key, e.expiresAt, low, high)
 		}
@@ -275,5 +277,285 @@ func TestLocalCacheWithoutObserverStillEvicts(t *testing.T) {
 	}
 	if _, ok := c.Get(ctx, "k2"); !ok {
 		t.Fatal("most recently written entry was dropped")
+	}
+}
+
+func TestLocalCache_LRUOrderEvictsLeastRecentlyUsed(t *testing.T) {
+	c := NewLocalCache(3, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+	ctx := context.Background()
+
+	c.Set(ctx, "a", []byte("1"), time.Minute)
+	c.Set(ctx, "b", []byte("1"), time.Minute)
+	c.Set(ctx, "c", []byte("1"), time.Minute)
+	// Recency order is now c, b, a. Touching a makes b the oldest entry.
+	if _, ok := c.Get(ctx, "a"); !ok {
+		t.Fatal("expected a to be present")
+	}
+	c.Set(ctx, "d", []byte("1"), time.Minute)
+
+	if _, ok := c.Get(ctx, "b"); ok {
+		t.Fatal("b should have been evicted as least recently used")
+	}
+	for _, key := range []string{"a", "c", "d"} {
+		if _, ok := c.Get(ctx, key); !ok {
+			t.Fatalf("%s should have survived eviction", key)
+		}
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+func TestLocalCache_KeepsHotKeyUnderInsertPressure(t *testing.T) {
+	c := NewLocalCache(4, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+	ctx := context.Background()
+
+	c.Set(ctx, "hot", []byte("hot"), time.Minute)
+	for i := 0; i < 200; i++ {
+		if _, ok := c.Get(ctx, "hot"); !ok {
+			t.Fatalf("hot key evicted after %d cold inserts", i)
+		}
+		c.Set(ctx, fmt.Sprintf("cold-%d", i), []byte("cold"), time.Minute)
+	}
+	if _, ok := c.Get(ctx, "hot"); !ok {
+		t.Fatal("hot key evicted at the end of the run")
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+func TestLocalCache_MaxBytesEvictsLeastRecentlyUsed(t *testing.T) {
+	// Every key is one byte and every value is four bytes, so one entry
+	// accounts for five payload bytes and the budget holds three entries.
+	c := NewLocalCacheWithBudget(0, 15, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+	ctx := context.Background()
+
+	c.Set(ctx, "a", []byte("1111"), time.Minute)
+	c.Set(ctx, "b", []byte("1111"), time.Minute)
+	c.Set(ctx, "c", []byte("1111"), time.Minute)
+	if c.bytes != 15 {
+		t.Fatalf("bytes = %d, want 15", c.bytes)
+	}
+
+	c.Set(ctx, "d", []byte("2222"), time.Minute)
+	if _, ok := c.Get(ctx, "a"); ok {
+		t.Fatal("a should have been evicted to make room for d")
+	}
+	if _, ok := c.Get(ctx, "d"); !ok {
+		t.Fatal("the entry just written was evicted")
+	}
+
+	// Touching b makes c the oldest entry before e is inserted.
+	if _, ok := c.Get(ctx, "b"); !ok {
+		t.Fatal("expected b to be present")
+	}
+	c.Set(ctx, "e", []byte("3333"), time.Minute)
+	if _, ok := c.Get(ctx, "c"); ok {
+		t.Fatal("c should have been evicted as least recently used")
+	}
+	if _, ok := c.Get(ctx, "e"); !ok {
+		t.Fatal("the entry just written was evicted")
+	}
+	if c.bytes > 15 {
+		t.Fatalf("bytes = %d, want <= 15", c.bytes)
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+func TestLocalCache_MaxBytesKeepsOversizedWriteAlone(t *testing.T) {
+	c := NewLocalCacheWithBudget(0, 4, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+	ctx := context.Background()
+
+	// 3 key bytes + 5 value bytes exceed the budget on their own, so the
+	// write must not evict itself.
+	c.Set(ctx, "big", []byte("12345"), time.Minute)
+	if _, ok := c.Get(ctx, "big"); !ok {
+		t.Fatal("oversized entry evicted itself")
+	}
+	if c.Size() != 1 {
+		t.Fatalf("Size() = %d, want 1", c.Size())
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+func TestLocalCache_TracksPayloadBytesAcrossMutations(t *testing.T) {
+	c := NewLocalCache(0, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+	ctx := context.Background()
+
+	c.Set(ctx, "a", []byte("123"), time.Minute) // 4 payload bytes
+	c.Set(ctx, "b", []byte("12"), time.Minute)  // 3 payload bytes
+	if c.bytes != 7 {
+		t.Fatalf("bytes after inserts = %d, want 7", c.bytes)
+	}
+
+	c.Set(ctx, "a", []byte("12345"), time.Minute) // a grows to 6
+	if c.bytes != 9 {
+		t.Fatalf("bytes after grow = %d, want 9", c.bytes)
+	}
+
+	c.Set(ctx, "a", []byte("1"), time.Minute) // a shrinks to 2
+	if c.bytes != 5 {
+		t.Fatalf("bytes after shrink = %d, want 5", c.bytes)
+	}
+
+	c.Delete(ctx, "a")
+	c.Delete(ctx, "missing")
+	if c.bytes != 3 {
+		t.Fatalf("bytes after delete = %d, want 3", c.bytes)
+	}
+
+	c.Flush(ctx)
+	if c.bytes != 0 {
+		t.Fatalf("bytes after flush = %d, want 0", c.bytes)
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+func TestLocalCache_TTLExpiryUpdatesByteAccounting(t *testing.T) {
+	c := NewLocalCache(0, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+	ctx := context.Background()
+
+	c.Set(ctx, "short", []byte("v"), time.Millisecond)
+	c.Set(ctx, "long", []byte("v"), time.Minute)
+	time.Sleep(10 * time.Millisecond)
+
+	if _, ok := c.Get(ctx, "short"); ok {
+		t.Fatal("expected short entry to be expired")
+	}
+	if c.bytes != int64(len("long")+1) {
+		t.Fatalf("bytes after lazy expiry = %d, want %d", c.bytes, len("long")+1)
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+func TestLocalCache_BackgroundEvictionRemovesExpiredEntries(t *testing.T) {
+	c := NewLocalCache(0, time.Millisecond)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+	ctx := context.Background()
+
+	c.Set(ctx, "k", []byte("v"), time.Millisecond)
+	deadline := time.Now().Add(2 * time.Second)
+	for c.Size() != 0 {
+		if time.Now().After(deadline) {
+			t.Fatal("background eviction did not remove the expired entry")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if c.bytes != 0 {
+		t.Fatalf("bytes = %d, want 0", c.bytes)
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+func TestLocalCacheReportsByteBudgetEvictions(t *testing.T) {
+	c := NewLocalCacheWithBudget(0, 10, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+
+	evicted := 0
+	c.SetEvictionObserver(func(n int) { evicted += n })
+
+	ctx := context.Background()
+	for _, key := range []string{"a", "b", "c"} {
+		c.Set(ctx, key, make([]byte, 4), time.Minute) // 5 payload bytes each
+	}
+	if evicted != 1 {
+		t.Fatalf("evicted %d entries, want 1", evicted)
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+func TestLocalCache_ConcurrentSetGetDelete(t *testing.T) {
+	c := NewLocalCacheWithBudget(64, 4096, 0)
+	t.Cleanup(func() {
+		if err := c.Close(); err != nil {
+			t.Errorf("Close() returned error: %v", err)
+		}
+	})
+	ctx := context.Background()
+
+	var wg sync.WaitGroup
+	for g := 0; g < 8; g++ {
+		wg.Add(1)
+		go func(g int) {
+			defer wg.Done()
+			for i := 0; i < 500; i++ {
+				key := fmt.Sprintf("k%d", (g*7+i)%100)
+				switch i % 3 {
+				case 0:
+					c.Set(ctx, key, []byte(strings.Repeat("v", i%8)), time.Minute)
+				case 1:
+					c.Get(ctx, key)
+				default:
+					c.Delete(ctx, key)
+				}
+			}
+		}(g)
+	}
+	wg.Wait()
+
+	if c.Size() > 64 {
+		t.Fatalf("Size() = %d, want <= 64", c.Size())
+	}
+	if c.bytes > 4096 {
+		t.Fatalf("bytes = %d, want <= 4096", c.bytes)
+	}
+	assertLocalCacheAccounting(t, c)
+}
+
+// assertLocalCacheAccounting verifies that the byte counter matches the live
+// entries and that the map and LRU list hold the same entries.
+func assertLocalCacheAccounting(t *testing.T, c *LocalCache) {
+	t.Helper()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	var sum int64
+	for _, elem := range c.data {
+		e := elem.Value.(*l1Entry)
+		sum += e.bytes
+		if e.bytes != int64(len(e.key)+len(e.value)) {
+			t.Fatalf("entry %q accounts %d bytes, want %d", e.key, e.bytes, len(e.key)+len(e.value))
+		}
+	}
+	if sum != c.bytes {
+		t.Fatalf("byte counter = %d, want %d", c.bytes, sum)
+	}
+	if len(c.data) != c.lru.Len() {
+		t.Fatalf("map holds %d entries, LRU list holds %d", len(c.data), c.lru.Len())
 	}
 }

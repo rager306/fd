@@ -373,13 +373,18 @@ func TestWarmupRetryPolicyFromEnvDefaultsTo5(t *testing.T) {
 
 func TestCacheConfigFromEnv(t *testing.T) {
 	t.Setenv("FD_CACHE_MAX_SIZE", "500")
+	t.Setenv("FD_CACHE_MAX_BYTES", "1048576")
 	t.Setenv("FD_CACHE_LOCAL_TTL", "10s")
 
-	size := envutil.PositiveInt("FD_CACHE_MAX_SIZE", 10000)
+	size := envutil.Int("FD_CACHE_MAX_SIZE", 200000)
+	maxBytes := envutil.Int64("FD_CACHE_MAX_BYTES", 512<<20)
 	ttl := envutil.DurationOrDefault("FD_CACHE_LOCAL_TTL", 30*time.Second)
 
 	if size != 500 {
 		t.Fatalf("FD_CACHE_MAX_SIZE=500, got %d", size)
+	}
+	if maxBytes != 1048576 {
+		t.Fatalf("FD_CACHE_MAX_BYTES=1048576, got %d", maxBytes)
 	}
 	if ttl != 10*time.Second {
 		t.Fatalf("FD_CACHE_LOCAL_TTL=10s, got %s", ttl)
@@ -388,13 +393,18 @@ func TestCacheConfigFromEnv(t *testing.T) {
 
 func TestCacheConfigDefaultsWithoutEnv(t *testing.T) {
 	t.Setenv("FD_CACHE_MAX_SIZE", "")
+	t.Setenv("FD_CACHE_MAX_BYTES", "")
 	t.Setenv("FD_CACHE_LOCAL_TTL", "")
 
-	size := envutil.PositiveInt("FD_CACHE_MAX_SIZE", 10000)
+	size := envutil.Int("FD_CACHE_MAX_SIZE", 200000)
+	maxBytes := envutil.Int64("FD_CACHE_MAX_BYTES", 512<<20)
 	ttl := envutil.DurationOrDefault("FD_CACHE_LOCAL_TTL", 30*time.Second)
 
-	if size != 10000 {
-		t.Fatalf("default FD_CACHE_MAX_SIZE = %d, want 10000", size)
+	if size != 200000 {
+		t.Fatalf("default FD_CACHE_MAX_SIZE = %d, want 200000", size)
+	}
+	if maxBytes != 536870912 {
+		t.Fatalf("default FD_CACHE_MAX_BYTES = %d, want 536870912", maxBytes)
 	}
 	if ttl != 30*time.Second {
 		t.Fatalf("default FD_CACHE_LOCAL_TTL = %s, want 30s", ttl)
