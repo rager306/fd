@@ -14,7 +14,11 @@ const (
 	headerETag         = "ETag"
 	headerIfNoneMatch  = "If-None-Match"
 	headerCacheControl = "Cache-Control"
-	cacheControlValue  = "public, max-age=86400"
+	// private, not public: both cacheable paths (/v1/embeddings, /info) sit
+	// behind API key auth and carry caller-specific data. `public` would let a
+	// shared cache (proxy, CDN) store the response and serve it across callers.
+	// The ETag still enables client-side revalidation.
+	cacheControlValue = "private, max-age=86400"
 )
 
 // CacheHeaders computes response-body ETags for cacheable fd v2 surfaces.

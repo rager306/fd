@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func TestTEIClientEmbedSendsBatchAndReturnsEmbeddings(t *testing.T) {
@@ -170,5 +171,23 @@ func TestTEIClientEmbedReturnsEmptyDataError(t *testing.T) {
 	client := NewTEIClient(server.URL, "model-a", server.Client())
 	if _, err := client.Embed(context.Background(), []string{"x"}); err == nil {
 		t.Fatal("Embed empty data error = nil, want error")
+	}
+}
+
+func TestRetryBackoffIsJitteredWithinHalfToFull(t *testing.T) {
+	c := &TEIClient{retryBaseBackoff: 10 * time.Millisecond}
+	for attempt := 1; attempt <= 3; attempt++ {
+		base := 10 * time.Millisecond << (attempt - 1)
+		seen := make(map[time.Duration]bool, 20)
+		for i := 0; i < 20; i++ {
+			got := c.retryBackoff(attempt)
+			if got < base/2 || got > base {
+				t.Fatalf("retryBackoff(%d) = %s, want within [%s, %s]", attempt, got, base/2, base)
+			}
+			seen[got] = true
+		}
+		if len(seen) == 1 {
+			t.Fatalf("retryBackoff(%d) returned the same value 20 times; expected jitter", attempt)
+		}
 	}
 }

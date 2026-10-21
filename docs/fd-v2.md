@@ -355,7 +355,7 @@ fd_model_loaded 1
 
 **R-P2-2**: ETag + Cache-Control
 - `ETag: "<hash-of-input>"`
-- `Cache-Control: public, max-age=86400`
+- `Cache-Control: private, max-age=86400` (private: both cached paths sit behind API key auth)
 
 **R-P2-3**: `/v1/batch` separate endpoint
 - Для caller-ов которые хотят explicit batch semantics.

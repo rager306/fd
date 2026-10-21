@@ -483,7 +483,7 @@ func run() error {
 		queueItems := make(chan queue.Item, queueCap)
 		resultStore := queue.NewResultStore()
 		queueHandler := handlers.NewQueueHandler(resultStore, queueItems, modelID, logger)
-		r.POST("/v1/queue", queueHandler.Submit)
+		r.POST("/v1/queue", middleware.LimitRequestBody(), queueHandler.Submit)
 		r.GET("/v1/queue/:id", queueHandler.Poll)
 		logger.Info("queue enabled", "capacity", queueCap)
 		// Worker goroutine drains the bounded queue: single-pass

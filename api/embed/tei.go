@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"strings"
 	"sync"
@@ -253,10 +254,15 @@ func (c *TEIClient) ObserveBatchFill(inputs int) {
 }
 
 func (c *TEIClient) retryBackoff(attempt int) time.Duration {
-	if c.retryBaseBackoff <= 0 {
+	base := c.retryBaseBackoff
+	if base <= 0 {
 		return 0
 	}
-	return c.retryBaseBackoff << max(attempt-1, 0)
+	backoff := base << max(attempt-1, 0)
+	// Half-to-full jitter: the backoff still grows with each attempt, but
+	// concurrent callers no longer wake in lockstep after a TEI blip, which
+	// otherwise turns a short outage into a synchronized retry storm.
+	return backoff/2 + time.Duration(rand.Int64N(int64(backoff/2)+1)) //nolint:gosec // G404: retry jitter only; unpredictability is not a security requirement
 }
 
 func (c *TEIClient) checkCircuitOpen() error {

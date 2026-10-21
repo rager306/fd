@@ -305,5 +305,7 @@ func (tc *TieredCache) Set(ctx context.Context, key string, dim int, emb []float
 		return
 	}
 	tc.local.Set(ctx, localKey, data, tc.localTTL)
-	_ = tc.redis.SetBytes(ctx, key, data, dim)
+	if err := tc.redis.SetBytes(ctx, key, data, dim); err != nil {
+		tc.logger.Warn("cache l2 set failed", "event", "cache_l2_set_failed", "key_hash", shortHash(key), "dim", dim, "error", err)
+	}
 }

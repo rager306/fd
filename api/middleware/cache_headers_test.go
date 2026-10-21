@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -73,4 +74,21 @@ func cacheHeadersTestRouter() *gin.Engine {
 	r.POST("/v1/embeddings", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) })
 	r.GET("/live", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) })
 	return r
+}
+
+// The cacheable paths sit behind API key auth, so a shared cache must never
+// store them; only the caller's own cache may.
+func TestCacheHeadersMarksAuthenticatedResponsesPrivate(t *testing.T) {
+	r := cacheHeadersTestRouter()
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/v1/embeddings", http.NoBody)
+	r.ServeHTTP(w, req)
+
+	got := w.Header().Get(headerCacheControl)
+	if !strings.HasPrefix(got, "private") {
+		t.Fatalf("Cache-Control = %q, want a private directive", got)
+	}
+	if strings.Contains(got, "public") {
+		t.Fatalf("Cache-Control = %q, must not allow shared caching", got)
+	}
 }
