@@ -42,9 +42,18 @@ func parseCORSOrigins(origins string) []string {
 	if strings.TrimSpace(origins) == "" {
 		return []string{"*"}
 	}
-	parts := strings.Split(origins, ",")
-	allowed := make([]string, 0, len(parts))
-	for _, part := range parts {
+	// ⚡ Bolt: Zero-allocation loop using IndexByte instead of strings.Split
+	var allowed []string
+	s := origins
+	for len(s) > 0 {
+		var part string
+		if idx := strings.IndexByte(s, ','); idx >= 0 {
+			part = s[:idx]
+			s = s[idx+1:]
+		} else {
+			part = s
+			s = ""
+		}
 		origin := strings.TrimSpace(part)
 		if origin != "" {
 			allowed = append(allowed, origin)
