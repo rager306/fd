@@ -66,6 +66,67 @@ func TestCacheHeadersSkipsNonCacheablePath(t *testing.T) {
 	}
 }
 
+func TestETagMatches(t *testing.T) {
+	const (
+		etagABC     = `"abc"`
+		etagDEF     = `"def"`
+		etagWeakABC = `W/"abc"`
+	)
+	cases := []struct {
+		name        string
+		ifNoneMatch string
+		etag        string
+		want        bool
+	}{
+		{name: "empty header and empty etag", ifNoneMatch: "", etag: `""`, want: true},
+		{name: "empty header", ifNoneMatch: "", etag: etagABC, want: false},
+		{name: "exact quoted match", ifNoneMatch: etagABC, etag: etagABC, want: true},
+		{name: "exact quoted mismatch", ifNoneMatch: etagABC, etag: etagDEF, want: false},
+		{name: "list matches second", ifNoneMatch: `"abc", "def"`, etag: etagDEF, want: true},
+		{name: "list with whitespace", ifNoneMatch: ` "abc" , "def" `, etag: etagDEF, want: true},
+		{name: "unquoted candidate", ifNoneMatch: `abc`, etag: etagABC, want: true},
+		{name: "trailing comma", ifNoneMatch: `"abc",`, etag: etagABC, want: true},
+		{name: "comma-only header and empty etag", ifNoneMatch: ",,", etag: `""`, want: true},
+		{name: "comma-only header", ifNoneMatch: ",,", etag: etagABC, want: false},
+		{name: "weak etag exact", ifNoneMatch: etagWeakABC, etag: etagWeakABC, want: true},
+		{name: "weak etag is not the strong etag", ifNoneMatch: etagWeakABC, etag: etagABC, want: false},
+		{name: "unquoted etag does not match quoted candidate", ifNoneMatch: etagABC, etag: `abc`, want: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := etagMatches(tc.ifNoneMatch, tc.etag); got != tc.want {
+				t.Fatalf("etagMatches(%q, %q) = %v, want %v", tc.ifNoneMatch, tc.etag, got, tc.want)
+			}
+		})
+	}
+}
+
+func BenchmarkETagMatchesNoMatch(b *testing.B) {
+	const (
+		header = `"aaa", "bbb", "ccc", "ddd"`
+		etag   = `"zzz"`
+	)
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if etagMatches(header, etag) {
+			b.Fatal("unexpected match")
+		}
+	}
+}
+
+func BenchmarkETagMatchesFirstCandidate(b *testing.B) {
+	const (
+		header = `"zzz", "bbb", "ccc", "ddd"`
+		etag   = `"zzz"`
+	)
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		if !etagMatches(header, etag) {
+			b.Fatal("expected match")
+		}
+	}
+}
+
 func cacheHeadersTestRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

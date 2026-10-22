@@ -79,9 +79,6 @@ func responseETag(body []byte) string {
 
 func etagMatches(ifNoneMatch, etag string) bool {
 	// ⚡ Bolt: Zero-allocation fast path for ETag matching by avoiding strings.Split.
-	if ifNoneMatch == "" {
-		return false
-	}
 	start := 0
 	for {
 		idx := strings.IndexByte(ifNoneMatch[start:], ',')
