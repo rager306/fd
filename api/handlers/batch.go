@@ -66,9 +66,11 @@ func (h *BatchHandler) CreateBatchEmbeddings(c *gin.Context) {
 		return
 	}
 
+	// ⚡ Bolt: Precompute encoding format outside the loop to eliminate redundant function calls and branch evaluations per vector.
+	encoding := defaultBatchEncoding(req.EncodingFormat)
 	embeddings := make([]string, len(vectors))
 	for i, vector := range vectors {
-		embeddings[i] = embed.EncodeEmbedding(vector, defaultBatchEncoding(req.EncodingFormat))
+		embeddings[i] = embed.EncodeEmbedding(vector, encoding)
 	}
 
 	c.JSON(http.StatusOK, embed.BatchEmbeddingsResponse{

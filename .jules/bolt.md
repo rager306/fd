@@ -8,3 +8,6 @@
 ## 2024-10-18 - Avoid strconv.Itoa for common constants
 **Learning:** strconv.Itoa only caches integers 0-99. For larger common constants (like dimension sizes 512 or 1024), it results in a heap allocation on every call.
 **Action:** Use a switch statement with string literals for high-frequency known values to completely eliminate the allocation.
+## 2024-10-22 - Loop Invariant Encoding Validation
+**Learning:** Evaluating conditional encoding validation functions like `defaultBatchEncoding` inside high-throughput batch processing loops forces redundant branch evaluations on every element.
+**Action:** Evaluate constant inputs outside of loops to eliminate unnecessary per-element overhead.
