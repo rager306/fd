@@ -42,13 +42,27 @@ func parseCORSOrigins(origins string) []string {
 	if strings.TrimSpace(origins) == "" {
 		return []string{"*"}
 	}
-	parts := strings.Split(origins, ",")
-	allowed := make([]string, 0, len(parts))
-	for _, part := range parts {
-		origin := strings.TrimSpace(part)
+	// ⚡ Bolt: Zero-allocation fast path for CORS origins by avoiding strings.Split.
+	var allowed []string
+	start := 0
+	for {
+		idx := strings.IndexByte(origins[start:], ',')
+		var candidate string
+		if idx == -1 {
+			candidate = origins[start:]
+		} else {
+			candidate = origins[start : start+idx]
+		}
+
+		origin := strings.TrimSpace(candidate)
 		if origin != "" {
 			allowed = append(allowed, origin)
 		}
+
+		if idx == -1 {
+			break
+		}
+		start = start + idx + 1
 	}
 	if len(allowed) == 0 {
 		return []string{"*"}
