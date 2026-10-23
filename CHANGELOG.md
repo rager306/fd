@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-23
+
+### Fixed
+
+- **ETag matching is allocation-free.** `etagMatches` scans `If-None-Match` with
+  `strings.IndexByte` instead of `strings.Split`. Benchmarks on the middleware:
+  first-candidate checks dropped from ~148–168 ns/op to ~21–23 ns/op, and no-match
+  checks from ~400–464 ns/op to ~242–298 ns/op; both now report 0 allocs/op instead
+  of 1 alloc/64 B. Table tests cover quoted, unquoted, weak, empty, comma-only, and
+  multi-value headers.
+
+### Changed
+
+- **Test image on Alpine 3.24.** `api/Dockerfile.tests` moved from Alpine 3.20 to
+  3.24 (dependabot). The runtime image is unchanged.
+
 ## [1.0.1] - 2026-10-21
 
 ### Added
