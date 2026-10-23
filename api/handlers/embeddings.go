@@ -245,13 +245,17 @@ func truncateEmbedding(emb []float32, dims int) []float32 {
 
 func buildEmbeddingsResponse(embeddings [][]float32, dims int, encodingFormat, modelID string, promptTokens int) embed.EmbeddingsResponse {
 	data := make([]embed.EmbeddingObj, len(embeddings))
+
+	// ⚡ Bolt: Hoist constant conditional check outside loop to eliminate redundant evaluations
+	isBase64 := encodingFormat == embed.EncodingFormatBase64
+
 	for i, emb := range embeddings {
 		obj := embed.EmbeddingObj{
 			Object:     embed.ObjectEmbedding,
 			Index:      i,
 			Dimensions: dims,
 		}
-		if encodingFormat == embed.EncodingFormatBase64 {
+		if isBase64 {
 			obj.SetBase64(embed.EncodeEmbedding(emb, embed.EncodingFormatBase64))
 		} else {
 			obj.SetVector(emb)
