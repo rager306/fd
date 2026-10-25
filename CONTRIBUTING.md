@@ -71,6 +71,16 @@ Configuration is the public surface of this service. When you add or rename an e
 
 `docs/same-host-embedding-service-contract.md` is the canonical consumer contract. New consumer-facing behavior belongs there first.
 
+## Automated and bot pull requests
+
+Automated agents open pull requests against `master` under the maintainer's own account. They repeat the same change without warning, so the repository applies one policy instead of re-deciding each wave (tracked as issue #488):
+
+- Group incoming pull requests by the change they implement, not by title: `gh pr list --json number,title,files`.
+- Keep at most one implementation of a change. Merge it, then close the rest as duplicates with a link to the merged pull request and, when the claim is a performance win, the measurement behind the decision.
+- Delete the branch of every closed pull request: `gh pr close <n> --comment "..." --delete-branch`. `delete_branch_on_merge` handles branches of merged pull requests.
+- Verify `git ls-remote --heads origin` shows only `master` and the branches of open pull requests.
+- A micro-optimization needs a benchmark that exists in the repository and a measurement wider than the noise floor. A/A control runs belong in the comparison: if the same function measured twice spreads wider than the difference, the change is below noise and does not ship.
+
 ## Review
 
 - A pull request is ready when CI is green, the description states what was verified, and review comments are addressed or explicitly declined with a reason.
@@ -81,6 +91,8 @@ Configuration is the public surface of this service. When you add or rename an e
 
 1. Move the `[Unreleased]` entries in `CHANGELOG.md` under a new version heading with today's date, and update the badge/version references in `README.md` if the release changes them.
 2. Tag the commit on `master` and push the tag: `git tag v1.2.3 && git push origin v1.2.3`.
+
+   Do not renumber a published line. A tag whose commit is an ancestor of an earlier tag makes every semver-aware tool pick the wrong release: `v2.0.0` was tagged on 2026-06-15 and later superseded by `v1.0.0`, and the stray tag was removed on 2026-10-25 for exactly that reason (see `CHANGELOG.md`).
 3. The `Release notes` workflow reacts to the tag: it walks the Conventional Commit range with `git-cliff` (configuration in `cliff.toml`) and creates the GitHub release, or updates it if one already exists.
 4. Check the generated notes against `CHANGELOG.md` before announcing. `CHANGELOG.md` is authoritative for release history; the workflow only fills the release page.
 

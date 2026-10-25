@@ -3,7 +3,7 @@
 [![Go Quality](https://github.com/rager306/fd/actions/workflows/go-quality.yml/badge.svg?branch=master)](https://github.com/rager306/fd/actions/workflows/go-quality.yml)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.2-blue)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.3-blue)](./CHANGELOG.md)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-3.0-4baaaa.svg)](./CODE_OF_CONDUCT.md)
 
 FD is a same-host text embedding service for Russian and legal-domain workloads. It exposes an OpenAI-compatible `POST /v1/embeddings` API, calls Hugging Face Text Embeddings Inference (TEI) for inference, and caches results in two tiers: an in-process L1 and a Redis L2.

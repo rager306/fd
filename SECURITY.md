@@ -53,6 +53,21 @@ Out of scope:
 - `SetTrustedProxies(nil)` is set: forwarded headers are not trusted by default.
 - CI runs `go test`, `golangci-lint` (18 linters, includes `gosec`), and `govulncheck` on every push and pull request to `master`.
 
+## Known advisories that do not apply
+
+`govulncheck` scans the module graph as well as the code, so a module-level advisory
+appears even when no reachable package imports the affected code. These are known
+and accepted:
+
+| Advisory | Module | Why it does not apply |
+|---|---|---|
+| GO-2026-5932 | `golang.org/x/crypto/openpgp` | `openpgp` is unmaintained and unsafe by design. The service reaches only `x/crypto/sha3` (through `go-playground/validator`); no `openpgp` package is imported. The advisory covers every version and has no fix, so an upgrade cannot clear it. |
+
+`govulncheck` exits 0 on the current tree because the advisory is not reachable.
+Third-party scanners that report at module granularity (the Snyk pull-request
+check, for example) flag it anyway; a red result there for this module is
+expected and is not a reason to block a dependency update.
+
 ## Operational notes for operators
 
 - Never commit or log secrets; `FD_API_KEY` belongs in `.env` (gitignored) or the shell environment.

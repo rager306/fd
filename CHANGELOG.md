@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-10-25
+
+### Changed
+
+- **Go modules refreshed.** The grouped dependabot bump (#487) was closed by hand
+  on 2026-10-22 and no replacement arrived, leaving the module graph behind.
+  Direct updates: `prometheus/client_golang` 1.23.2 → 1.25.0, `redis/go-redis/v9`
+  9.7.3 → 9.23.0, `testify` 1.11.1 → 1.12.1, `x/sync` 0.23.0 → 0.24.0. Indirect
+  updates include `x/crypto` 0.57.0 → 0.58.0, `x/net` 0.60.0 → 0.61.0, `quic-go`
+  0.59.1 → 0.64.1 and `protobuf` 1.36.11 → 1.36.12. No source change; every gate
+  (tests, race tests, lint, govulncheck) is green on the result.
+
+- **Bot pull request policy is written down.** `CONTRIBUTING.md` now records the
+  deduplication runbook (group by change, keep one implementation, close the rest
+  with a link and a measurement, always delete the branch) and the rule that a
+  micro-optimization needs a benchmark that exists in the repository plus an A/A
+  control, because a difference smaller than the control spread is noise.
+
+- **GO-2026-5932 is documented as not applicable.** `SECURITY.md` records that
+  `golang.org/x/crypto/openpgp` is never imported — the service reaches only
+  `x/crypto/sha3` through `go-playground/validator` — and that the advisory has no
+  fixed version, so an upgrade cannot clear it. `govulncheck` exits 0 because the
+  path is unreachable; module-granularity scanners may still flag it.
+
+### Removed
+
+- **Stray `v2.0.0` tag and release withdrawn.** The tag had been placed on
+  `bc65199` (2026-06-15), which is an *ancestor* of `v1.0.0` (2026-07-03), so
+  semver-aware tooling ranked a four-month-old tree above the current release and
+  `CHANGELOG.md` never had a 2.0.0 section. The tag and release are gone; their
+  published content is preserved in `docs/release-history/v2.0.0-withdrawn.md`.
+  The OpenAPI document keeps `info.version: 2.0.0`, which versions the API
+  contract, not the service release. Release numbering continues on the 1.0 line.
+
 ## [1.0.2] - 2026-10-23
 
 ### Fixed
