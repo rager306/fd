@@ -1,0 +1,17 @@
+# Snyk policy for rager306/fd.
+#
+# Only advisories that provably cannot affect this service are ignored, each with a
+# reason and an expiry so the decision is revisited instead of forgotten.
+version: v1.25.0
+patch: {}
+ignore:
+  SNYK-GOLANG-GOLANGORGXCRYPTOOPENPGPCLEARSIGN-5813980:
+    - '*':
+        reason: >-
+          CVE-2019-11841: improper signature verification in
+          golang.org/x/crypto/openpgp/clearsign. The service never imports openpgp:
+          the only reachable x/crypto package is sha3, pulled in through
+          go-playground/validator. govulncheck reports no reachable path.
+          Deleting the module is not possible because gin depends on it.
+        expires: 2027-10-25T00:00:00.000Z
+        created: 2026-10-25T00:00:00.000Z
