@@ -1,5 +1,11 @@
 # Dependabot: keeps Go modules, workflow actions, and container images current.
 # Version updates open pull requests; security updates also open them for reachable advisories.
+#
+# golang.org/x/crypto is deliberately NOT ignored. GO-2026-5932 covers openpgp,
+# which this service does not import, and third-party scanners report it at module
+# granularity (see SECURITY.md). Ignoring the module would also suppress real
+# security updates for it, so Snyk may keep flagging that advisory on bump pull
+# requests; the required check is "Go tests and lint", not the Snyk status.
 version: 2
 updates:
   - package-ecosystem: gomod
