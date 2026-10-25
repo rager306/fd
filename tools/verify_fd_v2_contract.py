@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import statistics
 import sys
 import time
@@ -18,7 +19,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-BASE_URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
+BASE_URL = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("FD_BASE_URL", "http://localhost:8000")
+# Protected routes fail closed, so every check except the public probes needs the
+# bearer key. Read it from the environment rather than a flag: putting the secret
+# in argv would publish it in the process list and in shell history.
+API_KEY = os.environ.get("FD_API_KEY", "").strip()
 OUT = Path("benchmark-results/fd-v2-validation-m041.md")
 MODEL = "deepvk/USER-bge-m3"
 
@@ -50,6 +55,8 @@ RESULTS: list[Check] = []
 def request(method: str, path: str, body: Any = None, headers: dict[str, str] | None = None, timeout: int = 30) -> HTTPResult:
     data = None
     merged_headers = dict(headers or {})
+    if API_KEY and not merged_headers.get("Authorization"):
+        merged_headers["Authorization"] = f"Bearer {API_KEY}"
     if body is not None:
         data = json.dumps(body).encode("utf-8")
         merged_headers.setdefault("Content-Type", "application/json")
@@ -160,7 +167,7 @@ def run_checks() -> dict[str, Any]:
     hit = request("POST", "/v1/embeddings", embedding_body(cache_key))
     add("T022", "First unique embedding request is cache MISS", miss.status == 200 and header(miss, "X-Cache") == "MISS", f"X-Cache={header(miss, 'X-Cache')}", miss.latency_ms)
     add("T023", "Repeated embedding request is cache HIT", hit.status == 200 and header(hit, "X-Cache") == "HIT", f"X-Cache={header(hit, 'X-Cache')}", hit.latency_ms)
-    add("T024", "Embedding response includes ETag and Cache-Control", header(hit, "ETag") != "" and header(hit, "Cache-Control") == "public, max-age=86400", str({k: header(hit, k) for k in ['ETag','Cache-Control']}), hit.latency_ms)
+    add("T024", "Embedding response includes ETag and Cache-Control", header(hit, "ETag") != "" and header(hit, "Cache-Control") == "private, max-age=86400", str({k: header(hit, k) for k in ['ETag','Cache-Control']}), hit.latency_ms)
     not_modified = request("POST", "/v1/embeddings", embedding_body(cache_key), headers={"If-None-Match": header(hit, "ETag")})
     expect_status("T025", "Embedding If-None-Match returns 304", not_modified, 304)
     info_again = request("GET", "/info", headers={"If-None-Match": header(info, "ETag")})
@@ -176,7 +183,10 @@ def run_checks() -> dict[str, Any]:
     expect_error("T032", "Invalid dimensions returns dimensions_invalid", request("POST", "/v1/embeddings", embedding_body("x", dimensions=256)), 400, "dimensions_invalid")
     expect_error("T033", "Invalid encoding_format returns encoding_format_invalid", request("POST", "/v1/embeddings", embedding_body("x", encoding_format="hex")), 400, "encoding_format_invalid")
     expect_error("T034", "Invalid priority returns priority_invalid", request("POST", "/v1/embeddings", embedding_body("x", priority="urgent")), 400, "priority_invalid")
-    expect_error("T035", "Too long input returns input_too_long", request("POST", "/v1/embeddings", embedding_body("x" * 2049)), 413, "input_too_long")
+    # Per-input length is a token question the backend tokenizer owns, so the
+    # middleware must not guess it from characters; only the aggregate guard is
+    # enforced here (maxTotalInputChars = 300_000 * 4).
+    expect_error("T035", "Over-long aggregate input returns payload_too_large", request("POST", "/v1/embeddings", embedding_body("x" * 1_200_001)), 413, "payload_too_large")
     expect_error("T036", "GET /v1/embeddings returns method_not_allowed envelope", request("GET", "/v1/embeddings"), 405, "method_not_allowed")
     expect_error("T037", "Unknown route returns not_found", request("GET", "/nope"), 404, "not_found")
 
@@ -233,6 +243,14 @@ def write_artifact(perf: dict[str, Any]) -> None:
 
 
 def main() -> int:
+    if not API_KEY:
+        print(
+            "FD_API_KEY is not set: protected routes fail closed, so most checks would\n"
+            "report 401. Export the running service key first, for example:\n"
+            "  export FD_API_KEY=$(docker exec fd_api printenv FD_API_KEY)",
+            file=sys.stderr,
+        )
+        return 2
     perf = run_checks()
     write_artifact(perf)
     failed = [r for r in RESULTS if not r.passed]
