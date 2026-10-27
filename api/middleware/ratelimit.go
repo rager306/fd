@@ -33,10 +33,11 @@ type rateBucket struct {
 
 // RateLimiter is a concurrency-safe per-key token bucket limiter.
 type RateLimiter struct {
-	limit int
-	now   func() time.Time
-	mu    sync.Mutex
-	items map[string]*rateBucket
+	limit    int
+	limitStr string
+	now      func() time.Time
+	mu       sync.Mutex
+	items    map[string]*rateBucket
 }
 
 // NewRateLimiter constructs a token bucket limiter with rpm capacity/refill.
@@ -44,7 +45,8 @@ func NewRateLimiter(rpm int) *RateLimiter {
 	if rpm <= 0 {
 		rpm = defaultIPRateLimitRPM
 	}
-	return &RateLimiter{limit: rpm, now: time.Now, items: make(map[string]*rateBucket)}
+	// ⚡ Bolt: Precompute static limit string to avoid strconv.Itoa heap allocation per request.
+	return &RateLimiter{limit: rpm, limitStr: strconv.Itoa(rpm), now: time.Now, items: make(map[string]*rateBucket)}
 }
 
 // IPRateLimitFromEnv returns per-IP rate limiting middleware from env.
@@ -97,7 +99,7 @@ func (l *RateLimiter) allow(c *gin.Context, key string) bool {
 	allowed, remaining, reset, retryAfter := l.take(key)
 	l.mu.Unlock()
 
-	setRateLimitHeaders(c, l.limit, remaining, reset)
+	setRateLimitHeaders(c, l.limitStr, remaining, reset)
 	if allowed {
 		return true
 	}
@@ -172,8 +174,8 @@ func (l *RateLimiter) evictOldest() {
 	}
 }
 
-func setRateLimitHeaders(c *gin.Context, limit, remaining, reset int) {
-	c.Header(headerRateLimitLimit, strconv.Itoa(limit))
+func setRateLimitHeaders(c *gin.Context, limitStr string, remaining, reset int) {
+	c.Header(headerRateLimitLimit, limitStr)
 	c.Header(headerRateLimitRemaining, strconv.Itoa(remaining))
 	c.Header(headerRateLimitReset, strconv.Itoa(reset))
 }
