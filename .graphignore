@@ -1,0 +1,31 @@
+# .graphignore
+# Keeps the native `graph` code graph on real project source.
+# Format is gitignore-style; the `graph` tool reads this at the project root
+# when it indexes. Matched files are excluded from the symbol/call graph.
+
+# ── Agent / tooling state (already gitignored, not product code) ──
+# GSD local runtime/state: vendored python-packages/redis copy, a docker
+# build-context copy of api/ under runtime/docker/onnx1024-context, and hundreds
+# of runtime/exec/*.meta.json files. Maintainer-workspace artifacts.
+/.gsd/
+/.gsd-backups/
+# GitNexus second-opinion index state (its own store, not source).
+/.gitnexus/
+# Agent / shell / browser session state.
+/.bg-shell/
+/.artifacts/
+/.jules/
+/.pytest_cache/
+/.claude/
+/.compound-engineering/
+
+# ── Generated / model / research artifacts (0-symbol noise for a Go code graph) ──
+# Generated benchmark/closure reports: text and markdown, no code symbols.
+/benchmark-results/
+# Working issue & design notes (markdown, not source).
+/documents/
+# Downloaded TEI model weights, tokenizer, and huggingface cache (gitignored).
+/tei-models/
+# Historical ONNX research artifacts; README: "not part of the current
+# deployment path". Kept out of the live-service graph.
+/docs/onnx-artifacts/

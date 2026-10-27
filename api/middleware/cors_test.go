@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -47,6 +48,30 @@ func TestCORSDisallowedOriginOmitsAllowOrigin(t *testing.T) {
 	}
 	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "" {
 		t.Fatalf("Access-Control-Allow-Origin = %q, want empty", got)
+	}
+}
+
+func TestParseCORSOriginsEdgeCases(t *testing.T) {
+	cases := []struct {
+		in   string
+		want []string
+	}{
+		{"", []string{"*"}},
+		{"   ", []string{"*"}},
+		{"a", []string{"a"}},
+		{"a, b", []string{"a", "b"}},
+		{"a,,b", []string{"a", "b"}},
+		{"a,b,", []string{"a", "b"}},
+		{",a,b", []string{"a", "b"}},
+		{"a, b , c", []string{"a", "b", "c"}},
+		{",", []string{"*"}},
+		{" , ", []string{"*"}},
+		{"https://app.example, https://admin.example", []string{"https://app.example", "https://admin.example"}},
+	}
+	for _, c := range cases {
+		if got := parseCORSOrigins(c.in); !reflect.DeepEqual(got, c.want) {
+			t.Errorf("parseCORSOrigins(%q) = %v, want %v", c.in, got, c.want)
+		}
 	}
 }
 
