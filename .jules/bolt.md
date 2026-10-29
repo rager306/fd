@@ -8,3 +8,7 @@
 ## 2024-10-18 - Avoid strconv.Itoa for common constants
 **Learning:** strconv.Itoa only caches integers 0-99. For larger common constants (like dimension sizes 512 or 1024), it results in a heap allocation on every call.
 **Action:** Use a switch statement with string literals for high-frequency known values to completely eliminate the allocation.
+
+## 2026-10-18 - UUID String Formatting Overhead
+**Learning:** In Go, replacing `hex.EncodeToString(bytes)` plus multi-part string concatenation with a stack-allocated byte array and direct `hex.Encode` calls reduces heap allocations from 2 to 1 for UUID formatting.
+**Action:** Use stack-allocated byte arrays for UUID or formatted string generation in high-throughput hot paths to decrease garbage collection pressure.
