@@ -27,6 +27,12 @@ func TestHeadersMiddlewareSetsServerAndConnection(t *testing.T) {
 	if got := w.Header().Get("X-Content-Type-Options"); got != "nosniff" {
 		t.Fatalf("X-Content-Type-Options = %q, want nosniff", got)
 	}
+	if got := w.Header().Get("X-Frame-Options"); got != "DENY" {
+		t.Fatalf("X-Frame-Options = %q, want DENY", got)
+	}
+	if got := w.Header().Get("Strict-Transport-Security"); got != "max-age=31536000; includeSubDomains" {
+		t.Fatalf("Strict-Transport-Security = %q, want max-age=31536000; includeSubDomains", got)
+	}
 }
 
 func TestHeadersMiddlewareEchoesRequestID(t *testing.T) {
