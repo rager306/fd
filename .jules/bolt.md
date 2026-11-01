@@ -8,3 +8,7 @@
 ## 2024-10-18 - Avoid strconv.Itoa for common constants
 **Learning:** strconv.Itoa only caches integers 0-99. For larger common constants (like dimension sizes 512 or 1024), it results in a heap allocation on every call.
 **Action:** Use a switch statement with string literals for high-frequency known values to completely eliminate the allocation.
+
+## 2024-11-01 - Avoid hex.EncodeToString for UUID generation
+**Learning:** Using `hex.EncodeToString` followed by string concatenation to format UUIDs (e.g., adding hyphens) causes multiple unnecessary heap allocations due to intermediate strings and the final concatenation.
+**Action:** Pre-allocate a fixed-size byte array (e.g., `[36]byte`) on the stack, format the hex segments directly into it using `hex.Encode`, and insert hyphens manually. Convert to string only once at the end to minimize GC pressure.
