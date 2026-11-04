@@ -10,9 +10,12 @@ import (
 // are negligible in any fd deployment window. A failure of the system
 // entropy source panics rather than silently returning a weak id.
 func NewRequestID() string {
+	// ⚡ Bolt: Fast path for ID formatting by avoiding hex.EncodeToString.
 	var buf [8]byte
 	if _, err := rand.Read(buf[:]); err != nil {
 		panic("queue: crypto/rand unavailable: " + err.Error())
 	}
-	return hex.EncodeToString(buf[:])
+	var dst [16]byte
+	hex.Encode(dst[:], buf[:])
+	return string(dst[:])
 }
