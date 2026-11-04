@@ -97,12 +97,24 @@ func (w *headerWriter) setEmbeddingHeaders() {
 }
 
 func newRequestID() string {
+	// ⚡ Bolt: Fast path for request ID formatting by avoiding hex.EncodeToString and strings concatenation.
 	var bytes [16]byte
 	if _, err := rand.Read(bytes[:]); err != nil {
 		panic("headers: crypto/rand unavailable: " + err.Error())
 	}
 	bytes[6] = (bytes[6] & 0x0f) | 0x40
 	bytes[8] = (bytes[8] & 0x3f) | 0x80
-	encoded := hex.EncodeToString(bytes[:])
-	return encoded[0:8] + "-" + encoded[8:12] + "-" + encoded[12:16] + "-" + encoded[16:20] + "-" + encoded[20:32]
+
+	var dst [36]byte
+	hex.Encode(dst[0:8], bytes[0:4])
+	dst[8] = '-'
+	hex.Encode(dst[9:13], bytes[4:6])
+	dst[13] = '-'
+	hex.Encode(dst[14:18], bytes[6:8])
+	dst[18] = '-'
+	hex.Encode(dst[19:23], bytes[8:10])
+	dst[23] = '-'
+	hex.Encode(dst[24:36], bytes[10:16])
+
+	return string(dst[:])
 }
