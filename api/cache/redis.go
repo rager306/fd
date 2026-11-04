@@ -269,8 +269,11 @@ func unmarshalEmbedding(data []byte) (embedding []float32, dim int) {
 // component for the embedding text (the dim and prefix are added by
 // the key() method to form the full Redis key).
 func (c *RedisCache) HashText(text string) string {
+	// ⚡ Bolt: Stack-allocated byte array for hex encoding reduces heap allocations.
 	h := sha256.Sum256([]byte(text))
-	return hex.EncodeToString(h[:])
+	var dst [64]byte
+	hex.Encode(dst[:], h[:])
+	return string(dst[:])
 }
 
 // Get retrieves the cached embedding vector for (text, dim). Returns
