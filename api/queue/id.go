@@ -14,5 +14,8 @@ func NewRequestID() string {
 	if _, err := rand.Read(buf[:]); err != nil {
 		panic("queue: crypto/rand unavailable: " + err.Error())
 	}
-	return hex.EncodeToString(buf[:])
+	// ⚡ Bolt: Use stack-allocated buffer and direct hex.Encode to avoid hex.EncodeToString intermediate allocation
+	var dst [16]byte
+	hex.Encode(dst[:], buf[:])
+	return string(dst[:])
 }
