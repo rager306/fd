@@ -8,6 +8,3 @@
 ## 2024-10-18 - Avoid strconv.Itoa for common constants
 **Learning:** strconv.Itoa only caches integers 0-99. For larger common constants (like dimension sizes 512 or 1024), it results in a heap allocation on every call.
 **Action:** Use a switch statement with string literals for high-frequency known values to completely eliminate the allocation.
-## 2024-11-09 - Optimize Hex Encoding
-**Learning:** `hex.EncodeToString(bytes)` dynamically allocates an intermediate `[]byte` slice on the heap. Using a stack-allocated byte array (e.g., `var dst [64]byte`) and direct `hex.Encode` calls reduces heap allocations and decreases GC pressure.
-**Action:** Use a stack-allocated byte array for hex encoding in high-throughput hot paths.
