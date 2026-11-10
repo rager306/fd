@@ -2,6 +2,7 @@
 package envutil
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -27,6 +28,20 @@ func PositiveInt(key string, fallback int) int {
 		return fallback
 	}
 	return parsed
+}
+
+// RequiredPositiveInt returns the fallback only when the variable is unset.
+// A configured value must be a positive integer.
+func RequiredPositiveInt(key string, fallback int) (int, error) {
+	value, present := os.LookupEnv(key)
+	if !present {
+		return fallback, nil
+	}
+	parsed, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil || parsed <= 0 {
+		return 0, fmt.Errorf("%s must be a positive integer", key)
+	}
+	return parsed, nil
 }
 
 // Int64 returns a non-negative 64-bit integer from the environment or fallback.

@@ -102,7 +102,7 @@ func runQueueWorker(
 		for i, r := range results {
 			r.CompletedAt = time.Now().UnixNano()
 			r.CreatedAt = batch[i].CreatedAt
-			store.Save(batch[i].ID, &r)
+			store.CompleteExisting(batch[i].ID, &r)
 			batch[i].Response <- r
 		}
 		if batchSize := len(batch); batchSize > 1 {
@@ -202,6 +202,11 @@ func processBatch(ctx context.Context, batch []Item, emb embed.Embedder) []Resul
 	// Walk embeddings, slicing into per-item slices.
 	cursor := 0
 	for i, item := range batch {
+		if !validBackendDimensions(embs[cursor:cursor+len(item.Texts)], item.Dims) {
+			results[i] = Result{ID: item.ID, Status: StatusFailed, Err: fmt.Errorf("TEI returned an invalid embedding dimension")}
+			cursor += len(item.Texts)
+			continue
+		}
 		itemSlice := make([][]float32, len(item.Texts))
 		promptTokens := 0
 		for j, text := range item.Texts {
@@ -219,6 +224,15 @@ func processBatch(ctx context.Context, batch []Item, emb embed.Embedder) []Resul
 		cursor += len(item.Texts)
 	}
 	return results
+}
+
+func validBackendDimensions(vectors [][]float32, dims int) bool {
+	for _, vector := range vectors {
+		if (dims == 512 && len(vector) < 512) || (dims == 1024 && len(vector) != 1024) {
+			return false
+		}
+	}
+	return true
 }
 
 // truncateToDims mirrors the sync path: a 512-dimension request returns the
@@ -247,7 +261,7 @@ func drainRemaining(items <-chan Item, store *ResultStore, err error, logger *sl
 				Err:         err,
 				CompletedAt: time.Now().UnixNano(),
 			}
-			store.Save(item.ID, &result)
+			store.CompleteExisting(item.ID, &result)
 			// item.Response уже закрыт через channel cancel — неблокирующий send
 			select {
 			case item.Response <- result:

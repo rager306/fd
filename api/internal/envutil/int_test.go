@@ -54,6 +54,22 @@ func TestPositiveIntParsesPositiveValues(t *testing.T) {
 	}
 }
 
+func TestRequiredPositiveInt(t *testing.T) {
+	const key = "FD_TEST_REQUIRED_POSITIVE_INT"
+	for _, value := range []string{"", "0", "-1", "bad", strings.Repeat("9", 100)} {
+		t.Run(value, func(t *testing.T) {
+			t.Setenv(key, value)
+			if _, err := RequiredPositiveInt(key, 9); err == nil {
+				t.Fatalf("expected error for %q", value)
+			}
+		})
+	}
+	t.Setenv(key, " 12 ")
+	if value, err := RequiredPositiveInt(key, 9); err != nil || value != 12 {
+		t.Fatalf("value=%d err=%v", value, err)
+	}
+}
+
 func TestInt64ParsesNonNegativeValues(t *testing.T) {
 	t.Setenv("FD_TEST_ENV_INT64", "536870912")
 	if got := Int64("FD_TEST_ENV_INT64", -1); got != 536870912 {

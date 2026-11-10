@@ -44,7 +44,8 @@ func (f *fakeEmbedder) Embed(ctx context.Context, texts []string) ([][]float32, 
 		if i < len(f.returns) {
 			out[i] = f.returns[i]
 		} else {
-			out[i] = []float32{float32(i)}
+			out[i] = make([]float32, 1024)
+			out[i][0] = float32(i)
 		}
 	}
 	if f.shortBy > 0 && f.shortBy < len(out) {
@@ -109,7 +110,10 @@ func TestWorkerHandlesEmbedError(t *testing.T) {
 		BatchWindow:  10 * time.Millisecond,
 	})
 
-	item := makeItem("test-err", []string{"x"})
+	item := makeItem("test-err-0000000", []string{"x"})
+	if !store.ReservePending(item.ID, item.CreatedAt, len(item.Texts), item.Dims) {
+		t.Fatal("reserve failed")
+	}
 	items <- item
 
 	select {
@@ -124,7 +128,7 @@ func TestWorkerHandlesEmbedError(t *testing.T) {
 		t.Fatal("worker did not process within 2s")
 	}
 
-	got, ok := store.Get("test-err")
+	got, ok := store.Get("test-err-0000000")
 	if !ok {
 		t.Fatal("result not in store")
 	}
@@ -145,7 +149,10 @@ func TestWorkerStopsOnContextCancel(t *testing.T) {
 		BatchWindow:  10 * time.Millisecond,
 	})
 
-	item := makeItem("test-cancel", []string{"x"})
+	item := makeItem("test-cancel-0000", []string{"x"})
+	if !store.ReservePending(item.ID, item.CreatedAt, len(item.Texts), item.Dims) {
+		t.Fatal("reserve failed")
+	}
 	items <- item
 	cancel()
 
@@ -157,7 +164,7 @@ func TestWorkerStopsOnContextCancel(t *testing.T) {
 			t.Fatalf("status = %s, want failed", res.Status)
 		}
 	case <-time.After(2 * time.Second):
-		got, ok := store.Get("test-cancel")
+		got, ok := store.Get("test-cancel-0000")
 		if !ok || got.Status != StatusFailed {
 			t.Fatal("worker did not record failed result on cancel")
 		}
@@ -265,6 +272,25 @@ func TestWorkerFailsBatchOnResponseCountMismatch(t *testing.T) {
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("worker did not complete within 2s")
+	}
+}
+
+func TestWorkerRejectsMalformedVector(t *testing.T) {
+	item := makeItem("bad-vector", []string{"x"})
+	results := processBatch(context.Background(), []Item{item}, &fakeEmbedder{returns: [][]float32{make([]float32, 1025)}})
+	if len(results) != 1 || results[0].Status != StatusFailed || results[0].Embeddings != nil {
+		t.Fatalf("malformed backend vector accepted: %+v", results)
+	}
+	item.Dims = 512
+	for _, n := range []int{512, 1024, 2048} {
+		results = processBatch(context.Background(), []Item{item}, &fakeEmbedder{returns: [][]float32{make([]float32, n)}})
+		if results[0].Status != StatusCompleted || len(results[0].Embeddings[0]) != 512 {
+			t.Fatalf("512-dimension request rejected vector of length %d", n)
+		}
+	}
+	results = processBatch(context.Background(), []Item{item}, &fakeEmbedder{returns: [][]float32{make([]float32, 511)}})
+	if results[0].Status != StatusFailed {
+		t.Fatal("accepted short 512-dimension vector")
 	}
 }
 
