@@ -8,3 +8,7 @@
 ## 2024-10-18 - Avoid strconv.Itoa for common constants
 **Learning:** strconv.Itoa only caches integers 0-99. For larger common constants (like dimension sizes 512 or 1024), it results in a heap allocation on every call.
 **Action:** Use a switch statement with string literals for high-frequency known values to completely eliminate the allocation.
+
+## 2024-11-10 - Stack-allocated hex encoding for small identifiers
+**Learning:** While stack-allocated byte arrays for UUID formatting improves CPU execution time (from ~1309 ns/op to ~1215 ns/op), it does not always reduce heap allocations (remains 1 alloc/op) in short benchmarks, as string conversion is still present.
+**Action:** Always verify memory claims with benchmarks and accurately document the performance impact (e.g., reduces CPU execution time) rather than assuming zero allocations.
