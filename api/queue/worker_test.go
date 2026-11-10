@@ -403,3 +403,48 @@ func TestWorkerDoneChannelClosesAfterCancel(t *testing.T) {
 		t.Fatal("worker did not report completion after cancellation")
 	}
 }
+
+// cancelOnWaitContext deterministically cancels after the worker's first
+// cancellation check, as it starts waiting for an item.
+type cancelOnWaitContext struct {
+	context.Context
+	calls  atomic.Int32
+	onWait func()
+}
+
+func (c *cancelOnWaitContext) Done() <-chan struct{} {
+	switch c.calls.Add(1) {
+	case 1:
+		return nil
+	case 2:
+		c.onWait()
+	}
+	return c.Context.Done()
+}
+
+func TestWorkerDrainsWhenCanceledWhileWaiting(t *testing.T) {
+	for _, closeItems := range []bool{false, true} {
+		for i := 0; i < 50; i++ {
+			store := NewResultStore()
+			items := make(chan Item, 1)
+			item := makeItem("0000000000000001", []string{"x"})
+			if !store.ReservePending(item.ID, item.CreatedAt, 1, 1024) {
+				t.Fatal("reservation failed")
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			controlled := &cancelOnWaitContext{Context: ctx, onWait: func() {
+				items <- item
+				if closeItems {
+					close(items)
+				}
+				cancel()
+			}}
+			runQueueWorker(controlled, store, items, &fakeEmbedder{}, discardLogger(), WorkerConfig{BatchMaxSize: 1, BatchWindow: time.Millisecond})
+			result, ok := store.Get(item.ID)
+			if !ok || result.Status != StatusFailed || result.CompletedAt == 0 {
+				t.Fatalf("closed=%v: result=%+v, present=%v", closeItems, result, ok)
+			}
+			_ = store.Close()
+		}
+	}
+}

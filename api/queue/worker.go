@@ -72,16 +72,18 @@ func runQueueWorker(
 	)
 	var processed int64
 	defer func() {
+		if ctx.Err() != nil {
+			drainMark := drainRemaining(items, store, context.Canceled, logger)
+			if drainMark > 0 {
+				logger.Info("queue worker drained remaining items on shutdown", "count", drainMark)
+			}
+		}
 		logger.Info("queue worker stopped", "processed", processed)
 	}()
 
 	for {
 		select {
 		case <-ctx.Done():
-			drainMark := drainRemaining(items, store, context.Canceled, logger)
-			if drainMark > 0 {
-				logger.Info("queue worker drained remaining items on shutdown", "count", drainMark)
-			}
 			return
 		default:
 		}
