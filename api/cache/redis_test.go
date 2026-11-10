@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"strings"
 	"testing"
 	"time"
@@ -46,6 +48,16 @@ func TestHashText(t *testing.T) {
 	}
 	if len(hash1) != 64 { // SHA256 hex length
 		t.Errorf("expected 64 char hash, got %d", len(hash1))
+	}
+}
+
+func TestHashTextMatchesSHA256(t *testing.T) {
+	c := &RedisCache{}
+	for _, text := range []string{"", "hello", "unicode: 世界", strings.Repeat("x", 1024)} {
+		sum := sha256.Sum256([]byte(text))
+		if got, want := c.HashText(text), hex.EncodeToString(sum[:]); got != want {
+			t.Errorf("HashText(%q) = %q, want %q", text, got, want)
+		}
 	}
 }
 
