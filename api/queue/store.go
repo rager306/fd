@@ -48,6 +48,13 @@ func (s *ResultStore) Save(id string, res *Result) {
 	s.mu.Unlock()
 }
 
+// Delete removes the result for id.
+func (s *ResultStore) Delete(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.data, id)
+}
+
 // Get retrieves a result by id. Returns nil, false if absent or expired.
 func (s *ResultStore) Get(id string) (*Result, bool) {
 	s.mu.Lock()

@@ -59,16 +59,16 @@ func (h *QueueHandler) Submit(c *gin.Context) {
 		CreatedAt:      time.Now().UnixNano(),
 	}
 
+	// Publish pending before enqueueing so the worker cannot overwrite a
+	// terminal result with a late pending result.
+	h.store.Save(id, &queue.Result{
+		ID:        id,
+		Status:    queue.StatusPending,
+		CreatedAt: item.CreatedAt,
+	})
 	// Non-blocking send with saturation backpressure.
 	select {
 	case h.items <- item:
-		// Accepted. Track pending result so GET /v1/queue/:id can see it
-		// even before the worker has filled in the response.
-		h.store.Save(id, &queue.Result{
-			ID:        id,
-			Status:    queue.StatusPending,
-			CreatedAt: item.CreatedAt,
-		})
 		c.Header("X-Request-Id", id)
 		c.JSON(http.StatusAccepted, gin.H{
 			"status":     queue.StatusPending,
@@ -76,6 +76,7 @@ func (h *QueueHandler) Submit(c *gin.Context) {
 			"hint":       "Poll GET /v1/queue/" + id,
 		})
 	default:
+		h.store.Delete(id)
 		c.Header("Retry-After", queueRetryAfterSeconds)
 		WriteError(c, CodeModelOverloaded, "", "queue is saturated; retry shortly")
 	}
