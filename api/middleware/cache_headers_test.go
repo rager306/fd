@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -63,6 +65,26 @@ func TestCacheHeadersSkipsNonCacheablePath(t *testing.T) {
 
 	if got := w.Header().Get(headerETag); got != "" {
 		t.Fatalf("ETag = %q, want empty", got)
+	}
+}
+
+func TestResponseETagMatchesSHA256(t *testing.T) {
+	for _, body := range [][]byte{nil, []byte("hello"), []byte("世界"), []byte(strings.Repeat("x", 1024))} {
+		sum := sha256.Sum256(body)
+		want := `"` + hex.EncodeToString(sum[:]) + `"`
+		if got := responseETag(body); got != want {
+			t.Errorf("responseETag(%q) = %q, want %q", body, got, want)
+		}
+	}
+}
+
+var benchmarkResponseETagResult string
+
+func BenchmarkResponseETag(b *testing.B) {
+	body := []byte(`{"data":[1,2,3]}`)
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		benchmarkResponseETagResult = responseETag(body)
 	}
 }
 
