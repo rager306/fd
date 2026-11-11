@@ -525,14 +525,22 @@ func run() error {
 	if queueEnabled {
 		queueCap := envutil.PositiveInt("FD_QUEUE_MAX_SIZE", 1024)
 		queueItems := make(chan queue.Item, queueCap)
-		resultStore := queue.NewResultStore()
+		resultMaxBytes, err := envutil.RequiredPositiveInt("FD_QUEUE_RESULT_MAX_BYTES", queue.DefaultResultMaxBytes)
+		if err != nil {
+			return err
+		}
+		resultMaxEntries, err := envutil.RequiredPositiveInt("FD_QUEUE_RESULT_MAX_ENTRIES", queue.DefaultResultMaxEntries)
+		if err != nil {
+			return err
+		}
+		resultStore := queue.NewResultStoreWithLimits(resultMaxBytes, resultMaxEntries)
 		queueHandler := handlers.NewQueueHandler(resultStore, queueItems, modelID, logger)
 		// Same validation contract as /v1/embeddings, as the README states:
 		// shape, batch size, dimensions and encoding_format are checked before
 		// the item is enqueued, so a client error cannot surface as a 500 later.
 		r.POST("/v1/queue", middleware.ValidateEmbeddingsRequest(), queueHandler.Submit)
 		r.GET("/v1/queue/:id", queueHandler.Poll)
-		logger.Info("queue enabled", "capacity", queueCap)
+		logger.Info("queue enabled", "capacity", queueCap, "result_max_bytes", resultMaxBytes, "result_max_entries", resultMaxEntries)
 		// The worker shares the process lifetime: cancelling this context on the
 		// way out lets it mark queued items failed and stop issuing TEI calls,
 		// instead of being killed mid-request.

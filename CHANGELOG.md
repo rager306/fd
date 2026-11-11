@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ## [Unreleased]
 
+### Changed
+
+- **Async queue retention is bounded.** Pending and retained results reserve
+  vector payload and entry capacity. When either limit is reached, submissions
+  return `503` with `Retry-After`; accepted results are not evicted early.
+  Failed-result error text is capped at 1024 bytes. The limits are configurable
+  and do not cap process RSS; see the queue section of the README.
+
 ## [1.0.3] - 2026-10-25
 
 ### Changed

@@ -34,6 +34,14 @@ The current fd build is TEI-only. ONNX-specific runtime metadata fields are rese
 
 ---
 
+### Optional async queue
+
+When `FD_QUEUE_ENABLED=true`, `POST /v1/queue` accepts the embeddings request body and returns `202` with an ID to poll at `GET /v1/queue/{id}`. Pending requests reserve capacity until completion; terminal results expire five minutes after completion and are lost on restart. The channel, reserved vector payload (default 128 MiB), and result count (default 4096) have separate limits. If any is full, submissions return `503 model_overloaded` with `Retry-After: 5`; accepted results are not evicted early. Failed results reserve capacity until expiry, and their error text is limited to 1024 bytes. Queue result limits do not cap process RSS. Set positive integers in `FD_QUEUE_RESULT_MAX_BYTES` and `FD_QUEUE_RESULT_MAX_ENTRIES` to adjust them; invalid configured values prevent startup when the queue is enabled.
+
+For a 512-dimensional request, the queue accepts a backend vector of at least 512 elements and retains the first 512. For 1024 dimensions it requires exactly 1024 elements; a malformed vector fails that queued request.
+
+---
+
 ## 2. Runtime and Environment
 
 ### Production default: TEI

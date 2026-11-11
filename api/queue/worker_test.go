@@ -44,7 +44,8 @@ func (f *fakeEmbedder) Embed(ctx context.Context, texts []string) ([][]float32, 
 		if i < len(f.returns) {
 			out[i] = f.returns[i]
 		} else {
-			out[i] = []float32{float32(i)}
+			out[i] = make([]float32, 1024)
+			out[i][0] = float32(i)
 		}
 	}
 	if f.shortBy > 0 && f.shortBy < len(out) {
@@ -109,7 +110,10 @@ func TestWorkerHandlesEmbedError(t *testing.T) {
 		BatchWindow:  10 * time.Millisecond,
 	})
 
-	item := makeItem("test-err", []string{"x"})
+	item := makeItem("test-err-0000000", []string{"x"})
+	if !store.ReservePending(item.ID, item.CreatedAt, len(item.Texts), item.Dims) {
+		t.Fatal("reserve failed")
+	}
 	items <- item
 
 	select {
@@ -124,7 +128,7 @@ func TestWorkerHandlesEmbedError(t *testing.T) {
 		t.Fatal("worker did not process within 2s")
 	}
 
-	got, ok := store.Get("test-err")
+	got, ok := store.Get("test-err-0000000")
 	if !ok {
 		t.Fatal("result not in store")
 	}
@@ -145,7 +149,10 @@ func TestWorkerStopsOnContextCancel(t *testing.T) {
 		BatchWindow:  10 * time.Millisecond,
 	})
 
-	item := makeItem("test-cancel", []string{"x"})
+	item := makeItem("test-cancel-0000", []string{"x"})
+	if !store.ReservePending(item.ID, item.CreatedAt, len(item.Texts), item.Dims) {
+		t.Fatal("reserve failed")
+	}
 	items <- item
 	cancel()
 
@@ -157,7 +164,7 @@ func TestWorkerStopsOnContextCancel(t *testing.T) {
 			t.Fatalf("status = %s, want failed", res.Status)
 		}
 	case <-time.After(2 * time.Second):
-		got, ok := store.Get("test-cancel")
+		got, ok := store.Get("test-cancel-0000")
 		if !ok || got.Status != StatusFailed {
 			t.Fatal("worker did not record failed result on cancel")
 		}
@@ -268,6 +275,25 @@ func TestWorkerFailsBatchOnResponseCountMismatch(t *testing.T) {
 	}
 }
 
+func TestWorkerRejectsMalformedVector(t *testing.T) {
+	item := makeItem("bad-vector", []string{"x"})
+	results := processBatch(context.Background(), []Item{item}, &fakeEmbedder{returns: [][]float32{make([]float32, 1025)}})
+	if len(results) != 1 || results[0].Status != StatusFailed || results[0].Embeddings != nil {
+		t.Fatalf("malformed backend vector accepted: %+v", results)
+	}
+	item.Dims = 512
+	for _, n := range []int{512, 1024, 2048} {
+		results = processBatch(context.Background(), []Item{item}, &fakeEmbedder{returns: [][]float32{make([]float32, n)}})
+		if results[0].Status != StatusCompleted || len(results[0].Embeddings[0]) != 512 {
+			t.Fatalf("512-dimension request rejected vector of length %d", n)
+		}
+	}
+	results = processBatch(context.Background(), []Item{item}, &fakeEmbedder{returns: [][]float32{make([]float32, 511)}})
+	if results[0].Status != StatusFailed {
+		t.Fatal("accepted short 512-dimension vector")
+	}
+}
+
 // The result must report the dimensions and wire format the caller asked for,
 // and account for prompt tokens instead of leaving usage at zero.
 func TestWorkerHonoursRequestedDimensionsAndCountsTokens(t *testing.T) {
@@ -375,5 +401,50 @@ func TestWorkerDoneChannelClosesAfterCancel(t *testing.T) {
 	case <-done:
 	case <-time.After(2 * time.Second):
 		t.Fatal("worker did not report completion after cancellation")
+	}
+}
+
+// cancelOnWaitContext deterministically cancels after the worker's first
+// cancellation check, as it starts waiting for an item.
+type cancelOnWaitContext struct {
+	context.Context
+	calls  atomic.Int32
+	onWait func()
+}
+
+func (c *cancelOnWaitContext) Done() <-chan struct{} {
+	switch c.calls.Add(1) {
+	case 1:
+		return nil
+	case 2:
+		c.onWait()
+	}
+	return c.Context.Done()
+}
+
+func TestWorkerDrainsWhenCanceledWhileWaiting(t *testing.T) {
+	for _, closeItems := range []bool{false, true} {
+		for i := 0; i < 50; i++ {
+			store := NewResultStore()
+			items := make(chan Item, 1)
+			item := makeItem("0000000000000001", []string{"x"})
+			if !store.ReservePending(item.ID, item.CreatedAt, 1, 1024) {
+				t.Fatal("reservation failed")
+			}
+			ctx, cancel := context.WithCancel(context.Background())
+			controlled := &cancelOnWaitContext{Context: ctx, onWait: func() {
+				items <- item
+				if closeItems {
+					close(items)
+				}
+				cancel()
+			}}
+			runQueueWorker(controlled, store, items, &fakeEmbedder{}, discardLogger(), WorkerConfig{BatchMaxSize: 1, BatchWindow: time.Millisecond})
+			result, ok := store.Get(item.ID)
+			if !ok || result.Status != StatusFailed || result.CompletedAt == 0 {
+				t.Fatalf("closed=%v: result=%+v, present=%v", closeItems, result, ok)
+			}
+			_ = store.Close()
+		}
 	}
 }

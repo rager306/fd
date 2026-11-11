@@ -135,6 +135,38 @@ func TestQueueBackpressureRejectsWhenFull(t *testing.T) {
 	}
 }
 
+func TestQueueResultCapacityAndEnqueueRollback(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	store := queue.NewResultStoreWithLimits(4096, 1)
+	t.Cleanup(func() { _ = store.Close() })
+	items := make(chan queue.Item, 1)
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	h := handlers.NewQueueHandler(store, items, "model", logger)
+	r := gin.New()
+	r.POST("/v1/queue", h.Submit)
+	body := `{"model":"model","input":["test"]}`
+	first := postQueue(r, body)
+	if first.Code != http.StatusAccepted {
+		t.Fatalf("first: %d %s", first.Code, first.Body)
+	}
+	second := postQueue(r, body)
+	if second.Code != http.StatusServiceUnavailable || second.Header().Get("Retry-After") != "5" {
+		t.Fatalf("overload: %d %s", second.Code, second.Body)
+	}
+	id := first.Header().Get("X-Request-Id")
+	store.DeletePending(id)
+	// The channel is still full; this attempt must release its reservation.
+	third := postQueue(r, body)
+	if third.Code != http.StatusServiceUnavailable || store.Size() != 0 {
+		t.Fatalf("rollback: %d size=%d", third.Code, store.Size())
+	}
+	<-items
+	fourth := postQueue(r, body)
+	if fourth.Code != http.StatusAccepted {
+		t.Fatalf("after rollback: %d %s", fourth.Code, fourth.Body)
+	}
+}
+
 func TestQueuePollReturns404ForUnknownId(t *testing.T) {
 	r, cancel := setupQueueTestServer(t, 8)
 	defer cancel()

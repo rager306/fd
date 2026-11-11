@@ -59,14 +59,13 @@ func (h *QueueHandler) Submit(c *gin.Context) {
 		CreatedAt:      time.Now().UnixNano(),
 	}
 
-	// Publish pending before enqueueing so the worker cannot overwrite a
-	// terminal result with a late pending result.
-	h.store.Save(id, &queue.Result{
-		ID:        id,
-		Status:    queue.StatusPending,
-		CreatedAt: item.CreatedAt,
-	})
-	// Non-blocking send with saturation backpressure.
+	if !h.store.ReservePending(id, item.CreatedAt, len(item.Texts), dims) {
+		c.Header("Retry-After", queueRetryAfterSeconds)
+		WriteError(c, CodeModelOverloaded, "", "queue result capacity exhausted; retry shortly")
+		return
+	}
+
+	// Publish pending before enqueue so a fast worker cannot be overwritten.
 	select {
 	case h.items <- item:
 		c.Header("X-Request-Id", id)
@@ -76,7 +75,7 @@ func (h *QueueHandler) Submit(c *gin.Context) {
 			"hint":       "Poll GET /v1/queue/" + id,
 		})
 	default:
-		h.store.Delete(id)
+		h.store.DeletePending(id)
 		c.Header("Retry-After", queueRetryAfterSeconds)
 		WriteError(c, CodeModelOverloaded, "", "queue is saturated; retry shortly")
 	}

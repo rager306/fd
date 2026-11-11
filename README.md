@@ -234,7 +234,11 @@ Rate-limited responses carry `Retry-After` with the seconds until the next token
 
 `POST /v1/cache/flush` ignores its body and returns the number of L2 keys removed. `POST /v1/cache/delete` accepts `{"input":"text"}` or `{"input":["a","b"]}` and reports how many inputs it processed, not how many keys existed.
 
-The queue is enabled only with `FD_QUEUE_ENABLED=true`. Submit accepts the same body as `/v1/embeddings`, returns `202` with `X-Request-Id`, and stores results in memory for about five minutes. Results are lost on restart; items still queued at shutdown are marked failed so pollers do not wait forever.
+The queue is enabled only with `FD_QUEUE_ENABLED=true`. Submit accepts the same body as `/v1/embeddings` and returns `202` with `X-Request-Id`. Terminal results are retained for five minutes after completion; pending requests reserve capacity until they finish. Results are lost on restart; items still queued at shutdown are marked failed when the worker drains them.
+
+Both queue result limits must be positive integers when configured; invalid values prevent startup when the queue is enabled.
+
+Each accepted request reserves space for its maximum vector payload and one result entry before enqueueing. When either result limit or the submission channel is full, new requests return `503 model_overloaded` with `Retry-After: 5`. Already accepted results are not evicted early to admit new requests. Failed results retain their reservation for the same five-minute period; their error text is limited to 1024 bytes. For 512 dimensions, backend vectors must contain at least 512 elements; for 1024 dimensions they must contain exactly 1024. Other lengths fail the queued request. These budgets do not limit process RSS: map and allocation overhead, in-flight requests, backend responses, HTTP responses, and caches consume additional memory. With the defaults, 4096 single-input 1024-dimensional results reserve 16 MiB, while 256 maximum-size requests reserve 128 MiB.
 
 ## Configuration
 
@@ -294,6 +298,8 @@ CORS allows `GET, POST, OPTIONS` and the `Content-Type`, `Authorization`, and `X
 | `FD_COALESCE_WINDOW_MS` | `5ms` | Collection window before a batch is flushed. |
 | `FD_QUEUE_ENABLED` | `false` | Registers `/v1/queue` and starts the worker. |
 | `FD_QUEUE_MAX_SIZE` | `1024` | Bounded in-memory channel capacity. |
+| `FD_QUEUE_RESULT_MAX_BYTES` | `134217728` (128 MiB) | Maximum reserved float32 vector payload across pending and retained results; not an RSS limit. |
+| `FD_QUEUE_RESULT_MAX_ENTRIES` | `4096` | Maximum pending and retained results. |
 | `FD_QUEUE_BATCH_MAX_SIZE` | `32` | Maximum items per worker batch. |
 | `FD_QUEUE_BATCH_WINDOW_MS` | `10ms` | Time the worker waits to fill a batch. |
 | `FD_WARMUP_START_MAX_ATTEMPTS` | `5` | Startup attempts before the recovery loop takes over. |
