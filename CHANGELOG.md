@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/
 
 ### Changed
 
+- **Go security update.** Raise the module and CI toolchain minimum to Go 1.26.11
+  and both Docker builders to Go 1.27.4 to include the net/http fix for
+  GO-2026-6859.
+
 - **Async queue retention is bounded.** Pending and retained results reserve
   vector payload and entry capacity. When either limit is reached, submissions
   return `503` with `Retry-After`; accepted results are not evicted early.

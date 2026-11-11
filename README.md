@@ -374,7 +374,7 @@ Logs are structured JSON on stdout; request bodies and secrets are never logged.
 
 ## Development
 
-The module lives in `api/` and declares `go 1.26.10`; CI reads the toolchain from `api/go.mod`.
+The module lives in `api/` and declares `go 1.26.11`; CI reads the toolchain from `api/go.mod`.
 
 ```bash
 cd api

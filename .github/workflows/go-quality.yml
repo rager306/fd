@@ -36,10 +36,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          # Read the floor from the module instead of resolving "1.26.x" here:
-          # the runner toolcache served 1.26.9 while the module already required
-          # the stdlib fix for GO-2026-6809 (crypto/x509) from 1.26.10, so CI ran
-          # a toolchain older than the one the code declares.
+          # Read the security-patched minimum toolchain directly from the module;
+          # a floating 1.26.x can resolve to an older cached runner version.
           go-version-file: api/go.mod
           cache: true
           cache-dependency-path: api/go.sum
